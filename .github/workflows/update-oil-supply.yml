@@ -1,0 +1,141 @@
+name: Update oil supply indicator
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '35 4 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas openpyxl requests
+      - name: Build oil-supply.json from EIA STEO figures
+        run: |
+          python - <<'PY'
+          import io, json, math, re, requests, pandas as pd
+          from datetime import datetime, timezone
+
+          TODAY = pd.Timestamp.utcnow().tz_localize(None)
+
+          def book(url):
+              r=requests.get(url,timeout=45,headers={'User-Agent':'DOMINO-dashboard/1.0'})
+              r.raise_for_status()
+              return pd.read_excel(io.BytesIO(r.content), sheet_name=None, header=None)
+
+          def norm(x):
+              return re.sub(r'\s+',' ',str(x)).strip().lower()
+
+          def series_from_book(sheets, keywords, aggregate=False):
+              best=None
+              for _,df in sheets.items():
+                  if df.empty: continue
+                  # Search header area for matching series labels.
+                  labels={}
+                  for r in range(min(18,len(df))):
+                      for c in range(df.shape[1]):
+                          s=norm(df.iat[r,c])
+                          if s and s!='nan' and any(k in s for k in keywords):
+                              labels[c]=s
+                  for r in range(len(df)):
+                      date=None
+                      for c in range(min(3,df.shape[1])):
+                          try:
+                              d=pd.to_datetime(df.iat[r,c],errors='coerce')
+                              if not pd.isna(d) and pd.Timestamp('2000-01-01') < d < pd.Timestamp('2035-01-01'):
+                                  date=d; break
+                          except: pass
+                      if date is None or date>TODAY: continue
+                      vals=[]
+                      cols=labels.keys() if labels else range(1,df.shape[1])
+                      for c in cols:
+                          try:
+                              v=float(df.iat[r,c])
+                              if math.isfinite(v): vals.append(v)
+                          except: pass
+                      if not vals: continue
+                      val=sum(vals) if aggregate else vals[0]
+                      if best is None or date>best[0]: best=(date,val)
+              if not best: raise RuntimeError('No matching EIA series found')
+              return best
+
+          # Fig2: production-consumption balance. If the workbook exposes the balance
+          # directly we use it; otherwise derive production minus consumption.
+          fig2=book('https://www.eia.gov/outlooks/steo/xls/Fig2.xlsx')
+          try:
+              bal_date,balance=series_from_book(fig2,['balance','stock change'])
+          except Exception:
+              p_date,prod=series_from_book(fig2,['production'])
+              c_date,cons=series_from_book(fig2,['consumption'])
+              bal_date=max(p_date,c_date); balance=prod-cons
+
+          fig6=book('https://www.eia.gov/outlooks/steo/xls/Fig6.xlsx')
+          spare_date,spare=series_from_book(fig6,['surplus','capacity'])
+
+          fig10=book('https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx')
+          outage_date,outages=series_from_book(fig10,['outage'],aggregate=True)
+
+          # v1 calibration. These are intentionally conservative and will be
+          # recalibrated against observed behaviour during DOMINO operation.
+          def balance_status(v):
+              # Negative means consumption exceeds production.
+              deficit=max(0,-v)
+              if deficit>=3.0:return 'red',3
+              if deficit>=1.5:return 'orange',2
+              if deficit>=0.5:return 'yellow',1
+              return 'green',0
+          def spare_status(v):
+              if v<=1.0:return 'red',3
+              if v<=2.0:return 'orange',2
+              if v<=3.0:return 'yellow',1
+              return 'green',0
+          def outage_status(v):
+              if v>=5.0:return 'red',3
+              if v>=3.0:return 'orange',2
+              if v>=1.5:return 'yellow',1
+              return 'green',0
+
+          sb,xb=balance_status(balance)
+          ss,xs=spare_status(spare)
+          so,xo=outage_status(outages)
+          # Weight physical balance highest, then outages, then spare capacity.
+          score=0.45*xb+0.30*xo+0.25*xs
+          if score>=2.35: overall='red'
+          elif score>=1.45: overall='orange'
+          elif score>=0.55: overall='yellow'
+          else: overall='green'
+          labels={'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT'}
+          dates=[bal_date,spare_date,outage_date]
+          out={
+            'status':overall,'label':labels[overall],
+            'score':round(score,2),
+            'updated':datetime.now(timezone.utc).isoformat(),
+            'source_date':max(dates).date().isoformat(),
+            'components':{
+              'supply_demand_balance':{'status':sb,'value':round(balance,2),'unit':'mb/d','label':'Angebot/Nachfrage','date':bal_date.date().isoformat()},
+              'spare_capacity':{'status':ss,'value':round(spare,2),'unit':'mb/d','label':'OPEC Reservekapazität','date':spare_date.date().isoformat()},
+              'unplanned_outages':{'status':so,'value':round(outages,2),'unit':'mb/d','label':'Ungeplante Ausfälle','date':outage_date.date().isoformat()}
+            },
+            'note':'DOMINO Ölversorgung v1.0; Raffinerien, Lager, Transport und Schiffsverkehr bleiben separate Hauptindikatoren.',
+            'sources':[
+              'U.S. EIA STEO Fig2 – World liquid fuels production and consumption balance',
+              'U.S. EIA STEO Fig6 – OPEC surplus crude oil production capacity',
+              'U.S. EIA STEO Fig10 – Estimated unplanned crude oil production outages'
+            ]
+          }
+          with open('oil-supply.json','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add oil-supply.json
+          git diff --cached --quiet || (git commit -m "Update oil supply indicator" && git push)
