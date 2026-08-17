@@ -1,0 +1,46 @@
+name: Update Brent
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-brent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository laden
+        uses: actions/checkout@v4
+      - name: Brent abrufen
+        shell: python
+        run: |
+          import csv, io, json, urllib.request
+          from datetime import datetime, timezone
+          url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
+          req = urllib.request.Request(url, headers={"User-Agent":"DOMINO-Brent-Monitor/1.0"})
+          with urllib.request.urlopen(req, timeout=30) as response:
+              text = response.read().decode("utf-8")
+          latest = None
+          for row in csv.DictReader(io.StringIO(text)):
+              raw = row.get("DCOILBRENTEU", "")
+              if raw and raw != ".":
+                  try: latest = {"date": row["DATE"], "value": float(raw)}
+                  except (ValueError, KeyError): pass
+          if latest is None: raise RuntimeError("Kein gueltiger Brent-Wert gefunden")
+          latest["updated_at"] = datetime.now(timezone.utc).isoformat()
+          with open("brent.json", "w", encoding="utf-8") as f:
+              json.dump(latest, f, ensure_ascii=False, indent=2); f.write("\n")
+      - name: Brent speichern
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add brent.json
+          if git diff --cached --quiet; then
+            echo "Keine Änderung"
+          else
+            git commit -m "Update Brent price"
+            git push
+          fi
