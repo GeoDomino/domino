@@ -1,0 +1,13 @@
+{
+  "status": "unknown",
+  "label": "WARTET",
+  "updated": null,
+  "source_date": null,
+  "score": null,
+  "components": {
+    "supply_demand_balance": {"status":"unknown","value":null,"unit":"mb/d","label":"Angebot/Nachfrage"},
+    "spare_capacity": {"status":"unknown","value":null,"unit":"mb/d","label":"OPEC Reservekapazität"},
+    "unplanned_outages": {"status":"unknown","value":null,"unit":"mb/d","label":"Ungeplante Ausfälle"}
+  },
+  "note": "DOMINO Ölversorgung v1.0 – wartet auf ersten automatischen EIA-Abruf"
+}
