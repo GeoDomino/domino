@@ -1,0 +1,2 @@
+Hallo Martin.
+Der ChatGPT Codex Connector kann jetzt in GeoDomino/domino schreiben.
