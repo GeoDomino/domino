@@ -19,20 +19,48 @@ jobs:
         run: |
           import csv, io, json, urllib.request
           from datetime import datetime, timezone
+
           url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
-          req = urllib.request.Request(url, headers={"User-Agent":"DOMINO-Brent-Monitor/1.0"})
+          req = urllib.request.Request(url, headers={"User-Agent":"DOMINO-Brent-Monitor/1.1"})
           with urllib.request.urlopen(req, timeout=30) as response:
-              text = response.read().decode("utf-8")
+              text = response.read().decode("utf-8-sig")
+
+          reader = csv.DictReader(io.StringIO(text))
+          if not reader.fieldnames:
+              raise RuntimeError("FRED CSV hat keine Spalten")
+
+          fieldnames = [f.strip() for f in reader.fieldnames if f]
+          date_field = next((f for f in fieldnames if f.lower() in ("date", "observation_date")), fieldnames[0])
+          value_field = next((f for f in fieldnames if f.upper() == "DCOILBRENTEU"), None)
+          if value_field is None:
+              value_field = next((f for f in fieldnames if f != date_field), None)
+          if value_field is None:
+              raise RuntimeError(f"Keine Wertespalte gefunden: {fieldnames}")
+
           latest = None
-          for row in csv.DictReader(io.StringIO(text)):
-              raw = row.get("DCOILBRENTEU", "")
-              if raw and raw != ".":
-                  try: latest = {"date": row["DATE"], "value": float(raw)}
-                  except (ValueError, KeyError): pass
-          if latest is None: raise RuntimeError("Kein gueltiger Brent-Wert gefunden")
+          for row in reader:
+              raw = (row.get(value_field) or "").strip()
+              date = (row.get(date_field) or "").strip()
+              if not raw or raw in (".", "NA", "N/A"):
+                  continue
+              try:
+                  value = float(raw)
+              except ValueError:
+                  continue
+              if value > 0:
+                  latest = {"date": date, "value": value}
+
+          if latest is None:
+              raise RuntimeError(f"Kein gueltiger Brent-Wert gefunden; Spalten: {fieldnames}")
+
           latest["updated_at"] = datetime.now(timezone.utc).isoformat()
+          latest["source"] = "FRED DCOILBRENTEU"
           with open("brent.json", "w", encoding="utf-8") as f:
-              json.dump(latest, f, ensure_ascii=False, indent=2); f.write("\n")
+              json.dump(latest, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+
+          print(json.dumps(latest, ensure_ascii=False))
+
       - name: Brent speichern
         run: |
           git config user.name "github-actions[bot]"
