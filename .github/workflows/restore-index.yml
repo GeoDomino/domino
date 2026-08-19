@@ -26,7 +26,6 @@ jobs:
               'git','show','be6719c648ebd72023c61049f1e15f08a8e8f1d9:index.html'
           ], text=True)
 
-          # Make cards easier to distinguish without touching the dashboard logic.
           base = base.replace('--card:#181b21;', '--card:#242932;')
           base = base.replace(
               ".refresh{position:absolute;right:14px;top:10px;width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:var(--card);color:var(--text);font-size:22px;line-height:34px;text-align:center;padding:0;cursor:pointer}",
@@ -37,13 +36,14 @@ jobs:
               ".card{background:var(--card);border-radius:17px;padding:13px 10px;text-align:center;border:1px solid rgba(255,255,255,.12);min-height:150px}"
           )
 
-          # Preserve the existing eight-tile layout but reserve two economy slots explicitly.
           old_items = "let items=[['Tankstellenpreise DK','Deutschland / USA'],['Kraftstoff-Großhandel','Diesel / Benzin'],['Petrochemie / Chemie','Vorprodukte'],['Straßengüterverkehr','Logistik'],['Luftfahrt / Kerosin','Jet Fuel'],['Landwirtschaft','Lebensmittel'],['Industrieproduktion','Schwerindustrie'],['Lieferketten','Warenpreise']];"
           new_items = "let items=[['Tankstellenpreise DK','Deutschland / USA'],['Kraftstoff-Großhandel','DK / Derivate'],['Petrochemie / Chemie','Vorprodukte'],['Industrieproduktion','Schwerindustrie'],['Halbleiter','Computerchips'],['Grundnahrungsmittel','Weizen · Reis · Mais'],['Straßengüterverkehr','Logistik'],['Lieferketten','Warenpreise']];"
           base = base.replace(old_items, new_items)
 
-          # Update economy detail labels while leaving all data loaders and energy details intact.
           base = base.replace('<div class="rule"><b>5 · Luftfahrt / Kerosin</b><br>Jet-Fuel-Preise, Verfügbarkeit und Belastung der Luftfahrt. Besonders relevant für Luftfracht und internationale Lieferketten.</div><div class="rule"><b>6 · Landwirtschaft / Lebensmittel</b><br>Diesel, Dünger, Chemie, Trocknung, Verarbeitung und Transport treffen hier zusammen. Ziel ist zu erkennen, ob Energie- und Vorproduktkosten in landwirtschaftliche Produktion und Lebensmittelketten durchschlagen.</div><div class="rule"><b>7 · Industrieproduktion</b><br>Beobachtet, ob energie- und rohstoffintensive Produktion tatsächlich zurückgeht. Hier können auch Gas/LNG- und Stromstress indirekt sichtbar werden, etwa über Stahl, Glas, Zement, Papier oder andere energieintensive Branchen.</div><div class="rule"><b>8 · Lieferketten / Warenpreise</b>', '<div class="rule"><b>5 · Halbleiter</b><br>Platzhalter für Computerchips und Halbleiterversorgung. Datenquellen und Ampellogik werden später definiert.</div><div class="rule"><b>6 · Grundnahrungsmittel</b><br>Platzhalter für Weizen, Reis und Mais. Datenquellen und Ampellogik werden später definiert.</div><div class="rule"><b>7 · Straßengüterverkehr / Logistik</b><br>Beobachtet Kosten und Aktivität im Lkw- und Speditionssektor.</div><div class="rule"><b>8 · Lieferketten / Warenpreise</b>')
+
+          if 'wholesale-dk.js' not in base:
+              base = base.replace('</body>', '<script src="wholesale-dk.js?v=1"></script></body>')
 
           with open('index.html','w',encoding='utf-8') as f:
               f.write(base)
@@ -56,6 +56,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No index changes"
           else
-            git commit -m "Restore dashboard values and improve card contrast"
+            git commit -m "Restore dashboard and add wholesale DK widget"
             git push
           fi
