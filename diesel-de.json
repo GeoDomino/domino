@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "market": "Deutschland",
+  "product": "DK",
+  "value": null,
+  "unit": "EUR/l",
+  "status": "unknown",
+  "label": "?",
+  "trend_pct_last_observation": null,
+  "updated_at": null,
+  "source": "ADAC bundesweiter Wochenmittelwert",
+  "thresholds": {
+    "green_below": 2.0,
+    "yellow_from": 2.0,
+    "orange_from": 2.4,
+    "red_from": 2.5
+  },
+  "history": []
+}
