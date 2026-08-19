@@ -1,0 +1,86 @@
+name: Update Diesel Deutschland
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25 6 * * *'
+  push:
+    paths:
+      - 'diesel-de.json'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests beautifulsoup4
+      - name: ADAC DK Deutschland abrufen und DOMINO aktualisieren
+        run: |
+          python - <<'PY'
+          import json, os, re, requests
+          from bs4 import BeautifulSoup
+          from datetime import datetime, timezone
+
+          URL='https://www.adac.de/reise-freizeit/reiseplanung/reiseziele/deutschland/tanken-laden/'
+          r=requests.get(URL,timeout=45,headers={'User-Agent':'DOMINO-dashboard/1.0'})
+          r.raise_for_status()
+          text=' '.join(BeautifulSoup(r.text,'html.parser').stripped_strings)
+          m=re.search(r'Diesel\s+([0-9]+[,.][0-9]{2,3})\s*€/Liter',text,re.I)
+          if not m:
+              m=re.search(r'Diesel.{0,180}?([0-9]+[,.][0-9]{2,3})\s*(?:Euro|€)',text,re.I)
+          if not m:
+              raise RuntimeError('ADAC-Dieselpreis nicht gefunden')
+          value=float(m.group(1).replace(',','.'))
+          if not 1.0 < value < 4.0:
+              raise RuntimeError('Unplausibler ADAC-Dieselpreis: '+str(value))
+
+          if value >= 2.50: status='red'
+          elif value >= 2.40: status='orange'
+          elif value >= 2.00: status='yellow'
+          else: status='green'
+          labels={'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT'}
+
+          old={}
+          if os.path.exists('diesel-de.json'):
+              try:
+                  old=json.load(open('diesel-de.json',encoding='utf-8'))
+              except Exception: pass
+          hist=old.get('history',[]) if isinstance(old,dict) else []
+          today=datetime.now(timezone.utc).date().isoformat()
+          if not hist or hist[-1].get('date')!=today or hist[-1].get('value')!=value:
+              hist.append({'date':today,'value':value})
+          hist=hist[-90:]
+          trend=None
+          if len(hist)>1 and hist[-2]['value']:
+              trend=round((value/hist[-2]['value']-1)*100,2)
+          out={'version':'1.0','market':'Deutschland','product':'DK','value':value,'unit':'EUR/l','status':status,'label':labels[status],'trend_pct_last_observation':trend,'updated_at':datetime.now(timezone.utc).isoformat(),'source':'ADAC bundesweiter Wochenmittelwert','source_url':URL,'thresholds':{'green_below':2.00,'yellow_from':2.00,'orange_from':2.40,'red_from':2.50},'history':hist}
+          json.dump(out,open('diesel-de.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+
+          # Einmalige/robuste UI-Erweiterung. Sie bleibt auch bei späteren Datenupdates erhalten.
+          p='index.html'
+          s=open(p,encoding='utf-8').read()
+          oldcard="['Tankstellenpreise','Diesel / Benzin']"
+          if oldcard in s:
+              s=s.replace(oldcard,"['Tankstellenpreise DK','Deutschland / USA']",1)
+          oldrule='<div class="rule"><b>1 · Tankstellenpreise</b><br>Endverbraucherpreise für Diesel und Benzin. Zeigt, ob Kraftstoffstress bei Haushalten, Handwerk und kleineren Unternehmen angekommen ist. Wichtig sind Niveau, Änderungsrate und Dauer.</div>'
+          newrule='<div class="rule"><b>1 · Tankstellenpreise DK · Version 1.0</b><br><span id="dkDeDetail">Deutschland: wartet auf ADAC-Daten.</span><br>Deutschland-Schwellen: 🟢 &lt;2,00 €/l · 🟡 2,00–&lt;2,40 · 🟠 2,40–&lt;2,50 · 🔴 ≥2,50 €/l. Quelle: ADAC bundesweiter Wochenmittelwert. USA wird separat ergänzt; bis dahin bestimmt Deutschland allein die sichtbare Kachel.</div>'
+          if oldrule in s:
+              s=s.replace(oldrule,newrule,1)
+          marker='economyCards();blanks(financeGrid'
+          loader="""economyCards();async function loadDieselDE(){try{let r=await fetch('./diesel-de.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;let x=await r.json(),card=economyGrid.children[0],lamp=card.querySelector('.light'),word=card.querySelector('.statusword'),price=card.querySelector('.price'),small=card.querySelector('.small');lamp.style.background=colors[x.status]||colors.unknown;word.textContent=x.label||'?';price.textContent=Number(x.value).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:3})+' €/l';small.textContent='DK Deutschland · '+(x.trend_pct_last_observation==null?'Trend startet':((x.trend_pct_last_observation>=0?'+':'')+x.trend_pct_last_observation.toLocaleString('de-DE')+' %'));let d=document.getElementById('dkDeDetail');if(d)d.textContent='Deutschland DK: '+price.textContent+' · '+word.textContent+(x.trend_pct_last_observation==null?'':' · letzte Änderung '+(x.trend_pct_last_observation>=0?'+':'')+x.trend_pct_last_observation.toLocaleString('de-DE')+' %');}catch(e){let card=economyGrid.children[0];card.querySelector('.statusword').textContent='?';card.querySelector('.small').textContent='Wartet auf ADAC-Daten';}}loadDieselDE();setInterval(loadDieselDE,3600000);blanks(financeGrid"""
+          if marker in s and 'async function loadDieselDE()' not in s:
+              s=s.replace(marker,loader,1)
+          open(p,'w',encoding='utf-8').write(s)
+          PY
+      - name: Änderungen speichern
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add diesel-de.json index.html
+          git diff --cached --quiet || (git commit -m "Update Germany DK price from ADAC" && git push)
