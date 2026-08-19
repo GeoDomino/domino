@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "market": "USA",
+  "product": "DK",
+  "value": 5.348,
+  "unit": "USD/gal",
+  "status": "orange",
+  "label": "ORANGE",
+  "level": 2,
+  "trend_pct_last_observation": 0.66,
+  "source_date": "2026-08-03",
+  "updated_at": "2026-08-19T07:10:00+00:00",
+  "source": "U.S. EIA Weekly Retail On-Highway Diesel Prices",
+  "thresholds": {
+    "green_below": 3.6,
+    "yellow_from": 3.6,
+    "orange_from": 4.7,
+    "red_from": 5.8
+  },
+  "history": [
+    {"date": "2026-07-27", "value": 5.313},
+    {"date": "2026-08-03", "value": 5.348}
+  ]
+}
