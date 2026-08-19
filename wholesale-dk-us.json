@@ -1,0 +1,17 @@
+{
+  "market": "Amerika",
+  "benchmark": "U.S. Gulf Coast ULSD Spot",
+  "value": 3.868,
+  "unit": "USD/gal",
+  "source_date": "2026-08-03",
+  "status": "orange",
+  "level": 2,
+  "days_in_status": 1,
+  "source": "U.S. EIA via FRED DDFUELUSGULF",
+  "thresholds": {
+    "green_below": 2.5,
+    "yellow_from": 2.5,
+    "orange_from": 3.5,
+    "red_from": 4.2
+  }
+}
