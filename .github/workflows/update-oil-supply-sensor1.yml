@@ -58,7 +58,6 @@ jobs:
               return None
 
           def horizontal(df):
-              # EIA chart workbooks usually store series in rows and time along columns.
               prod=[]; cons=[]
               for rr in range(len(df)):
                   row=' '.join(txt(x) for x in df.iloc[rr,:min(df.shape[1],8)].tolist())
@@ -68,7 +67,6 @@ jobs:
               for pr in prod:
                   for cr in cons:
                       if abs(pr-cr)>8: continue
-                      # Find the nearby row containing the most actual dates.
                       for dr in range(max(0,min(pr,cr)-8), min(len(df),max(pr,cr)+9)):
                           datecols=[]
                           for c in range(df.shape[1]):
@@ -85,7 +83,6 @@ jobs:
               return max(candidates,key=lambda z:z[0]) if candidates else None
 
           def vertical(df):
-              # Fallback for workbooks with dates down rows and series in columns.
               headers={}
               for rr in range(min(30,len(df))):
                   for c in range(df.shape[1]):
@@ -155,3 +152,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add oil-supply.json
           git diff --cached --quiet || (git commit -m "Update oil supply sensor 1 balance" && git push)
+
+# trigger: 2026-08-20T12:14Z
