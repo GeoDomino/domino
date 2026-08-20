@@ -24,4 +24,8 @@
   const stocks=document.createElement('script');
   stocks.src='stocks-ui.js?v=20260820-1';
   document.body.appendChild(stocks);
+
+  const transport=document.createElement('script');
+  transport.src='transport-ui.js?v=20260820-1';
+  document.body.appendChild(transport);
 })();
