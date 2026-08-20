@@ -45,7 +45,7 @@ jobs:
           base = re.sub(r'<script src="wholesale-dk(?:-v2)?\.js[^\"]*"></script>', '', base)
           base = re.sub(r'<script src="energy-ui\.js[^\"]*"></script>', '', base)
           base = re.sub(r'<script src="domino-ui-v2\.js[^\"]*"></script>', '', base)
-          base = base.replace('</body>', '<script src="wholesale-dk-v2.js?v=20260820-1"></script><script src="domino-ui-v2.js?v=20260820-2"></script></body>')
+          base = base.replace('</body>', '<script src="wholesale-dk-v2.js?v=20260820-1"></script><script src="domino-ui-v2.js?v=20260820-3"></script></body>')
 
           with open('index.html','w',encoding='utf-8') as f:
               f.write(base)
@@ -58,6 +58,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No index changes"
           else
-            git commit -m "Restore dashboard with wholesale DK v2"
+            git commit -m "Restore dashboard with live energy UI"
             git push
           fi
