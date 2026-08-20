@@ -1,0 +1,170 @@
+name: Update storage indicator
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-stocks.yml'
+  schedule:
+    # EIA inventory data are weekly, but DOMINO checks every day for a new release.
+    - cron: '20 12 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas openpyxl xlrd requests
+      - name: Fetch EIA inventory series and calculate DOMINO stress
+        shell: python
+        run: |
+          import io, json, math, os, requests, pandas as pd
+          from datetime import datetime, timezone, date
+
+          UA={'User-Agent':'DOMINO-dashboard/2.0 (+GitHub Actions)'}
+          NOW=datetime.now(timezone.utc)
+          TODAY=NOW.date()
+
+          SERIES={
+            'spr':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAS_MBBL_W.xls',
+            'commercial':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAE_MBBL_W.xls',
+            'distillate':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPD0_SAE_MBBL_W.xls',
+            'days_supply':'https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPD0_VSD_DAYS_W.xls'
+          }
+
+          def download(url):
+              r=requests.get(url,headers=UA,timeout=60)
+              r.raise_for_status()
+              return r.content
+
+          def series_from_xls(url):
+              sheets=pd.read_excel(io.BytesIO(download(url)),sheet_name=None,header=None)
+              best=[]
+              for _,df in sheets.items():
+                  rows=[]
+                  for r in range(len(df)):
+                      vals=list(df.iloc[r])
+                      for i,x in enumerate(vals):
+                          d=pd.to_datetime(x,errors='coerce')
+                          if pd.isna(d) or not (pd.Timestamp('1980-01-01')<=d<=pd.Timestamp('2035-01-01')):
+                              continue
+                          numeric=None
+                          for y in vals[i+1:i+4]:
+                              try:
+                                  v=float(str(y).replace(',',''))
+                                  if math.isfinite(v): numeric=v; break
+                              except: pass
+                          if numeric is not None:
+                              rows.append((pd.Timestamp(d).date(),numeric)); break
+                  if len(rows)>len(best): best=rows
+              if len(best)<2: raise RuntimeError('Could not parse EIA series '+url)
+              ded={d:v for d,v in best}
+              return sorted(ded.items())
+
+          def pct_rank(values,current):
+              vals=[float(x) for x in values if x is not None and math.isfinite(float(x))]
+              if not vals:return None
+              return 100.0*sum(x<=current for x in vals)/len(vals)
+
+          def low_level(p):
+              if p is None:return 0
+              if p<=10:return 3
+              if p<=20:return 2
+              if p<=35:return 1
+              return 0
+
+          def draw_level(p,change):
+              if change>=0:return 0
+              if p>=95:return 3
+              if p>=80:return 2
+              if p>=60:return 1
+              return 0
+
+          spr=series_from_xls(SERIES['spr'])
+          commercial=series_from_xls(SERIES['commercial'])
+          dist=series_from_xls(SERIES['distillate'])
+          dos=series_from_xls(SERIES['days_supply'])
+
+          # Keep five years for empirical calibration, while preserving the latest point.
+          def tail(s,n=260): return s[-n:]
+          spr5,com5,dist5,dos5=map(tail,(spr,commercial,dist,dos))
+
+          sd,sv=spr[-1]; cd,cv=commercial[-1]; dd,dv=dist[-1]; pd,pv=dos[-1]
+          spr_m=sv/1000.0; com_m=cv/1000.0; dist_m=dv/1000.0
+          spr_change=(sv-spr[-2][1])/1000.0
+          dist_change=(dv-dist[-2][1])/1000.0
+
+          spr_level=0 if spr_m>=400 else 1 if spr_m>=350 else 2 if spr_m>=300 else 3
+          spr_trend_level=0 if spr_change>=0 else 1 if spr_change>-2 else 2 if spr_change>-5 else 3
+
+          com_pct=pct_rank([v for _,v in com5],cv); com_level=low_level(com_pct)
+          dist_pct=pct_rank([v for _,v in dist5],dv); dist_level=low_level(dist_pct)
+          dos_pct=pct_rank([v for _,v in dos5],pv); dos_level=low_level(dos_pct)
+
+          historical_draws=[]
+          vals=[v for _,v in dist5]
+          for a,b in zip(vals[:-1],vals[1:]):
+              ch=(b-a)/1000.0
+              if ch<0: historical_draws.append(abs(ch))
+          draw_mag=abs(dist_change) if dist_change<0 else 0
+          draw_pct=pct_rank(historical_draws,draw_mag) if historical_draws else 0
+          draw_lvl=draw_level(draw_pct,dist_change)
+
+          diesel_score=.40*dist_level+.35*dos_level+.25*draw_lvl
+          diesel_level=0 if diesel_score<.75 else 1 if diesel_score<1.5 else 2 if diesel_score<2.3 else 3
+          if dist_level>=2 and dos_level>=2: diesel_level=max(diesel_level,2)
+          if dist_level==3 and dos_level==3: diesel_level=3
+
+          overall_score=.30*spr_level+.20*com_level+.50*diesel_level
+          overall=0 if overall_score<.75 else 1 if overall_score<1.5 else 2 if overall_score<2.3 else 3
+          if spr_level==3 and diesel_level>=2: overall=max(overall,2)
+          labels=['GRÜN','GELB','ORANGE','ROT']; statuses=['green','yellow','orange','red']
+
+          old={}
+          try: old=json.load(open('stocks.json',encoding='utf-8'))
+          except: pass
+          if old.get('level')==overall and old.get('status_since'):
+              status_since=old['status_since']
+          else:
+              status_since=TODAY.isoformat()
+          try: days=(TODAY-date.fromisoformat(status_since)).days+1
+          except: status_since=TODAY.isoformat(); days=1
+
+          out={
+            'version':'2.0','status':statuses[overall],'label':labels[overall],'level':overall,
+            'score':round(overall_score,2),'status_since':status_since,'days_in_status':days,
+            'source_date':max(sd,cd,dd,pd).isoformat(),'updated_at':NOW.isoformat(),
+            'components':{
+              'spr':{'level':spr_level,'value_million_bbl':round(spr_m,3),'source_date':sd.isoformat()},
+              'spr_trend':{'level':spr_trend_level,'weekly_change_million_bbl':round(spr_change,3),'source_date':sd.isoformat()},
+              'commercial_crude':{'level':com_level,'value_million_bbl':round(com_m,3),'percentile':round(com_pct,1),'source_date':cd.isoformat()},
+              'distillate_stocks':{'level':dist_level,'value_million_bbl':round(dist_m,3),'percentile':round(dist_pct,1),'weekly_change_million_bbl':round(dist_change,3),'source_date':dd.isoformat()},
+              'days_supply':{'level':dos_level,'value_days':round(pv,1),'percentile':round(dos_pct,1),'source_date':pd.isoformat()},
+              'draw_speed':{'level':draw_lvl,'draw_percentile':round(draw_pct,1),'weekly_change_million_bbl':round(dist_change,3),'source_date':dd.isoformat()},
+              'diesel_stress':{'level':diesel_level,'score':round(diesel_score,2),'formula':'40% stock percentile + 35% days-of-supply percentile + 25% draw-speed percentile'}
+            },
+            'thresholds':{
+              'spr_million_bbl':{'green':'>=400','yellow':'350-<400','orange':'300-<350','red':'<300'},
+              'historical_low_percentile':{'green':'>35','yellow':'20-35','orange':'10-20','red':'<=10'},
+              'draw_speed_percentile':{'green':'<60 or build','yellow':'60-<80','orange':'80-<95','red':'>=95'}
+            },
+            'sources':SERIES,
+            'note':'EIA weekly inventory data; workflow checks daily for a new release. Percentiles use the latest 260 weekly observations (~5 years).'
+          }
+          with open('stocks.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2);f.write('\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add stocks.json
+          git diff --cached --quiet || (git commit -m "Update EIA storage indicator" && git push)
