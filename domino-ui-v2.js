@@ -28,4 +28,8 @@
   const transport=document.createElement('script');
   transport.src='transport-ui.js?v=20260820-1';
   document.body.appendChild(transport);
+
+  const refinery=document.createElement('script');
+  refinery.src='refinery-ui.js?v=20260820-1';
+  document.body.appendChild(refinery);
 })();
