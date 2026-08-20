@@ -42,10 +42,10 @@ jobs:
 
           base = base.replace('<div class="rule"><b>5 · Luftfahrt / Kerosin</b><br>Jet-Fuel-Preise, Verfügbarkeit und Belastung der Luftfahrt. Besonders relevant für Luftfracht und internationale Lieferketten.</div><div class="rule"><b>6 · Landwirtschaft / Lebensmittel</b><br>Diesel, Dünger, Chemie, Trocknung, Verarbeitung und Transport treffen hier zusammen. Ziel ist zu erkennen, ob Energie- und Vorproduktkosten in landwirtschaftliche Produktion und Lebensmittelketten durchschlagen.</div><div class="rule"><b>7 · Industrieproduktion</b><br>Beobachtet, ob energie- und rohstoffintensive Produktion tatsächlich zurückgeht. Hier können auch Gas/LNG- und Stromstress indirekt sichtbar werden, etwa über Stahl, Glas, Zement, Papier oder andere energieintensive Branchen.</div><div class="rule"><b>8 · Lieferketten / Warenpreise</b>', '<div class="rule"><b>5 · Halbleiter</b><br>Platzhalter für Computerchips und Halbleiterversorgung. Datenquellen und Ampellogik werden später definiert.</div><div class="rule"><b>6 · Grundnahrungsmittel</b><br>Platzhalter für Weizen, Reis und Mais. Datenquellen und Ampellogik werden später definiert.</div><div class="rule"><b>7 · Straßengüterverkehr / Logistik</b><br>Beobachtet Kosten und Aktivität im Lkw- und Speditionssektor.</div><div class="rule"><b>8 · Lieferketten / Warenpreise</b>')
 
-          base = re.sub(r'<script src="wholesale-dk\.js[^\"]*"></script>', '', base)
+          base = re.sub(r'<script src="wholesale-dk(?:-v2)?\.js[^\"]*"></script>', '', base)
           base = re.sub(r'<script src="energy-ui\.js[^\"]*"></script>', '', base)
           base = re.sub(r'<script src="domino-ui-v2\.js[^\"]*"></script>', '', base)
-          base = base.replace('</body>', '<script src="wholesale-dk.js?v=20260820-6"></script><script src="domino-ui-v2.js?v=20260820-2"></script></body>')
+          base = base.replace('</body>', '<script src="wholesale-dk-v2.js?v=20260820-1"></script><script src="domino-ui-v2.js?v=20260820-2"></script></body>')
 
           with open('index.html','w',encoding='utf-8') as f:
               f.write(base)
@@ -58,6 +58,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No index changes"
           else
-            git commit -m "Restore dashboard with consolidated UI fix"
+            git commit -m "Restore dashboard with wholesale DK v2"
             git push
           fi
