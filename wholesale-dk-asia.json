@@ -1,0 +1,14 @@
+{
+  "market": "Asien",
+  "benchmark": "NYMEX Singapore Gasoil (Platts) Futures",
+  "ticker": "SGB=F",
+  "value": null,
+  "unit": "USD/bbl",
+  "source_date": null,
+  "updated_at": null,
+  "status": "unknown",
+  "level": null,
+  "days_in_status": null,
+  "source": "Yahoo Finance delayed futures quote",
+  "note": "Wartet auf ersten automatischen Abruf."
+}
