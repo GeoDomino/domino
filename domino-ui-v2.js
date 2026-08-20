@@ -20,4 +20,8 @@
     new MutationObserver(sync).observe(date,{childList:true,subtree:true,characterData:true});
   }
   pairs.forEach(([a,b])=>apply(a,b));
+
+  const stocks=document.createElement('script');
+  stocks.src='stocks-ui.js?v=20260820-1';
+  document.body.appendChild(stocks);
 })();
