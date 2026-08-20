@@ -111,7 +111,7 @@ jobs:
 
           (d,balance,production,consumption),sheet=max(found,key=lambda z:z[0][0])
           deficit=max(0,-balance)
-          if deficit>=3.0: status='red'; points=3
+          if deficit>=5.0: status='red'; points=3
           elif deficit>=1.5: status='orange'; points=2
           elif deficit>=0.5: status='yellow'; points=1
           else: status='green'; points=0
