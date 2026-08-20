@@ -34,6 +34,6 @@
   document.body.appendChild(refinery);
 
   const oilSensor1=document.createElement('script');
-  oilSensor1.src='oil-sensor1-ui.js?v=20260820-1';
+  oilSensor1.src='oil-sensor1-ui.js?v=20260820-2';
   document.body.appendChild(oilSensor1);
 })();
