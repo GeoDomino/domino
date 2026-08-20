@@ -1,11 +1,22 @@
 (()=>{
   const target=document.getElementById('oilComponents');
   if(!target)return;
-  const description='<div class="rule" data-oil-sensor1-note><b>Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance (Global Supply–Demand Balance)</b><br>Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.<br><span style="color:var(--muted)">Quelle: U.S. EIA Short-Term Energy Outlook (STEO). Der STEO wird monatlich veröffentlicht; der angezeigte Wert ist daher kein Tagesmesswert.</span><br><br><b>DOMINO-Schwellen:</b> 🟢 Defizit &lt;0,5 mb/d · 🟡 0,5–&lt;1,5 · 🟠 1,5–&lt;5,0 · 🔴 ab 5,0 mb/d.</div>';
-  function apply(){
-    if(target.querySelector('[data-oil-sensor1-note]'))return;
-    target.insertAdjacentHTML('afterbegin',description);
+  const COLORS={green:'#31d158',yellow:'#ffd60a',orange:'#ff9f0a',red:'#ff453a',unknown:'#6b7280'};
+  const LABELS={green:'GRÜN',yellow:'GELB',orange:'ORANGE',red:'ROT',unknown:'WARTET'};
+  function shell(){
+    if(target.querySelector('[data-oil-sensor1-note]'))return target.querySelector('[data-oil-sensor1-note]');
+    const el=document.createElement('div'); el.className='rule'; el.setAttribute('data-oil-sensor1-note','');
+    el.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span id="oilSensor1Light" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#6b7280;box-shadow:0 0 8px rgba(107,114,128,.45);flex:0 0 auto"></span><b>Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance (Global Supply–Demand Balance)</b></div><div id="oilSensor1Result" style="margin:0 0 7px 28px;font-weight:700">WARTET</div>Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.<br><span style="color:var(--muted)">Quelle: U.S. EIA Short-Term Energy Outlook (STEO). Der STEO wird monatlich veröffentlicht; der angezeigte Wert ist daher kein Tagesmesswert.</span><br><br><b>DOMINO-Schwellen:</b> 🟢 Defizit &lt;0,5 mb/d · 🟡 0,5–&lt;1,5 · 🟠 1,5–&lt;5,0 · 🔴 ab 5,0 mb/d.';
+    target.insertAdjacentElement('afterbegin',el); return el;
   }
-  apply();
-  new MutationObserver(()=>requestAnimationFrame(apply)).observe(target,{childList:true,subtree:true});
+  function paint(data){
+    const c=data&&data.components&&data.components.supply_demand_balance||{};
+    const s=COLORS[c.status]?c.status:'unknown';
+    const light=document.getElementById('oilSensor1Light'), result=document.getElementById('oilSensor1Result');
+    if(light){light.style.background=COLORS[s];light.style.boxShadow=`0 0 10px ${COLORS[s]}88`;}
+    if(result){const v=Number(c.value);result.textContent=Number.isFinite(v)?`${LABELS[s]} · ${v>0?'+':''}${v.toFixed(2)} mb/d · ${c.period||c.date||''}`:LABELS[s];}
+  }
+  shell();
+  fetch('oil-supply.json?ts='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(paint).catch(()=>paint(null));
+  new MutationObserver(()=>requestAnimationFrame(shell)).observe(target,{childList:true,subtree:true});
 })();
