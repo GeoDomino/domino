@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "status": "unknown",
+  "label": "WARTET",
+  "updated_at": null,
+  "source_date": null,
+  "score": null,
+  "components": {
+    "hormuz": {"status":"unknown","count":null,"baseline":null,"ratio":null,"label":"Straße von Hormus"},
+    "bab_el_mandeb": {"status":"unknown","count":null,"baseline":null,"ratio":null,"label":"Bab el-Mandeb"},
+    "suez": {"status":"unknown","count":null,"baseline":null,"ratio":null,"label":"Suez / SUMED"},
+    "cape": {"status":"unknown","count":null,"baseline":null,"ratio":null,"label":"Kap der Guten Hoffnung"},
+    "ais_dark": {"status":"unknown","count":null,"baseline":null,"ratio":null,"label":"Dark-Shipping-Radar"}
+  },
+  "note": "Wartet auf ersten automatischen Transport-Abruf."
+}
