@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "status": "unknown",
+  "label": "WARTET",
+  "updated_at": null,
+  "source_date": null,
+  "utilization_pct": null,
+  "gross_inputs_kbd": null,
+  "operable_capacity_kbd": null,
+  "capacity_buffer_kbd": null,
+  "days_in_status": null,
+  "source": "U.S. EIA Weekly Inputs & Utilization",
+  "note": "Wartet auf ersten automatischen EIA-Abruf. Die zugrunde liegenden Raffineriedaten werden von der EIA wöchentlich veröffentlicht; DOMINO prüft täglich auf neue Werte."
+}
