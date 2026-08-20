@@ -1,0 +1,11 @@
+{
+  "version": "2.0",
+  "status": "unknown",
+  "label": "WARTET",
+  "level": null,
+  "days_in_status": null,
+  "source_date": null,
+  "updated_at": null,
+  "components": {},
+  "note": "Wartet auf ersten automatischen EIA-Abruf."
+}
