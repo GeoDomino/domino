@@ -1,0 +1,14 @@
+{
+  "market": "Europa",
+  "benchmark": "ICE Low Sulphur Gasoil Futures",
+  "ticker": "LGO=F",
+  "value": null,
+  "unit": "USD/t",
+  "source_date": null,
+  "updated_at": null,
+  "status": "unknown",
+  "level": null,
+  "days_in_status": null,
+  "source": "Yahoo Finance delayed futures quote",
+  "note": "Wartet auf ersten automatischen Abruf."
+}
