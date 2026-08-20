@@ -8,8 +8,8 @@
   "components": {
     "supply_demand_balance": {
       "sensor": 1,
-      "status": "red",
-      "points": 3,
+      "status": "orange",
+      "points": 2,
       "value": -3.84,
       "production": 99.66,
       "consumption": 103.5,
