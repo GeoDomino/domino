@@ -1,0 +1,157 @@
+name: Update oil supply sensor 1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-oil-supply-sensor1.yml'
+  schedule:
+    - cron: '20 5 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas openpyxl requests
+      - name: Fetch EIA world supply-demand balance
+        shell: python
+        run: |
+          import io, json, math, os, re, requests, pandas as pd
+          from datetime import datetime, timezone
+
+          URL='https://www.eia.gov/outlooks/steo/xls/Fig2.xlsx'
+          NOW=datetime.now(timezone.utc)
+          TODAY=pd.Timestamp(NOW.date())
+          UA={'User-Agent':'DOMINO-dashboard/2.1 (+GitHub Actions)'}
+
+          r=requests.get(URL,timeout=60,headers=UA)
+          r.raise_for_status()
+          sheets=pd.read_excel(io.BytesIO(r.content),sheet_name=None,header=None)
+
+          def txt(x):
+              return re.sub(r'\s+',' ',str(x)).strip().lower()
+
+          def num(x):
+              try:
+                  v=float(x)
+                  return v if math.isfinite(v) else None
+              except Exception:
+                  return None
+
+          def asdate(x):
+              try:
+                  d=pd.to_datetime(x,errors='coerce')
+                  if pd.isna(d): return None
+                  d=pd.Timestamp(d).tz_localize(None) if getattr(pd.Timestamp(d),'tzinfo',None) else pd.Timestamp(d)
+                  if pd.Timestamp('2000-01-01') <= d <= pd.Timestamp('2035-12-31'):
+                      return d
+              except Exception:
+                  pass
+              return None
+
+          def horizontal(df):
+              # EIA chart workbooks usually store series in rows and time along columns.
+              prod=[]; cons=[]
+              for rr in range(len(df)):
+                  row=' '.join(txt(x) for x in df.iloc[rr,:min(df.shape[1],8)].tolist())
+                  if 'world production' in row or ('production' in row and 'world' in row): prod.append(rr)
+                  if 'world consumption' in row or ('consumption' in row and 'world' in row): cons.append(rr)
+              candidates=[]
+              for pr in prod:
+                  for cr in cons:
+                      if abs(pr-cr)>8: continue
+                      # Find the nearby row containing the most actual dates.
+                      for dr in range(max(0,min(pr,cr)-8), min(len(df),max(pr,cr)+9)):
+                          datecols=[]
+                          for c in range(df.shape[1]):
+                              d=asdate(df.iat[dr,c])
+                              if d is not None: datecols.append((c,d))
+                          if len(datecols)<2: continue
+                          vals=[]
+                          for c,d in datecols:
+                              p=num(df.iat[pr,c]); q=num(df.iat[cr,c])
+                              if p is not None and q is not None and d<=TODAY:
+                                  vals.append((d,p-q,p,q))
+                          if vals:
+                              vals.sort(key=lambda z:z[0]); candidates.append(vals[-1])
+              return max(candidates,key=lambda z:z[0]) if candidates else None
+
+          def vertical(df):
+              # Fallback for workbooks with dates down rows and series in columns.
+              headers={}
+              for rr in range(min(30,len(df))):
+                  for c in range(df.shape[1]):
+                      s=txt(df.iat[rr,c])
+                      if 'production' in s and 'world' in s: headers.setdefault('p',c)
+                      if 'consumption' in s and 'world' in s: headers.setdefault('c',c)
+              if not {'p','c'}<=set(headers): return None
+              vals=[]
+              for rr in range(len(df)):
+                  d=None
+                  for c in range(min(5,df.shape[1])):
+                      d=asdate(df.iat[rr,c])
+                      if d is not None: break
+                  if d is None or d>TODAY: continue
+                  p=num(df.iat[rr,headers['p']]); q=num(df.iat[rr,headers['c']])
+                  if p is not None and q is not None: vals.append((d,p-q,p,q))
+              return max(vals,key=lambda z:z[0]) if vals else None
+
+          found=[]
+          for name,df in sheets.items():
+              if df.empty: continue
+              hit=horizontal(df) or vertical(df)
+              if hit: found.append((hit,name))
+          if not found:
+              raise RuntimeError('EIA Fig2 parsed, but no aligned world production/consumption series were found')
+
+          (d,balance,production,consumption),sheet=max(found,key=lambda z:z[0][0])
+          deficit=max(0,-balance)
+          if deficit>=3.0: status='red'; points=3
+          elif deficit>=1.5: status='orange'; points=2
+          elif deficit>=0.5: status='yellow'; points=1
+          else: status='green'; points=0
+
+          path='oil-supply.json'
+          try:
+              old=json.load(open(path,encoding='utf-8'))
+          except Exception:
+              old={}
+          old.setdefault('version','2.1')
+          old.setdefault('status','unknown')
+          old.setdefault('label','WARTET')
+          old.setdefault('score',None)
+          old.setdefault('components',{})
+          old['components']['supply_demand_balance']={
+              'sensor':1,
+              'status':status,
+              'points':points,
+              'value':round(balance,2),
+              'production':round(production,2),
+              'consumption':round(consumption,2),
+              'unit':'mb/d',
+              'label':'Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance',
+              'date':d.date().isoformat(),
+              'source':'U.S. EIA Short-Term Energy Outlook, World liquid fuels production and consumption balance (Fig2)',
+              'source_url':URL
+          }
+          old['sensor1_updated']=NOW.isoformat()
+          old['sensor1_source_date']=d.date().isoformat()
+          old['sensor1_note']='Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.'
+          with open(path,'w',encoding='utf-8') as f:
+              json.dump(old,f,ensure_ascii=False,indent=2); f.write('\n')
+          print(json.dumps(old['components']['supply_demand_balance'],ensure_ascii=False,indent=2))
+
+      - name: Commit sensor 1 data
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add oil-supply.json
+          git diff --cached --quiet || (git commit -m "Update oil supply sensor 1 balance" && git push)
