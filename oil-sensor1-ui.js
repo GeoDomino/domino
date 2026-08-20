@@ -6,14 +6,14 @@
   function shell(){
     if(target.querySelector('[data-oil-sensor1-note]'))return target.querySelector('[data-oil-sensor1-note]');
     const el=document.createElement('div'); el.className='rule'; el.setAttribute('data-oil-sensor1-note','');
-    el.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span id="oilSensor1Light" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#6b7280;box-shadow:0 0 8px rgba(107,114,128,.45);flex:0 0 auto"></span><b>Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance (Global Supply–Demand Balance)</b></div><div id="oilSensor1Result" style="margin:0 0 7px 28px;font-weight:700">WARTET</div>Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.<br><span style="color:var(--muted)">Quelle: U.S. EIA Short-Term Energy Outlook (STEO). Der STEO wird monatlich veröffentlicht; der angezeigte Wert ist daher kein Tagesmesswert.</span><br><br><b>DOMINO-Schwellen:</b> 🟢 Defizit &lt;0,5 mb/d · 🟡 0,5–&lt;1,5 · 🟠 1,5–&lt;5,0 · 🔴 ab 5,0 mb/d.';
+    el.innerHTML='<b>Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance <span id="oilSensor1Light" aria-label="Sensorstatus" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#6b7280;box-shadow:0 0 7px rgba(107,114,128,.55);margin-left:5px;vertical-align:1px"></span></b><br><span style="color:var(--muted)">(Global Supply–Demand Balance)</span><br><span id="oilSensor1Result" style="font-weight:700">WARTET</span><br>Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.<br><span style="color:var(--muted)">Quelle: U.S. EIA Short-Term Energy Outlook (STEO). Der STEO wird monatlich veröffentlicht; der angezeigte Wert ist daher kein Tagesmesswert.</span><br><br><b>DOMINO-Schwellen:</b> 🟢 Defizit &lt;0,5 mb/d · 🟡 0,5–&lt;1,5 · 🟠 1,5–&lt;5,0 · 🔴 ab 5,0 mb/d.';
     target.insertAdjacentElement('afterbegin',el); return el;
   }
   function paint(data){
     const c=data&&data.components&&data.components.supply_demand_balance||{};
     const s=COLORS[c.status]?c.status:'unknown';
     const light=document.getElementById('oilSensor1Light'), result=document.getElementById('oilSensor1Result');
-    if(light){light.style.background=COLORS[s];light.style.boxShadow=`0 0 10px ${COLORS[s]}88`;}
+    if(light){light.style.background=COLORS[s];light.style.boxShadow=`0 0 8px ${COLORS[s]}aa`;light.title=LABELS[s];}
     if(result){const v=Number(c.value);result.textContent=Number.isFinite(v)?`${LABELS[s]} · ${v>0?'+':''}${v.toFixed(2)} mb/d · ${c.period||c.date||''}`:LABELS[s];}
   }
   shell();
