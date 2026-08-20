@@ -1,0 +1,121 @@
+name: Update refinery capacity indicator
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 5 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas lxml requests
+      - name: Fetch latest EIA weekly refinery data
+        run: |
+          python - <<'PY'
+          import io, json, os, re, requests, pandas as pd
+          from datetime import datetime, timezone
+
+          URL='https://www.eia.gov/dnav/pet/pet_pnp_wiup_dcu_nus_w.htm'
+          UA={'User-Agent':'DOMINO-dashboard/2.0 (+GitHub Actions)'}
+          html=requests.get(URL,timeout=60,headers=UA)
+          html.raise_for_status()
+          tables=pd.read_html(io.StringIO(html.text))
+
+          def norm(x):
+              return re.sub(r'\s+',' ',str(x)).strip().lower()
+
+          # Find the table containing the three U.S. series we need.
+          target=None
+          for t in tables:
+              text=' '.join(norm(x) for x in t.astype(str).fillna('').values.flatten())
+              if 'gross inputs' in text and 'operable capacity' in text and 'percent operable utilization' in text:
+                  target=t.copy(); break
+          if target is None:
+              raise RuntimeError('Could not locate EIA weekly refinery table')
+
+          # EIA page is a wide table. First column contains row labels; remaining columns are dated observations.
+          target.columns=[str(c) for c in target.columns]
+          label_col=target.columns[0]
+
+          def row_values(label):
+              rows=target[target[label_col].astype(str).map(norm).str.contains(label,regex=False)]
+              if rows.empty: raise RuntimeError('Missing row: '+label)
+              row=rows.iloc[0]
+              vals=[]
+              for c in target.columns[1:]:
+                  v=row[c]
+                  try:
+                      f=float(str(v).replace(',',''))
+                      vals.append((c,f))
+                  except: pass
+              if not vals: raise RuntimeError('No numeric values for '+label)
+              return vals
+
+          util=row_values('percent operable utilization')
+          gross=row_values('gross inputs')
+          cap=row_values('operable capacity')
+
+          # Use the newest numeric observation; EIA columns are chronological on this page.
+          _,util_v=util[-1]; _,gross_v=gross[-1]; _,cap_v=cap[-1]
+
+          # Pull displayed dates from page, then take the newest one.
+          dates=re.findall(r'\b\d{2}/\d{2}/\d{2}\b',html.text)
+          if not dates: raise RuntimeError('No EIA observation dates found')
+          parsed=sorted({pd.to_datetime(d,format='%m/%d/%y') for d in dates})
+          source_date=parsed[-1].date().isoformat()
+
+          buffer=max(0.0,cap_v-gross_v)
+
+          # DOMINO refinery-stress thresholds. High utilization means little spare processing capacity.
+          if util_v>=99.5: status='red'
+          elif util_v>=98.0: status='orange'
+          elif util_v>=95.0: status='yellow'
+          else: status='green'
+          level={'green':0,'yellow':1,'orange':2,'red':3}[status]
+          label={'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT'}[status]
+
+          old={}
+          if os.path.exists('refinery.json'):
+              try:
+                  old=json.load(open('refinery.json',encoding='utf-8'))
+              except: old={}
+          if old.get('status')==status:
+              if old.get('source_date') and old.get('source_date')!=source_date:
+                  try:
+                      a=pd.Timestamp(old['source_date']); b=pd.Timestamp(source_date)
+                      days=max(1,int(old.get('days_in_status') or 1)+(b-a).days)
+                  except: days=max(1,int(old.get('days_in_status') or 1))
+              else:
+                  days=max(1,int(old.get('days_in_status') or 1))
+          else:
+              days=1
+
+          out={
+            'version':'2.0','status':status,'level':level,'label':label,
+            'updated_at':datetime.now(timezone.utc).isoformat(),'source_date':source_date,
+            'utilization_pct':round(util_v,1),'gross_inputs_kbd':round(gross_v,1),
+            'operable_capacity_kbd':round(cap_v,1),'capacity_buffer_kbd':round(buffer,1),
+            'days_in_status':days,
+            'source':'U.S. EIA Weekly Inputs & Utilization',
+            'source_url':URL,
+            'thresholds':{'green_below_pct':95.0,'yellow_from_pct':95.0,'orange_from_pct':98.0,'red_from_pct':99.5},
+            'note':'Die EIA veröffentlicht diese Raffineriedaten wöchentlich. DOMINO prüft täglich, ob ein neuer Wochenwert vorliegt.'
+          }
+          with open('refinery.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add refinery.json
+          git diff --cached --quiet || (git commit -m "Update refinery capacity indicator" && git push)
