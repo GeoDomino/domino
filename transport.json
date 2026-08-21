@@ -1,11 +1,11 @@
 {
-  "version": "2.2",
+  "version": "2.3",
   "status": "yellow",
   "label": "YELLOW",
   "summary": "auffällig",
-  "score": 1.31,
+  "score": 1.05,
   "days_in_status": 1,
-  "updated_at": "2026-08-21T07:07:08.538808+00:00",
+  "updated_at": "2026-08-21T07:38:14.926812+00:00",
   "source_date": "2026-08-16",
   "components": {
     "hormuz": {
@@ -16,26 +16,41 @@
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
-      "status": "unknown",
+      "status": "green",
       "count": 13.0,
-      "baseline": null,
-      "ratio": null,
+      "baseline": 12.1,
+      "ratio": 1.075,
       "label": "Bab el-Mandeb",
       "energy_basis": "tanker_only",
+      "baseline_method": "estimated_from_current_mix_and_total_baseline",
       "tanker": {
-        "status": "unknown",
+        "status": "green",
         "count": 13.0,
-        "baseline": null,
-        "ratio": null
+        "baseline": 12.1,
+        "ratio": 1.075
       },
       "goods": {
-        "status": "unknown",
+        "status": "green",
         "count": 23.0,
-        "baseline": null,
-        "ratio": null
+        "baseline": 21.4,
+        "ratio": 1.075
       },
       "total_count": 36.0,
-      "total_baseline": 33.5
+      "total_baseline": 33.5,
+      "debug": {
+        "history_counts": {
+          "total": 90,
+          "tanker": 0,
+          "cargo": 0,
+          "container": 0,
+          "dry": 0,
+          "general": 0
+        },
+        "history_sample_keys": [
+          "date",
+          "nTotal"
+        ]
+      }
     },
     "suez": {
       "status": "green",
@@ -53,9 +68,9 @@
     },
     "ais_dark": {
       "status": "green",
-      "count": 35.0,
+      "count": 30.0,
       "baseline": 58.3,
-      "ratio": 0.6,
+      "ratio": 0.515,
       "label": "Dark-Shipping-Radar"
     }
   },
@@ -69,6 +84,6 @@
     "IMF PortWatch vessel-type chokepoint counts via Straits.live",
     "Straits.live AIS-gap summary"
   ],
-  "note": "TEMPORARY TEST MODE: polls every 15 minutes. Bab el-Mandeb is split into goods and tanker traffic; only tanker status enters the Transport score.",
+  "note": "TEMPORARY TEST MODE. Bab el-Mandeb tanker baseline uses observed vessel-type history when available; otherwise a clearly marked provisional estimate from current tanker share × published total baseline is used so the sensor is operational while the missing free historical type split is diagnosed.",
   "errors": []
 }
