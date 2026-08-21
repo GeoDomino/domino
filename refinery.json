@@ -1,14 +1,22 @@
 {
   "version": "2.0",
-  "status": "unknown",
-  "label": "WARTET",
-  "updated_at": null,
-  "source_date": null,
-  "utilization_pct": null,
-  "gross_inputs_kbd": null,
-  "operable_capacity_kbd": null,
-  "capacity_buffer_kbd": null,
-  "days_in_status": null,
+  "status": "green",
+  "level": 0,
+  "label": "GRÜN",
+  "updated_at": "2026-08-21T07:32:05.249739+00:00",
+  "source_date": "2026-08-14",
+  "utilization_pct": NaN,
+  "gross_inputs_kbd": NaN,
+  "operable_capacity_kbd": NaN,
+  "capacity_buffer_kbd": 0.0,
+  "days_in_status": 1,
   "source": "U.S. EIA Weekly Inputs & Utilization",
-  "note": "Wartet auf ersten automatischen EIA-Abruf. Die zugrunde liegenden Raffineriedaten werden von der EIA wöchentlich veröffentlicht; DOMINO prüft täglich auf neue Werte."
+  "source_url": "https://www.eia.gov/dnav/pet/pet_pnp_wiup_dcu_nus_w.htm",
+  "thresholds": {
+    "green_below_pct": 95.0,
+    "yellow_from_pct": 95.0,
+    "orange_from_pct": 98.0,
+    "red_from_pct": 99.5
+  },
+  "note": "Die EIA veröffentlicht diese Raffineriedaten wöchentlich. DOMINO prüft täglich, ob ein neuer Wochenwert vorliegt."
 }
