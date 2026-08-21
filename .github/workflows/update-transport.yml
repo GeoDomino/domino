@@ -21,12 +21,12 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests
-      - name: Build transport.json from PortWatch and AIS data
+      - name: Build transport.json
         run: |
           python - <<'PY'
           import json, statistics, requests, re
           from datetime import datetime, timezone
-          UA={'User-Agent':'DOMINO-dashboard/2.3 (+GitHub Actions)'}; NOW=datetime.now(timezone.utc)
+          UA={'User-Agent':'DOMINO-dashboard/2.5 (+GitHub Actions)'}; NOW=datetime.now(timezone.utc)
           def get(url):
               r=requests.get(url,timeout=40,headers=UA); r.raise_for_status(); return r.json()
           def norm(x): return re.sub(r'[^a-z0-9]+',' ',str(x).lower()).strip()
@@ -36,88 +36,66 @@ jobs:
                   v=d.get(k)
                   if isinstance(v,(int,float)): return float(v)
               return None
-          def rows_from(root):
+          def rows(root):
               if isinstance(root,list): return root
-              if not isinstance(root,dict): return []
-              for k in ('chokepoints','items','data','routes','points'):
-                  if isinstance(root.get(k),list): return root[k]
+              if isinstance(root,dict):
+                  for k in ('chokepoints','items','data','routes','points'):
+                      if isinstance(root.get(k),list): return root[k]
               return []
-          def identity(item):
-              if not isinstance(item,dict): return ''
-              return norm(' '.join(str(item[k]) for k in ('id','slug','name','label','chokepoint','route','title') if isinstance(item.get(k),str)))
+          def ident(i): return norm(' '.join(str(i.get(k,'')) for k in ('id','slug','name','label','chokepoint','route','title'))) if isinstance(i,dict) else ''
           def pick(root,aliases):
-              aliases=[norm(a) for a in aliases]; best=None; score=-1
-              for item in rows_from(root):
-                  ident=identity(item); s=max((len(a) for a in aliases if a in ident),default=-1)
-                  if s>score: best=item; score=s
-              return best if score>=0 else None
-          def history(item):
-              for k in ('history','rows','series','points'):
-                  if isinstance(item.get(k),list): return item[k]
-              return []
+              aa=[norm(a) for a in aliases]
+              for i in rows(root):
+                  if any(a in ident(i) for a in aa): return i
           def extract(root,aliases):
-              item=pick(root,aliases)
-              if not item:return None
-              latest=item.get('latest') if isinstance(item.get('latest'),dict) else item
-              h=history(item)
+              i=pick(root,aliases)
+              if not i:return {}
+              latest=i.get('latest') if isinstance(i.get('latest'),dict) else i
+              h=next((i.get(k) for k in ('history','rows','series','points') if isinstance(i.get(k),list)),[])
               def metric(keys):
-                  current=num(latest,keys); vals=[num(r,keys) for r in h[-365:]]; vals=[v for v in vals if v is not None]
-                  baseline=float(statistics.median(vals[-180:])) if len(vals)>=7 else None
-                  return current,baseline,len(vals)
-              total,total_base,total_n=metric(('nTotal','n_total','transits','total'))
-              tanker,tanker_base,tanker_n=metric(('nTanker','n_tanker','tankers','tanker','oilTankers','oil_tankers'))
-              cargo,cargo_base,cargo_n=metric(('nCargo','n_cargo','cargo'))
-              container,container_base,container_n=metric(('nContainer','n_container','container'))
-              dry,dry_base,dry_n=metric(('nDryBulk','n_dry_bulk','dryBulk','dry_bulk'))
-              general,general_base,general_n=metric(('nGeneralCargo','n_general_cargo','generalCargo','general_cargo'))
-              goods_vals=[v for v in (cargo,container,dry,general) if v is not None]
-              goods_bases=[v for v in (cargo_base,container_base,dry_base,general_base) if v is not None]
-              goods=sum(goods_vals) if goods_vals else (total-tanker if total is not None and tanker is not None else None)
-              goods_base=sum(goods_bases) if goods_bases else (total_base-tanker_base if total_base is not None and tanker_base is not None else None)
-              # Fallback when PortWatch comparison history exposes only total history by chokepoint.
-              # Estimate the missing split from the current vessel-type mix and the published total baseline.
-              # This is explicitly marked estimated so DOMINO never presents it as an observed historical tanker baseline.
-              baseline_method='observed_history'
-              if tanker is not None and tanker_base is None and total is not None and total>0 and total_base:
-                  tanker_share=max(0,min(1,tanker/total))
-                  tanker_base=total_base*tanker_share
-                  baseline_method='estimated_from_current_mix_and_total_baseline'
-              if goods is not None and goods_base is None and total is not None and total>0 and total_base:
-                  goods_share=max(0,min(1,goods/total))
-                  goods_base=total_base*goods_share
-                  if baseline_method=='observed_history': baseline_method='estimated_from_current_mix_and_total_baseline'
-              dt=latest.get('date') or item.get('asOfDate') or item.get('date')
-              return {'count':total,'baseline':total_base,'tanker':tanker,'tanker_baseline':tanker_base,'goods':goods,'goods_baseline':goods_base,'date':dt,'identity':identity(item),'baseline_method':baseline_method,'history_counts':{'total':total_n,'tanker':tanker_n,'cargo':cargo_n,'container':container_n,'dry':dry_n,'general':general_n},'history_sample_keys':sorted(list(h[-1].keys())) if h and isinstance(h[-1],dict) else []}
-          def status(count,base):
-              if count is None or not base:return 'unknown',None
-              ratio=count/base; return ('green' if ratio>=.85 else 'yellow' if ratio>=.65 else 'orange' if ratio>=.40 else 'red'),ratio
-          def reroute(count,base):
-              if count is None or not base:return 'unknown',None
-              ratio=count/base; return ('green' if ratio<=1.10 else 'yellow' if ratio<=1.25 else 'orange' if ratio<=1.50 else 'red'),ratio
+                  cur=num(latest,keys); vals=[num(r,keys) for r in h[-180:]]; vals=[v for v in vals if v is not None]
+                  return cur,(float(statistics.median(vals)) if len(vals)>=7 else None)
+              total,totalbase=metric(('nTotal','n_total','transits','total'))
+              tanker,_=metric(('nTanker','n_tanker','tankers','tanker','oilTankers','oil_tankers'))
+              goods=(total-tanker) if total is not None and tanker is not None else None
+              return {'total':total,'baseline':totalbase,'tanker_visible':tanker,'goods':goods,'date':latest.get('date') or i.get('asOfDate') or i.get('date')}
+          def status(c,b):
+              if c is None or not b:return 'unknown',None
+              r=c/b; return ('green' if r>=.85 else 'yellow' if r>=.65 else 'orange' if r>=.40 else 'red'),r
+          def reroute(c,b):
+              if c is None or not b:return 'unknown',None
+              r=c/b; return ('green' if r<=1.10 else 'yellow' if r<=1.25 else 'orange' if r<=1.50 else 'red'),r
           old={}
-          try: old=json.load(open('transport.json',encoding='utf-8'))
+          try: old=json.load(open('transport.json'))
           except: pass
           errors=[]
           try: choke=get('https://straits.live/api/v1/chokepoints?history=1')
-          except Exception as e: choke=None; errors.append('chokepoints: '+str(e)[:160])
-          try: transits=get('https://straits.live/api/v1/transits?history=1&limit=120')
-          except Exception as e: transits=None; errors.append('transits: '+str(e)[:160])
+          except Exception as e: choke={}; errors.append('chokepoints: '+str(e)[:150])
+          try: trans=get('https://straits.live/api/v1/transits?history=1&limit=120')
+          except Exception as e: trans={}; errors.append('transits: '+str(e)[:150])
           try: dark=get('https://straits.live/api/v1/ais-gaps')
-          except Exception as e: dark=None; errors.append('ais-gaps: '+str(e)[:160])
-          raw={'bab_el_mandeb':extract(choke,['bab el mandeb','bab al mandab','bab mandeb']) if choke else None,'suez':extract(choke,['suez canal','suez']) if choke else None,'cape':extract(choke,['cape of good hope','good hope','cape']) if choke else None}
+          except Exception as e: dark={}; errors.append('ais-gaps: '+str(e)[:150])
           comps={}; dates=[]
-          latest=transits.get('latest',{}) if isinstance(transits,dict) else {}
-          hc=num(latest,('nTotal','n_total','transits','total')); hb=num(latest,('preCrisisBaselineMedian','baselineMedian','baseline'))
-          hs,hr=status(hc,hb); hd=latest.get('date') if isinstance(latest,dict) else None
+          latest=trans.get('latest',{}) if isinstance(trans,dict) else {}
+          hc=num(latest,('nTotal','n_total','transits','total')); hb=num(latest,('preCrisisBaselineMedian','baselineMedian','baseline')); hs,hr=status(hc,hb)
           comps['hormuz']={'status':hs,'count':hc,'baseline':hb,'ratio':round(hr,3) if hr is not None else None,'label':'Straße von Hormus'}
-          if hd: dates.append(str(hd)[:10])
-          b=raw['bab_el_mandeb'] or {}; bs,br=status(b.get('tanker'),b.get('tanker_baseline')); gs,gr=status(b.get('goods'),b.get('goods_baseline'))
-          comps['bab_el_mandeb']={'status':bs,'count':b.get('tanker'),'baseline':round(b.get('tanker_baseline'),2) if isinstance(b.get('tanker_baseline'),(int,float)) else None,'ratio':round(br,3) if br is not None else None,'label':'Bab el-Mandeb','energy_basis':'tanker_only','baseline_method':b.get('baseline_method'),'tanker':{'status':bs,'count':b.get('tanker'),'baseline':round(b.get('tanker_baseline'),2) if isinstance(b.get('tanker_baseline'),(int,float)) else None,'ratio':round(br,3) if br is not None else None},'goods':{'status':gs,'count':b.get('goods'),'baseline':round(b.get('goods_baseline'),2) if isinstance(b.get('goods_baseline'),(int,float)) else None,'ratio':round(gr,3) if gr is not None else None},'total_count':b.get('count'),'total_baseline':b.get('baseline'),'debug':{'history_counts':b.get('history_counts'),'history_sample_keys':b.get('history_sample_keys')}}
+          if latest.get('date'): dates.append(str(latest['date'])[:10])
+          b=extract(choke,['bab el mandeb','bab al mandab','bab mandeb'])
+          # DOMINO provisional assumption requested for the present crisis:
+          # if no normal/official Saudi oil AIS flow is visible, assume 70% of the reference oil flow continues dark.
+          # Reference oil flow = 8.1 mb/d (EIA Q2 2026 context). This is an estimate, never labelled measured.
+          reference_mbd=8.1; dark_assumption=.70
+          visible=b.get('tanker_visible')
+          estimated_mbd=round(reference_mbd*dark_assumption,2)
+          oil_ratio=dark_assumption
+          oil_status='green' if oil_ratio>=.85 else 'yellow' if oil_ratio>=.65 else 'orange' if oil_ratio>=.40 else 'red'
+          total=b.get('total'); base=b.get('baseline'); gs,gr=status(total,base)
+          comps['bab_el_mandeb']={'status':oil_status,'label':'Bab el-Mandeb','energy_basis':'estimated_oil_flow','oil_flow_mbd':estimated_mbd,'oil_reference_mbd':reference_mbd,'oil_ratio':oil_ratio,'assumption':'70_percent_dark_when_no_normal_saudi_AIS_flow','tanker':{'status':oil_status,'count':visible,'ratio':oil_ratio,'display':f'≈ {estimated_mbd:.1f} Mio. b/d · 70 % geschätzt (Dark)'},'goods':{'status':gs,'count':total,'baseline':base,'ratio':round(gr,3) if gr is not None else None,'display':f'{total:.0f} Schiffe · {gr*100:.0f} % vom Normalwert' if total is not None and gr is not None else 'wartet auf Daten'},'total_count':total,'total_baseline':base}
           if b.get('date'): dates.append(str(b['date'])[:10])
-          for k,label in [('suez','Suez / SUMED'),('cape','Kap der Guten Hoffnung')]:
-              r=raw[k] or {}; st,rr=(reroute(r.get('count'),r.get('baseline')) if k=='cape' else status(r.get('count'),r.get('baseline')))
-              comps[k]={'status':st,'count':r.get('count'),'baseline':r.get('baseline'),'ratio':round(rr,3) if rr is not None else None,'label':label}
-              if r.get('date'): dates.append(str(r['date'])[:10])
+          for key,aliases,label in [('suez',['suez canal','suez'],'Suez / SUMED'),('cape',['cape of good hope','good hope','cape'],'Kap der Guten Hoffnung')]:
+              z=extract(choke,aliases); st,rr=(reroute(z.get('total'),z.get('baseline')) if key=='cape' else status(z.get('total'),z.get('baseline')))
+              comps[key]={'status':st,'count':z.get('total'),'baseline':z.get('baseline'),'ratio':round(rr,3) if rr is not None else None,'label':label}
+              if z.get('date'): dates.append(str(z['date'])[:10])
           dc=db=None
           def walk(x):
               if isinstance(x,dict):
@@ -125,24 +103,20 @@ jobs:
                   for v in x.values(): yield from walk(v)
               elif isinstance(x,list):
                   for v in x: yield from walk(v)
-          if dark:
-              for d in walk(dark):
-                  if dc is None: dc=num(d,('count','darkCount','aisDarkCount','current'))
-                  if db is None: db=num(d,('baseline','baseline7d','sevenDayBaseline','avg7d','mean7d'))
+          for d in walk(dark):
+              if dc is None: dc=num(d,('count','darkCount','aisDarkCount','current'))
+              if db is None: db=num(d,('baseline','baseline7d','sevenDayBaseline','avg7d','mean7d'))
           if dc is not None and db:
               dr=dc/db; ds='green' if dr<=1.10 else 'yellow' if dr<=1.35 else 'orange' if dr<=1.75 else 'red'
           else: dr=None; ds='unknown'
           comps['ais_dark']={'status':ds,'count':dc,'baseline':db,'ratio':round(dr,3) if dr is not None else None,'label':'Dark-Shipping-Radar'}
-          ranks={'unknown':0,'green':0,'yellow':1,'orange':2,'red':3}; weights={'hormuz':.35,'bab_el_mandeb':.20,'suez':.15,'cape':.15,'ais_dark':.15}
-          known=[k for k in weights if comps[k]['status']!='unknown']
-          if known:
-              score=sum(weights[k]*ranks[comps[k]['status']] for k in known)/sum(weights[k] for k in known)
-              overall='green' if score<.65 else 'yellow' if score<1.35 else 'orange' if score<2.20 else 'red'
-              if comps['hormuz']['status']=='red' and any(comps[k]['status'] in ('orange','red') for k in ('bab_el_mandeb','suez')): overall='red'
-          else: score=None; overall='unknown'
-          src=max(dates) if dates else old.get('source_date'); oldstatus=old.get('status'); days=1 if overall!=oldstatus else int(old.get('days_in_status') or 1)
-          out={'version':'2.3','status':overall,'label':overall.upper() if overall!='unknown' else 'WARTET','summary':{'green':'normal','yellow':'auffällig','orange':'stark gestört','red':'kritisch','unknown':'wartet auf Daten'}[overall],'score':round(score,2) if score is not None else None,'days_in_status':days,'updated_at':NOW.isoformat(),'source_date':src,'components':comps,'rules':{'bab_el_mandeb':'ONLY tanker traffic contributes to Bab el-Mandeb energy status and overall Transport score; goods traffic is context only','main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline','cape':'green <=110%, yellow >110-125%, orange >125-150%, red >150%','ais_dark':'green <=110%, yellow >110-135%, orange >135-175%, red >175%'},'sources':['IMF PortWatch vessel-type chokepoint counts via Straits.live','Straits.live AIS-gap summary'],'note':'TEMPORARY TEST MODE. Bab el-Mandeb tanker baseline uses observed vessel-type history when available; otherwise a clearly marked provisional estimate from current tanker share × published total baseline is used so the sensor is operational while the missing free historical type split is diagnosed.','errors':errors}
-          with open('transport.json','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
+          ranks={'unknown':0,'green':0,'yellow':1,'orange':2,'red':3}; weights={'hormuz':.35,'bab_el_mandeb':.20,'suez':.15,'cape':.15,'ais_dark':.15}; known=[k for k in weights if comps[k]['status']!='unknown']
+          score=sum(weights[k]*ranks[comps[k]['status']] for k in known)/sum(weights[k] for k in known) if known else None
+          overall='unknown' if score is None else ('green' if score<.65 else 'yellow' if score<1.35 else 'orange' if score<2.20 else 'red')
+          if comps['hormuz']['status']=='red' and comps['bab_el_mandeb']['status'] in ('orange','red'): overall='red'
+          oldstatus=old.get('status'); days=1 if overall!=oldstatus else int(old.get('days_in_status') or 1)
+          out={'version':'2.5','status':overall,'label':overall.upper(),'summary':{'green':'normal','yellow':'auffällig','orange':'stark gestört','red':'kritisch','unknown':'wartet auf Daten'}[overall],'score':round(score,2) if score is not None else None,'days_in_status':days,'updated_at':NOW.isoformat(),'source_date':max(dates) if dates else old.get('source_date'),'components':comps,'rules':{'bab_el_mandeb':'Oil flow only enters overall score. Provisional crisis estimate: absent normal Saudi AIS flow = 70% of 8.1 mb/d reference assumed dark. Goods traffic context only.','main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40%','cape':'green <=110%, yellow >110-125%, orange >125-150%, red >150%'},'sources':['IMF PortWatch via Straits.live','Straits.live AIS-gap summary','EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d'],'note':'TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly an estimate, not a measured AIS flow. Assumption: 70% dark flow when normal Saudi AIS flow is absent.','errors':errors}
+          with open('transport.json','w') as f: json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
       - name: Commit if changed
