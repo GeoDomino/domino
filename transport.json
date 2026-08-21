@@ -1,11 +1,11 @@
 {
-  "version": "2.5",
+  "version": "2.6",
   "status": "yellow",
   "label": "YELLOW",
   "summary": "auffällig",
   "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-08-21T07:52:30.977766+00:00",
+  "updated_at": "2026-08-21T07:58:14.670759+00:00",
   "source_date": "2026-08-16",
   "components": {
     "hormuz": {
@@ -18,7 +18,7 @@
     "bab_el_mandeb": {
       "status": "yellow",
       "label": "Bab el-Mandeb",
-      "energy_basis": "estimated_oil_flow",
+      "energy_basis": "oil_flow_plus_security_news",
       "oil_flow_mbd": 5.67,
       "oil_reference_mbd": 8.1,
       "oil_ratio": 0.7,
@@ -35,6 +35,13 @@
         "baseline": 33.5,
         "ratio": 1.075,
         "display": "36 Schiffe · 107 % vom Normalwert"
+      },
+      "security_news": {
+        "status": "green",
+        "event_count_72h": 0,
+        "window_hours": 72,
+        "rule": "0=green, 1=orange, >=2=red",
+        "events": []
       },
       "total_count": 36.0,
       "total_baseline": 33.5
@@ -62,15 +69,16 @@
     }
   },
   "rules": {
-    "bab_el_mandeb": "Oil flow only enters overall score. Provisional crisis estimate: absent normal Saudi AIS flow = 70% of 8.1 mb/d reference assumed dark. Goods traffic context only.",
+    "bab_el_mandeb": "Oil flow and tanker-attack news determine Bab el-Mandeb. Security news: 0 attacks in 72h=green, 1 unique confirmed trusted-source event=orange, >=2 unique events=red. Goods traffic context only.",
     "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40%",
     "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150%"
   },
   "sources": [
     "IMF PortWatch via Straits.live",
     "Straits.live AIS-gap summary",
-    "EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d"
+    "EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d",
+    "Google News RSS restricted to trusted maritime/news sources for recent Houthi tanker-attack reports"
   ],
-  "note": "TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly an estimate, not a measured AIS flow. Assumption: 70% dark flow when normal Saudi AIS flow is absent.",
+  "note": "TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly estimated, not measured. Security-news sensor scans a rolling 72h window and deduplicates multiple reports of the same incident.",
   "errors": []
 }
