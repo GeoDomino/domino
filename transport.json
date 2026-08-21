@@ -1,11 +1,11 @@
 {
-  "version": "2.6",
+  "version": "2.7",
   "status": "yellow",
   "label": "YELLOW",
   "summary": "auffällig",
   "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-08-21T08:01:38.223054+00:00",
+  "updated_at": "2026-08-21T08:44:14.790408+00:00",
   "source_date": "2026-08-16",
   "components": {
     "hormuz": {
@@ -50,8 +50,21 @@
       "status": "green",
       "count": 41.0,
       "baseline": 41.5,
-      "ratio": 0.988,
-      "label": "Suez / SUMED"
+      "ratio": null,
+      "label": "Suez / SUMED",
+      "traffic": {
+        "status": "green",
+        "count": 41.0,
+        "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
+      },
+      "waiting": {
+        "status": "unknown",
+        "hours": null,
+        "source": "Portcast parse failed",
+        "url": "https://www.portcast.io/port-congestion/suez-canal",
+        "rule": "<24h green, 24-<48h yellow, 48-<72h orange, >=72h red"
+      },
+      "wait_time_hours": null
     },
     "cape": {
       "status": "green",
@@ -62,23 +75,24 @@
     },
     "ais_dark": {
       "status": "green",
-      "count": 31.0,
+      "count": 30.0,
       "baseline": 58.1,
-      "ratio": 0.534,
+      "ratio": 0.516,
       "label": "Dark-Shipping-Radar"
     }
   },
   "rules": {
-    "bab_el_mandeb": "Oil flow and tanker-attack news determine Bab el-Mandeb. Security news: 0 attacks in 72h=green, 1 unique confirmed trusted-source event=orange, >=2 unique events=red. Goods traffic context only.",
-    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40%",
+    "bab_el_mandeb": "Oil flow and tanker-attack news determine Bab el-Mandeb. Goods traffic context only.",
+    "suez": "Sensor 1 traffic: <=80 green, 81-99 yellow, >=100 orange. Sensor 2 waiting time: <24h green, 24-<48h yellow, 48-<72h orange, >=72h red. Suez uses the worse sensor.",
     "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150%"
   },
   "sources": [
     "IMF PortWatch via Straits.live",
     "Straits.live AIS-gap summary",
     "EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d",
-    "Google News RSS restricted to trusted maritime/news sources for recent Houthi tanker-attack reports"
+    "Google News RSS for Houthi tanker-attack reports",
+    "Portcast public Suez congestion page for median waiting time"
   ],
-  "note": "TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly estimated, not measured. Security-news sensor scans a rolling 72h window and deduplicates multiple reports of the same incident.",
+  "note": "TEMPORARY TEST MODE every 15 min. Suez now separates traffic load from actual waiting time; red is reserved for >=72h waiting time.",
   "errors": []
 }
