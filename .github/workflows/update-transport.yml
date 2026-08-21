@@ -2,8 +2,12 @@ name: Update transport indicator
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-transport.yml'
   schedule:
-    - cron: '15 5,11,17,23 * * *'
+    - cron: '*/15 * * * *'
 
 permissions:
   contents: write
@@ -20,94 +24,119 @@ jobs:
       - name: Build transport.json from PortWatch and AIS data
         run: |
           python - <<'PY'
-          import json, os, statistics, requests, re
+          import json, statistics, requests, re
           from datetime import datetime, timezone, date
 
-          UA={'User-Agent':'DOMINO-dashboard/2.0 (+GitHub Actions)'}
+          UA={'User-Agent':'DOMINO-dashboard/2.1 (+GitHub Actions)'}
           NOW=datetime.now(timezone.utc)
-          COLORS=['green','yellow','orange','red']
 
           def get(url):
               r=requests.get(url,timeout=40,headers=UA)
               r.raise_for_status()
               return r.json()
 
-          def walk(x):
-              if isinstance(x,dict):
-                  yield x
-                  for v in x.values(): yield from walk(v)
-              elif isinstance(x,list):
-                  for v in x: yield from walk(v)
-
-          def text(d):
-              return ' '.join(str(v) for v in d.values() if isinstance(v,(str,int,float))).lower()
+          def norm(x):
+              return re.sub(r'[^a-z0-9]+',' ',str(x).lower()).strip()
 
           def num(d, keys):
               if not isinstance(d,dict): return None
               for k in keys:
-                  if k in d and isinstance(d[k],(int,float)): return float(d[k])
+                  v=d.get(k)
+                  if isinstance(v,(int,float)): return float(v)
               return None
 
-          def hist_from(d):
-              for k in ('history','points','series','rows'):
-                  h=d.get(k) if isinstance(d,dict) else None
-                  if isinstance(h,list): return h
+          def rows_from(root):
+              if isinstance(root,list): return root
+              if not isinstance(root,dict): return []
+              for k in ('chokepoints','items','data','routes','points'):
+                  v=root.get(k)
+                  if isinstance(v,list): return v
               return []
 
-          def candidate(root, needles):
-              best=None; score=-1
-              for d in walk(root):
-                  t=text(d)
-                  s=sum(1 for n in needles if n in t)
-                  if s>score and s>0:
-                      best=d; score=s
-              return best
+          def history_from(item):
+              if not isinstance(item,dict): return []
+              for k in ('history','rows','series','points'):
+                  v=item.get(k)
+                  if isinstance(v,list): return v
+              return []
 
-          def extract(root, needles):
-              d=candidate(root,needles)
-              if not d: return None
-              latest=d.get('latest') if isinstance(d.get('latest'),dict) else d
-              count=num(latest,('nTotal','n_total','count','total','transits'))
-              baseline=num(latest,('preCrisisBaselineMedian','baselineMedian','baseline','median','typical'))
-              h=hist_from(d)
+          def identity(item):
+              if not isinstance(item,dict): return ''
               vals=[]
-              for r in h[-120:]:
-                  v=num(r,('nTotal','n_total','count','total','transits'))
+              for k in ('id','slug','name','label','chokepoint','route','title'):
+                  if k in item and isinstance(item[k],str): vals.append(item[k])
+              return norm(' '.join(vals))
+
+          def pick_item(root, aliases):
+              aliases=[norm(a) for a in aliases]
+              best=None; bestscore=-1
+              for item in rows_from(root):
+                  ident=identity(item)
+                  score=max((len(a) for a in aliases if a and a in ident), default=-1)
+                  if score>bestscore:
+                      best=item; bestscore=score
+              return best if bestscore>=0 else None
+
+          def extract_item(root, aliases):
+              item=pick_item(root,aliases)
+              if not item: return None
+              latest=item.get('latest') if isinstance(item.get('latest'),dict) else item
+              count=num(latest,('nTotal','n_total','transits','total'))
+              baseline=num(latest,('preCrisisBaselineMedian','pre_crisis_baseline_median','baselineMedian','baseline','median','typical'))
+              if baseline is None:
+                  baseline=num(item,('preCrisisBaselineMedian','pre_crisis_baseline_median','baselineMedian','baseline','median','typical'))
+              hist=history_from(item)
+              vals=[]
+              for r in hist[-120:]:
+                  v=num(r,('nTotal','n_total','transits','total'))
                   if v is not None: vals.append(v)
               if baseline is None and len(vals)>=7:
                   baseline=float(statistics.median(vals[-90:]))
-              dt=latest.get('date') or latest.get('asOfDate') or d.get('asOfDate') or d.get('date')
-              return {'count':count,'baseline':baseline,'date':dt}
+              dt=(latest.get('date') if isinstance(latest,dict) else None) or item.get('asOfDate') or item.get('date')
+              return {'count':count,'baseline':baseline,'date':dt,'identity':identity(item)}
 
           def disruption(r):
               if not r or not r.get('baseline') or r.get('count') is None: return 'unknown',None
               ratio=r['count']/r['baseline']
-              status='green' if ratio>=0.85 else 'yellow' if ratio>=0.65 else 'orange' if ratio>=0.40 else 'red'
-              return status,ratio
+              return ('green' if ratio>=0.85 else 'yellow' if ratio>=0.65 else 'orange' if ratio>=0.40 else 'red'),ratio
 
           def reroute(r):
               if not r or not r.get('baseline') or r.get('count') is None: return 'unknown',None
               ratio=r['count']/r['baseline']
-              status='green' if ratio<=1.10 else 'yellow' if ratio<=1.25 else 'orange' if ratio<=1.50 else 'red'
-              return status,ratio
+              return ('green' if ratio<=1.10 else 'yellow' if ratio<=1.25 else 'orange' if ratio<=1.50 else 'red'),ratio
 
           old={}
           try:
               old=json.load(open('transport.json',encoding='utf-8'))
-          except Exception: pass
+          except Exception:
+              pass
 
-          choke=None; dark=None
           errors=[]
-          try: choke=get('https://straits.live/api/v1/chokepoints?history=true')
-          except Exception as e: errors.append('chokepoints: '+str(e)[:120])
+          choke=dark=transits=None
+          try: choke=get('https://straits.live/api/v1/chokepoints?history=1')
+          except Exception as e: errors.append('chokepoints: '+str(e)[:160])
+          try: transits=get('https://straits.live/api/v1/transits?history=1&limit=120')
+          except Exception as e: errors.append('transits: '+str(e)[:160])
           try: dark=get('https://straits.live/api/v1/ais-gaps')
-          except Exception as e: errors.append('ais-gaps: '+str(e)[:120])
+          except Exception as e: errors.append('ais-gaps: '+str(e)[:160])
+
+          # Hormuz gets its authoritative value and published pre-crisis baseline directly
+          # from /transits. The comparison endpoint is used for the other routes.
+          hormuz=None
+          if isinstance(transits,dict):
+              latest=transits.get('latest') if isinstance(transits.get('latest'),dict) else {}
+              hormuz={
+                  'count':num(latest,('nTotal','n_total','transits','total')),
+                  'baseline':num(latest,('preCrisisBaselineMedian','pre_crisis_baseline_median','baselineMedian','baseline')),
+                  'date':latest.get('date') or transits.get('asOfDate') or transits.get('asOf'),
+                  'identity':'hormuz via /transits'
+              }
 
           raw={
-            'hormuz':extract(choke,['hormuz']) if choke else None,
-            'bab_el_mandeb':extract(choke,['bab','mandeb']) if choke else None,
-            'suez':extract(choke,['suez']) if choke else None,
-            'cape':extract(choke,['good hope']) if choke else None,
+            'hormuz':hormuz,
+            'bab_el_mandeb':extract_item(choke,['bab el mandeb','bab al mandab','bab mandeb']) if choke else None,
+            'suez':extract_item(choke,['suez','suez canal']) if choke else None,
+            'cape':extract_item(choke,['cape of good hope','good hope','cape']) if choke else None,
           }
 
           comps={}
@@ -116,10 +145,23 @@ jobs:
           for k,r in raw.items():
               st,ratio=(reroute(r) if k=='cape' else disruption(r))
               if r and r.get('date'): source_dates.append(str(r['date'])[:10])
-              comps[k]={'status':st,'count':r.get('count') if r else None,'baseline':r.get('baseline') if r else None,'ratio':round(ratio,3) if ratio is not None else None,'label':labels[k]}
+              comps[k]={
+                  'status':st,
+                  'count':r.get('count') if r else None,
+                  'baseline':r.get('baseline') if r else None,
+                  'ratio':round(ratio,3) if ratio is not None else None,
+                  'label':labels[k],
+                  'source_identity':r.get('identity') if r else None
+              }
 
           # Free AIS-gap endpoint: current dark-tanker count plus 7-day baseline.
           dc=db=None
+          def walk(x):
+              if isinstance(x,dict):
+                  yield x
+                  for v in x.values(): yield from walk(v)
+              elif isinstance(x,list):
+                  for v in x: yield from walk(v)
           if dark:
               for d in walk(dark):
                   if dc is None: dc=num(d,('count','darkCount','aisDarkCount','current'))
@@ -145,27 +187,28 @@ jobs:
           summary={'green':'normal','yellow':'auffällig','orange':'stark gestört','red':'kritisch','unknown':'wartet auf Daten'}[overall]
           src=max(source_dates) if source_dates else old.get('source_date')
           old_status=old.get('status'); old_days=int(old.get('days_in_status') or 1)
-          if overall=='unknown': days=old_days if old_status and old_status!='unknown' else None
+          if overall=='unknown':
+              days=old_days if old_status and old_status!='unknown' else None
           elif old_status==overall:
               old_src=old.get('source_date')
-              try:
-                  delta=(date.fromisoformat(src)-date.fromisoformat(old_src)).days if src and old_src else 0
+              try: delta=(date.fromisoformat(src)-date.fromisoformat(old_src)).days if src and old_src else 0
               except Exception: delta=0
               days=max(1,old_days+max(0,delta))
-          else: days=1
+          else:
+              days=1
 
           out={
-            'version':'2.0','status':overall,'label':overall.upper() if overall!='unknown' else 'WARTET',
+            'version':'2.1','status':overall,'label':overall.upper() if overall!='unknown' else 'WARTET',
             'summary':summary,'score':round(score,2) if score is not None else None,
             'days_in_status':days,'updated_at':NOW.isoformat(),'source_date':src,
             'components':comps,
             'rules':{
-              'main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of rolling/baseline transit count',
+              'main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline transit count',
               'cape':'green <=110%, yellow >110-125%, orange >125-150%, red >150% of baseline',
               'ais_dark':'green <=110%, yellow >110-135%, orange >135-175%, red >175% of 7-day baseline'
             },
             'sources':['IMF PortWatch daily chokepoint transit counts via Straits.live open API','Straits.live free AIS-gap summary'],
-            'note':'Transit counts are AIS-derived and can undercount vessels that switch AIS off. PortWatch daily data may publish with a lag; the workflow rechecks four times per day.',
+            'note':'TEMPORARY TEST MODE: workflow polls every 15 minutes until all four chokepoint parsers are verified. IMF PortWatch itself publishes weekly with lag.',
             'errors':errors
           }
           with open('transport.json','w',encoding='utf-8') as f:
