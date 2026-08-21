@@ -1,51 +1,55 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "status": "yellow",
   "label": "YELLOW",
   "summary": "auffällig",
-  "score": 1.0,
+  "score": 1.2,
   "days_in_status": 1,
-  "updated_at": "2026-08-20T23:58:38.632954+00:00",
-  "source_date": null,
+  "updated_at": "2026-08-21T05:40:37.721884+00:00",
+  "source_date": "2026-08-16",
   "components": {
     "hormuz": {
-      "status": "unknown",
-      "count": 5.0,
-      "baseline": null,
-      "ratio": null,
-      "label": "Straße von Hormus"
+      "status": "red",
+      "count": 1.0,
+      "baseline": 73.0,
+      "ratio": 0.014,
+      "label": "Straße von Hormus",
+      "source_identity": "hormuz via /transits"
     },
     "bab_el_mandeb": {
-      "status": "unknown",
-      "count": 5.0,
-      "baseline": null,
-      "ratio": null,
-      "label": "Bab el-Mandeb"
+      "status": "green",
+      "count": 36.0,
+      "baseline": 33.0,
+      "ratio": 1.091,
+      "label": "Bab el-Mandeb",
+      "source_identity": "bab el mandeb"
     },
     "suez": {
-      "status": "unknown",
-      "count": 5.0,
-      "baseline": null,
-      "ratio": null,
-      "label": "Suez / SUMED"
+      "status": "green",
+      "count": 41.0,
+      "baseline": 39.0,
+      "ratio": 1.051,
+      "label": "Suez / SUMED",
+      "source_identity": "suez canal"
     },
     "cape": {
-      "status": "unknown",
-      "count": 5.0,
-      "baseline": null,
-      "ratio": null,
-      "label": "Kap der Guten Hoffnung"
+      "status": "yellow",
+      "count": 99.0,
+      "baseline": 88.0,
+      "ratio": 1.125,
+      "label": "Kap der Guten Hoffnung",
+      "source_identity": "cape of good hope"
     },
     "ais_dark": {
-      "status": "yellow",
-      "count": 75.0,
-      "baseline": 59.4,
-      "ratio": 1.263,
+      "status": "green",
+      "count": 46.0,
+      "baseline": 58.7,
+      "ratio": 0.784,
       "label": "Dark-Shipping-Radar"
     }
   },
   "rules": {
-    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of rolling/baseline transit count",
+    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline transit count",
     "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150% of baseline",
     "ais_dark": "green <=110%, yellow >110-135%, orange >135-175%, red >175% of 7-day baseline"
   },
@@ -53,6 +57,6 @@
     "IMF PortWatch daily chokepoint transit counts via Straits.live open API",
     "Straits.live free AIS-gap summary"
   ],
-  "note": "Transit counts are AIS-derived and can undercount vessels that switch AIS off. PortWatch daily data may publish with a lag; the workflow rechecks four times per day.",
+  "note": "TEMPORARY TEST MODE: workflow polls every 15 minutes until all four chokepoint parsers are verified. IMF PortWatch itself publishes weekly with lag.",
   "errors": []
 }
