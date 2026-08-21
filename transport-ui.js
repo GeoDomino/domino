@@ -14,6 +14,7 @@
     let box=document.getElementById('transportLiveRows');if(!box){box=document.createElement('div');box.id='transportLiveRows';title.insertAdjacentElement('afterend',box)}
     const c=x.components||{};
     const row=(k)=>{const d=c[k]||{};const right=typeof d.count==='number'?`${fmt(d.count)} Schiffe · ${pct(d.ratio)} vom Normalwert`:'wartet auf Daten';return `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[d.status]||colors.unknown}"></span>${d.label||k}</div><div class="subright">${right}</div></div>`};
+
     const b=c.bab_el_mandeb||{},t=b.tanker||{},g=b.goods||{},s=b.security_news||{};
     const goodsRight=g.display|| (typeof g.count==='number'?`${fmt(g.count)} Schiffe · ${pct(g.ratio)} vom Normalwert`:'wartet auf Daten');
     const tankerRight=t.display|| (typeof t.count==='number'?`${fmt(t.count)} Tanker · ${pct(t.ratio)} vom Normalwert`:'wartet auf Daten');
@@ -25,8 +26,16 @@
       `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[t.status]||colors.unknown}"></span>Sensor 1 · Öltransport</div><div class="subright">${tankerRight}</div></div>`+
       `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[s.status]||colors.unknown}"></span>Sensor 2 · Sicherheitslage Öltanker</div><div class="subright">${securityRight}</div></div>`+
       eventHtml+
-      `<div style="margin:2px 0 8px 18px;color:var(--muted);font-size:.86em">Sensor 2: 0 Angriffe = Grün · 1 bestätigtes Ereignis = Orange · ab 2 unterschiedlichen Ereignissen = Rot. Mehrfachmeldungen zum selben Angriff werden zusammengefasst. Transportgüter sind nur Kontext; Bab el-Mandeb wird aus Ölfluss und Sicherheitslage bewertet.</div>`;
-    box.innerHTML=row('hormuz')+bab+row('suez')+row('cape')+row('ais_dark')+`<div id="transportLiveNote" style="margin-top:8px"><b style="color:var(--text)">Transport Version 2.6:</b> Bab el-Mandeb kombiniert geschätzten Ölfluss mit einem separaten Nachrichten-Sicherheitsindikator. Datenstand: ${x.source_date||'–'}.</div>`;
+      `<div style="margin:2px 0 8px 18px;color:var(--muted);font-size:.86em">Sensor 2: 0 Angriffe = Grün · 1 bestätigtes Ereignis = Orange · ab 2 unterschiedlichen Ereignissen = Rot. Mehrfachmeldungen zum selben Angriff werden zusammengefasst. Transportgüter sind nur Kontext.</div>`;
+
+    const z=c.suez||{},zt=z.traffic||{},zw=z.waiting||{};
+    const waitRight=typeof zw.hours==='number'?`${fmt(zw.hours)} h Wartezeit`:'wartet auf Wartezeitdaten';
+    const suez=`<div style="margin-top:7px;margin-bottom:2px;font-weight:700">Suez / SUMED</div>`+
+      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[zt.status]||colors.unknown}"></span>Sensor 1 · Verkehrsmenge</div><div class="subright">${typeof zt.count==='number'?`${fmt(zt.count)} Schiffe/Tag`:'wartet auf Daten'}</div></div>`+
+      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[zw.status]||colors.unknown}"></span>Sensor 2 · Wartezeit</div><div class="subright">${waitRight}</div></div>`+
+      `<div style="margin:2px 0 8px 18px;color:var(--muted);font-size:.86em">Verkehr: bis 80 Grün · 81–99 Gelb · ab 100 Orange. Rot gibt es hier nicht allein wegen der Schiffsanzahl. Wartezeit: unter 24 h Grün · 24–&lt;48 h Gelb · 48–&lt;72 h Orange · ab 72 h Rot. Für Suez zählt die schlechtere der beiden Farben.</div>`;
+
+    box.innerHTML=row('hormuz')+bab+suez+row('cape')+row('ais_dark')+`<div id="transportLiveNote" style="margin-top:8px"><b style="color:var(--text)">Transport Version 2.7:</b> Bab el-Mandeb kombiniert Ölfluss und Sicherheitslage; Suez trennt Verkehrsmenge und tatsächliche Wartezeit. Datenstand: ${x.source_date||'–'}.</div>`;
   }
   document.readyState==='loading'?document.addEventListener('DOMContentLoaded',load):load();setInterval(load,15*60*1000);
 })();
