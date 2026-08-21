@@ -6,5 +6,5 @@
   function dayNumber(text){if(!text||text==='–')return '–';if(/seit heute/i.test(text))return '1';const m=text.match(/seit\s+(\d+)\s+Tag/i);return m?String(Number(m[1])+1):'–'}
   function apply(lightId,dateId){const light=document.getElementById(lightId),date=document.getElementById(dateId);if(!light||!date)return;let span=light.querySelector('.statusword');if(!span){span=document.createElement('span');span.className='statusword';light.appendChild(span)}const sync=()=>{span.textContent=dayNumber((date.textContent||'').trim());date.style.display='none'};sync();new MutationObserver(sync).observe(date,{childList:true,subtree:true,characterData:true})}
   pairs.forEach(([a,b])=>apply(a,b));
-  for(const [src,v] of [['stocks-ui.js','20260820-1'],['transport-ui.js','20260821-6'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
+  for(const [src,v] of [['stocks-ui.js','20260820-1'],['transport-ui.js','20260821-7'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
 })();
