@@ -15,11 +15,13 @@
     const c=x.components||{};
     const row=(k)=>{const d=c[k]||{};const right=typeof d.count==='number'?`${fmt(d.count)} Schiffe · ${pct(d.ratio)} vom Normalwert`:'wartet auf Daten';return `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[d.status]||colors.unknown}"></span>${d.label||k}</div><div class="subright">${right}</div></div>`};
     const b=c.bab_el_mandeb||{},t=b.tanker||{},g=b.goods||{};
+    const goodsRight=g.display|| (typeof g.count==='number'?`${fmt(g.count)} Schiffe · ${pct(g.ratio)} vom Normalwert`:'wartet auf Daten');
+    const tankerRight=t.display|| (typeof t.count==='number'?`${fmt(t.count)} Tanker · ${pct(t.ratio)} vom Normalwert`:'wartet auf Daten');
     const bab=`<div style="margin-top:7px;margin-bottom:2px;font-weight:700">Bab el-Mandeb</div>`+
-      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[g.status]||colors.unknown}"></span>Transportgüter</div><div class="subright">${typeof g.count==='number'?`${fmt(g.count)} Schiffe · ${pct(g.ratio)} vom Normalwert`:'wartet auf Daten'}</div></div>`+
-      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[t.status]||colors.unknown}"></span>Öltanker</div><div class="subright">${typeof t.count==='number'?`${fmt(t.count)} Tanker · ${pct(t.ratio)} vom Normalwert`:'wartet auf Daten'}</div></div>`+
-      `<div style="margin:2px 0 8px 18px;color:var(--muted);font-size:.86em">Für die Transport-Gesamtampel zählt bei Bab el-Mandeb ausschließlich der Öltanker-Wert. Transportgüter werden nur als Kontext angezeigt.</div>`;
-    box.innerHTML=row('hormuz')+bab+row('suez')+row('cape')+row('ais_dark')+`<div id="transportLiveNote" style="margin-top:8px"><b style="color:var(--text)">Transport Version 2.2:</b> Bab el-Mandeb wird getrennt nach Transportgütern und Öltankern dargestellt. Nur die Öltanker fließen in die Transport-Gesamtampel ein. Quelle: IMF PortWatch über Straits.live. Letzter Datenstand: ${x.source_date||'–'}.</div>`;
+      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[g.status]||colors.unknown}"></span>Transportgüter</div><div class="subright">${goodsRight}</div></div>`+
+      `<div class="subrow"><div class="subleft"><span class="dot" style="background:${colors[t.status]||colors.unknown}"></span>Öltransport</div><div class="subright">${tankerRight}</div></div>`+
+      `<div style="margin:2px 0 8px 18px;color:var(--muted);font-size:.86em">Nur der unabhängig ermittelte Öltransport fließt bei Bab el-Mandeb in die Transport-Gesamtampel ein. Der allgemeine Güterverkehr ist nur Kontext.</div>`;
+    box.innerHTML=row('hormuz')+bab+row('suez')+row('cape')+row('ais_dark')+`<div id="transportLiveNote" style="margin-top:8px"><b style="color:var(--text)">Transport Version 2.4:</b> Bab el-Mandeb trennt Güterverkehr und Energiefluss. Datenstand: ${x.source_date||'–'}.</div>`;
   }
-  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',load):load();setInterval(load,60*60*1000);
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',load):load();setInterval(load,15*60*1000);
 })();
