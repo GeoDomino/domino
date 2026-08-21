@@ -24,78 +24,183 @@ jobs:
       - name: Build transport.json
         run: |
           python - <<'PY'
-          import json, statistics, requests, re
-          from datetime import datetime, timezone
-          UA={'User-Agent':'DOMINO-dashboard/2.5 (+GitHub Actions)'}; NOW=datetime.now(timezone.utc)
+          import json, statistics, requests, re, xml.etree.ElementTree as ET
+          from datetime import datetime, timezone, timedelta
+          from email.utils import parsedate_to_datetime
+          from urllib.parse import quote_plus
+
+          UA={'User-Agent':'DOMINO-dashboard/2.6 (+GitHub Actions)'}
+          NOW=datetime.now(timezone.utc)
+
           def get(url):
-              r=requests.get(url,timeout=40,headers=UA); r.raise_for_status(); return r.json()
+              r=requests.get(url,timeout=40,headers=UA)
+              r.raise_for_status()
+              return r
+
+          def get_json(url): return get(url).json()
           def norm(x): return re.sub(r'[^a-z0-9]+',' ',str(x).lower()).strip()
+
           def num(d,keys):
               if not isinstance(d,dict): return None
               for k in keys:
                   v=d.get(k)
                   if isinstance(v,(int,float)): return float(v)
               return None
+
           def rows(root):
               if isinstance(root,list): return root
               if isinstance(root,dict):
                   for k in ('chokepoints','items','data','routes','points'):
                       if isinstance(root.get(k),list): return root[k]
               return []
-          def ident(i): return norm(' '.join(str(i.get(k,'')) for k in ('id','slug','name','label','chokepoint','route','title'))) if isinstance(i,dict) else ''
+
+          def ident(i):
+              return norm(' '.join(str(i.get(k,'')) for k in ('id','slug','name','label','chokepoint','route','title'))) if isinstance(i,dict) else ''
+
           def pick(root,aliases):
               aa=[norm(a) for a in aliases]
               for i in rows(root):
-                  if any(a in ident(i) for a in aa): return i
+                  ii=ident(i)
+                  if any(a in ii for a in aa): return i
+              return None
+
           def extract(root,aliases):
               i=pick(root,aliases)
               if not i:return {}
               latest=i.get('latest') if isinstance(i.get('latest'),dict) else i
               h=next((i.get(k) for k in ('history','rows','series','points') if isinstance(i.get(k),list)),[])
               def metric(keys):
-                  cur=num(latest,keys); vals=[num(r,keys) for r in h[-180:]]; vals=[v for v in vals if v is not None]
+                  cur=num(latest,keys)
+                  vals=[num(r,keys) for r in h[-180:]]
+                  vals=[v for v in vals if v is not None]
                   return cur,(float(statistics.median(vals)) if len(vals)>=7 else None)
               total,totalbase=metric(('nTotal','n_total','transits','total'))
               tanker,_=metric(('nTanker','n_tanker','tankers','tanker','oilTankers','oil_tankers'))
               goods=(total-tanker) if total is not None and tanker is not None else None
               return {'total':total,'baseline':totalbase,'tanker_visible':tanker,'goods':goods,'date':latest.get('date') or i.get('asOfDate') or i.get('date')}
+
           def status(c,b):
               if c is None or not b:return 'unknown',None
-              r=c/b; return ('green' if r>=.85 else 'yellow' if r>=.65 else 'orange' if r>=.40 else 'red'),r
+              r=c/b
+              return ('green' if r>=.85 else 'yellow' if r>=.65 else 'orange' if r>=.40 else 'red'),r
+
           def reroute(c,b):
               if c is None or not b:return 'unknown',None
-              r=c/b; return ('green' if r<=1.10 else 'yellow' if r<=1.25 else 'orange' if r<=1.50 else 'red'),r
+              r=c/b
+              return ('green' if r<=1.10 else 'yellow' if r<=1.25 else 'orange' if r<=1.50 else 'red'),r
+
+          # Bab el-Mandeb security news sensor. We only count recent trusted-source reports
+          # that explicitly mention Houthis + tanker/oil tanker + an attack verb.
+          TRUSTED=('reuters','associated press','ap news','bbc','lloyd','ukmto','tradewinds','maritime executive')
+          ATTACK_WORDS=('attack','attacked','strike','struck','hit','missile','drone','fired','fire on','targeted','targeting')
+          TANKER_WORDS=('tanker','oil tanker','crude tanker','product tanker','vlcc','suezmax','aframax')
+          HOUTHI_WORDS=('houthi','houthis','ansar allah')
+
+          def canonical_event(title):
+              t=norm(title)
+              t=re.sub(r'\b(reuters|associated press|ap news|bbc|lloyds list|lloyd s list|tradewinds|maritime executive)\b',' ',t)
+              t=re.sub(r'\b(update|breaking|exclusive|live)\b',' ',t)
+              return ' '.join(t.split())[:180]
+
+          def fetch_attack_news():
+              q='Bab el-Mandeb Houthi tanker attack OR oil tanker strike OR missile OR drone'
+              url='https://news.google.com/rss/search?q='+quote_plus(q)+'&hl=en-US&gl=US&ceid=US:en'
+              out=[]
+              try:
+                  root=ET.fromstring(get(url).content)
+                  for item in root.findall('.//item'):
+                      title=(item.findtext('title') or '').strip()
+                      source=(item.findtext('source') or '').strip()
+                      link=(item.findtext('link') or '').strip()
+                      pub=(item.findtext('pubDate') or '').strip()
+                      txt=(title+' '+source).lower()
+                      try: dt=parsedate_to_datetime(pub).astimezone(timezone.utc)
+                      except Exception: continue
+                      if NOW-dt>timedelta(hours=72): continue
+                      if not any(s in source.lower() for s in TRUSTED): continue
+                      if not any(w in txt for w in HOUTHI_WORDS): continue
+                      if not any(w in txt for w in TANKER_WORDS): continue
+                      if not any(w in txt for w in ATTACK_WORDS): continue
+                      out.append({'title':title,'source':source,'url':link,'published_at':dt.isoformat(),'event_key':canonical_event(title)})
+              except Exception as e:
+                  return [],str(e)[:180]
+              # Deduplicate multiple headlines about the same event using normalized title similarity.
+              uniq=[]
+              for x in sorted(out,key=lambda a:a['published_at'],reverse=True):
+                  tokens=set(x['event_key'].split())
+                  duplicate=False
+                  for y in uniq:
+                      yt=set(y['event_key'].split())
+                      if tokens and yt and len(tokens & yt)/max(1,min(len(tokens),len(yt)))>=0.65:
+                          duplicate=True; break
+                  if not duplicate: uniq.append(x)
+              return uniq,None
+
           old={}
           try: old=json.load(open('transport.json'))
           except: pass
           errors=[]
-          try: choke=get('https://straits.live/api/v1/chokepoints?history=1')
+
+          try: choke=get_json('https://straits.live/api/v1/chokepoints?history=1')
           except Exception as e: choke={}; errors.append('chokepoints: '+str(e)[:150])
-          try: trans=get('https://straits.live/api/v1/transits?history=1&limit=120')
+          try: trans=get_json('https://straits.live/api/v1/transits?history=1&limit=120')
           except Exception as e: trans={}; errors.append('transits: '+str(e)[:150])
-          try: dark=get('https://straits.live/api/v1/ais-gaps')
+          try: dark=get_json('https://straits.live/api/v1/ais-gaps')
           except Exception as e: dark={}; errors.append('ais-gaps: '+str(e)[:150])
+
+          attack_events,attack_err=fetch_attack_news()
+          if attack_err: errors.append('attack-news: '+attack_err)
+          attack_count=len(attack_events)
+          attack_status='green' if attack_count==0 else 'orange' if attack_count==1 else 'red'
+
           comps={}; dates=[]
           latest=trans.get('latest',{}) if isinstance(trans,dict) else {}
-          hc=num(latest,('nTotal','n_total','transits','total')); hb=num(latest,('preCrisisBaselineMedian','baselineMedian','baseline')); hs,hr=status(hc,hb)
+          hc=num(latest,('nTotal','n_total','transits','total'))
+          hb=num(latest,('preCrisisBaselineMedian','baselineMedian','baseline'))
+          hs,hr=status(hc,hb)
           comps['hormuz']={'status':hs,'count':hc,'baseline':hb,'ratio':round(hr,3) if hr is not None else None,'label':'Straße von Hormus'}
           if latest.get('date'): dates.append(str(latest['date'])[:10])
+
           b=extract(choke,['bab el mandeb','bab al mandab','bab mandeb'])
-          # DOMINO provisional assumption requested for the present crisis:
-          # if no normal/official Saudi oil AIS flow is visible, assume 70% of the reference oil flow continues dark.
-          # Reference oil flow = 8.1 mb/d (EIA Q2 2026 context). This is an estimate, never labelled measured.
-          reference_mbd=8.1; dark_assumption=.70
+          reference_mbd=8.1
+          dark_assumption=.70
           visible=b.get('tanker_visible')
           estimated_mbd=round(reference_mbd*dark_assumption,2)
           oil_ratio=dark_assumption
           oil_status='green' if oil_ratio>=.85 else 'yellow' if oil_ratio>=.65 else 'orange' if oil_ratio>=.40 else 'red'
           total=b.get('total'); base=b.get('baseline'); gs,gr=status(total,base)
-          comps['bab_el_mandeb']={'status':oil_status,'label':'Bab el-Mandeb','energy_basis':'estimated_oil_flow','oil_flow_mbd':estimated_mbd,'oil_reference_mbd':reference_mbd,'oil_ratio':oil_ratio,'assumption':'70_percent_dark_when_no_normal_saudi_AIS_flow','tanker':{'status':oil_status,'count':visible,'ratio':oil_ratio,'display':f'≈ {estimated_mbd:.1f} Mio. b/d · 70 % geschätzt (Dark)'},'goods':{'status':gs,'count':total,'baseline':base,'ratio':round(gr,3) if gr is not None else None,'display':f'{total:.0f} Schiffe · {gr*100:.0f} % vom Normalwert' if total is not None and gr is not None else 'wartet auf Daten'},'total_count':total,'total_baseline':base}
+
+          # Bab el-Mandeb overall energy status is the more severe of oil-flow estimate and attack-news sensor.
+          rank={'green':0,'yellow':1,'orange':2,'red':3,'unknown':-1}
+          bab_status=max((oil_status,attack_status),key=lambda s:rank[s])
+
+          comps['bab_el_mandeb']={
+              'status':bab_status,
+              'label':'Bab el-Mandeb',
+              'energy_basis':'oil_flow_plus_security_news',
+              'oil_flow_mbd':estimated_mbd,
+              'oil_reference_mbd':reference_mbd,
+              'oil_ratio':oil_ratio,
+              'assumption':'70_percent_dark_when_no_normal_saudi_AIS_flow',
+              'tanker':{'status':oil_status,'count':visible,'ratio':oil_ratio,'display':f'≈ {estimated_mbd:.1f} Mio. b/d · 70 % geschätzt (Dark)'},
+              'goods':{'status':gs,'count':total,'baseline':base,'ratio':round(gr,3) if gr is not None else None,'display':f'{total:.0f} Schiffe · {gr*100:.0f} % vom Normalwert' if total is not None and gr is not None else 'wartet auf Daten'},
+              'security_news':{
+                  'status':attack_status,
+                  'event_count_72h':attack_count,
+                  'window_hours':72,
+                  'rule':'0=green, 1=orange, >=2=red',
+                  'events':[{'title':x['title'],'source':x['source'],'published_at':x['published_at'],'url':x['url']} for x in attack_events[:5]]
+              },
+              'total_count':total,'total_baseline':base
+          }
           if b.get('date'): dates.append(str(b['date'])[:10])
+
           for key,aliases,label in [('suez',['suez canal','suez'],'Suez / SUMED'),('cape',['cape of good hope','good hope','cape'],'Kap der Guten Hoffnung')]:
-              z=extract(choke,aliases); st,rr=(reroute(z.get('total'),z.get('baseline')) if key=='cape' else status(z.get('total'),z.get('baseline')))
+              z=extract(choke,aliases)
+              st,rr=(reroute(z.get('total'),z.get('baseline')) if key=='cape' else status(z.get('total'),z.get('baseline')))
               comps[key]={'status':st,'count':z.get('total'),'baseline':z.get('baseline'),'ratio':round(rr,3) if rr is not None else None,'label':label}
               if z.get('date'): dates.append(str(z['date'])[:10])
+
           dc=db=None
           def walk(x):
               if isinstance(x,dict):
@@ -107,16 +212,37 @@ jobs:
               if dc is None: dc=num(d,('count','darkCount','aisDarkCount','current'))
               if db is None: db=num(d,('baseline','baseline7d','sevenDayBaseline','avg7d','mean7d'))
           if dc is not None and db:
-              dr=dc/db; ds='green' if dr<=1.10 else 'yellow' if dr<=1.35 else 'orange' if dr<=1.75 else 'red'
+              dr=dc/db
+              ds='green' if dr<=1.10 else 'yellow' if dr<=1.35 else 'orange' if dr<=1.75 else 'red'
           else: dr=None; ds='unknown'
           comps['ais_dark']={'status':ds,'count':dc,'baseline':db,'ratio':round(dr,3) if dr is not None else None,'label':'Dark-Shipping-Radar'}
-          ranks={'unknown':0,'green':0,'yellow':1,'orange':2,'red':3}; weights={'hormuz':.35,'bab_el_mandeb':.20,'suez':.15,'cape':.15,'ais_dark':.15}; known=[k for k in weights if comps[k]['status']!='unknown']
+
+          ranks={'unknown':0,'green':0,'yellow':1,'orange':2,'red':3}
+          weights={'hormuz':.35,'bab_el_mandeb':.20,'suez':.15,'cape':.15,'ais_dark':.15}
+          known=[k for k in weights if comps[k]['status']!='unknown']
           score=sum(weights[k]*ranks[comps[k]['status']] for k in known)/sum(weights[k] for k in known) if known else None
           overall='unknown' if score is None else ('green' if score<.65 else 'yellow' if score<1.35 else 'orange' if score<2.20 else 'red')
           if comps['hormuz']['status']=='red' and comps['bab_el_mandeb']['status'] in ('orange','red'): overall='red'
-          oldstatus=old.get('status'); days=1 if overall!=oldstatus else int(old.get('days_in_status') or 1)
-          out={'version':'2.5','status':overall,'label':overall.upper(),'summary':{'green':'normal','yellow':'auffällig','orange':'stark gestört','red':'kritisch','unknown':'wartet auf Daten'}[overall],'score':round(score,2) if score is not None else None,'days_in_status':days,'updated_at':NOW.isoformat(),'source_date':max(dates) if dates else old.get('source_date'),'components':comps,'rules':{'bab_el_mandeb':'Oil flow only enters overall score. Provisional crisis estimate: absent normal Saudi AIS flow = 70% of 8.1 mb/d reference assumed dark. Goods traffic context only.','main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40%','cape':'green <=110%, yellow >110-125%, orange >125-150%, red >150%'},'sources':['IMF PortWatch via Straits.live','Straits.live AIS-gap summary','EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d'],'note':'TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly an estimate, not a measured AIS flow. Assumption: 70% dark flow when normal Saudi AIS flow is absent.','errors':errors}
-          with open('transport.json','w') as f: json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
+
+          oldstatus=old.get('status')
+          days=1 if overall!=oldstatus else int(old.get('days_in_status') or 1)
+          out={
+              'version':'2.6','status':overall,'label':overall.upper(),
+              'summary':{'green':'normal','yellow':'auffällig','orange':'stark gestört','red':'kritisch','unknown':'wartet auf Daten'}[overall],
+              'score':round(score,2) if score is not None else None,'days_in_status':days,
+              'updated_at':NOW.isoformat(),'source_date':max(dates) if dates else old.get('source_date'),
+              'components':comps,
+              'rules':{
+                  'bab_el_mandeb':'Oil flow and tanker-attack news determine Bab el-Mandeb. Security news: 0 attacks in 72h=green, 1 unique confirmed trusted-source event=orange, >=2 unique events=red. Goods traffic context only.',
+                  'main_routes':'green >=85%, yellow 65-<85%, orange 40-<65%, red <40%',
+                  'cape':'green <=110%, yellow >110-125%, orange >125-150%, red >150%'
+              },
+              'sources':['IMF PortWatch via Straits.live','Straits.live AIS-gap summary','EIA Q2 2026 Bab el-Mandeb oil-flow reference 8.1 mb/d','Google News RSS restricted to trusted maritime/news sources for recent Houthi tanker-attack reports'],
+              'note':'TEMPORARY TEST MODE every 15 min. Bab el-Mandeb oil value is explicitly estimated, not measured. Security-news sensor scans a rolling 72h window and deduplicates multiple reports of the same incident.',
+              'errors':errors
+          }
+          with open('transport.json','w') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
       - name: Commit if changed
