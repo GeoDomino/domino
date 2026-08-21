@@ -1,11 +1,11 @@
 {
-  "version": "2.1",
+  "version": "2.2",
   "status": "yellow",
   "label": "YELLOW",
   "summary": "auffällig",
-  "score": 1.2,
+  "score": 1.31,
   "days_in_status": 1,
-  "updated_at": "2026-08-21T05:40:37.721884+00:00",
+  "updated_at": "2026-08-21T07:07:08.538808+00:00",
   "source_date": "2026-08-16",
   "components": {
     "hormuz": {
@@ -13,50 +13,62 @@
       "count": 1.0,
       "baseline": 73.0,
       "ratio": 0.014,
-      "label": "Straße von Hormus",
-      "source_identity": "hormuz via /transits"
+      "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
-      "status": "green",
-      "count": 36.0,
-      "baseline": 33.0,
-      "ratio": 1.091,
+      "status": "unknown",
+      "count": 13.0,
+      "baseline": null,
+      "ratio": null,
       "label": "Bab el-Mandeb",
-      "source_identity": "bab el mandeb"
+      "energy_basis": "tanker_only",
+      "tanker": {
+        "status": "unknown",
+        "count": 13.0,
+        "baseline": null,
+        "ratio": null
+      },
+      "goods": {
+        "status": "unknown",
+        "count": 23.0,
+        "baseline": null,
+        "ratio": null
+      },
+      "total_count": 36.0,
+      "total_baseline": 33.5
     },
     "suez": {
       "status": "green",
       "count": 41.0,
-      "baseline": 39.0,
-      "ratio": 1.051,
-      "label": "Suez / SUMED",
-      "source_identity": "suez canal"
+      "baseline": 41.5,
+      "ratio": 0.988,
+      "label": "Suez / SUMED"
     },
     "cape": {
-      "status": "yellow",
+      "status": "green",
       "count": 99.0,
-      "baseline": 88.0,
-      "ratio": 1.125,
-      "label": "Kap der Guten Hoffnung",
-      "source_identity": "cape of good hope"
+      "baseline": 91.0,
+      "ratio": 1.088,
+      "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
       "status": "green",
-      "count": 46.0,
-      "baseline": 58.7,
-      "ratio": 0.784,
+      "count": 35.0,
+      "baseline": 58.3,
+      "ratio": 0.6,
       "label": "Dark-Shipping-Radar"
     }
   },
   "rules": {
-    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline transit count",
-    "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150% of baseline",
-    "ais_dark": "green <=110%, yellow >110-135%, orange >135-175%, red >175% of 7-day baseline"
+    "bab_el_mandeb": "ONLY tanker traffic contributes to Bab el-Mandeb energy status and overall Transport score; goods traffic is context only",
+    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline",
+    "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150%",
+    "ais_dark": "green <=110%, yellow >110-135%, orange >135-175%, red >175%"
   },
   "sources": [
-    "IMF PortWatch daily chokepoint transit counts via Straits.live open API",
-    "Straits.live free AIS-gap summary"
+    "IMF PortWatch vessel-type chokepoint counts via Straits.live",
+    "Straits.live AIS-gap summary"
   ],
-  "note": "TEMPORARY TEST MODE: workflow polls every 15 minutes until all four chokepoint parsers are verified. IMF PortWatch itself publishes weekly with lag.",
+  "note": "TEMPORARY TEST MODE: polls every 15 minutes. Bab el-Mandeb is split into goods and tanker traffic; only tanker status enters the Transport score.",
   "errors": []
 }
