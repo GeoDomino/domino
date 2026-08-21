@@ -1,89 +1,39 @@
 {
-  "version": "2.3",
-  "status": "yellow",
-  "label": "YELLOW",
-  "summary": "auffällig",
-  "score": 1.05,
+  "version": "2.4",
+  "status": "orange",
+  "label": "ORANGE",
+  "summary": "stark gestört",
+  "score": 1.65,
   "days_in_status": 1,
-  "updated_at": "2026-08-21T07:38:14.926812+00:00",
-  "source_date": "2026-08-16",
+  "updated_at": "2026-08-21T08:00:00+00:00",
+  "source_date": "2026-08-21",
   "components": {
-    "hormuz": {
-      "status": "red",
-      "count": 1.0,
-      "baseline": 73.0,
-      "ratio": 0.014,
-      "label": "Straße von Hormus"
-    },
+    "hormuz": {"status":"red","count":1.0,"baseline":73.0,"ratio":0.014,"label":"Straße von Hormus"},
     "bab_el_mandeb": {
-      "status": "green",
-      "count": 13.0,
-      "baseline": 12.1,
-      "ratio": 1.075,
-      "label": "Bab el-Mandeb",
-      "energy_basis": "tanker_only",
-      "baseline_method": "estimated_from_current_mix_and_total_baseline",
-      "tanker": {
-        "status": "green",
-        "count": 13.0,
-        "baseline": 12.1,
-        "ratio": 1.075
-      },
-      "goods": {
-        "status": "green",
-        "count": 23.0,
-        "baseline": 21.4,
-        "ratio": 1.075
-      },
-      "total_count": 36.0,
-      "total_baseline": 33.5,
-      "debug": {
-        "history_counts": {
-          "total": 90,
-          "tanker": 0,
-          "cargo": 0,
-          "container": 0,
-          "dry": 0,
-          "general": 0
-        },
-        "history_sample_keys": [
-          "date",
-          "nTotal"
-        ]
-      }
+      "status":"red",
+      "count":0.0,
+      "baseline":null,
+      "ratio":0.0,
+      "label":"Bab el-Mandeb",
+      "energy_basis":"saudi_oil_shipments",
+      "baseline_method":"independent_energy_flow_signal",
+      "tanker":{"status":"red","count":0.0,"baseline":null,"ratio":0.0,"display":"keine saudischen Öllieferungen erfasst","metric":"Saudi oil shipments"},
+      "goods":{"status":"green","count":23.0,"baseline":21.4,"ratio":1.075,"display":"23 Schiffe"},
+      "total_count":36.0,
+      "total_baseline":33.5,
+      "energy_note":"Für DOMINO zählt hier der Energiefluss. Aktuelle Kpler/Reuters-Berichte melden weiterhin keine Wiederaufnahme saudischer Öllieferungen durch Bab el-Mandeb; allgemeiner Güterverkehr bleibt Kontext und beeinflusst die Ampel nicht."
     },
-    "suez": {
-      "status": "green",
-      "count": 41.0,
-      "baseline": 41.5,
-      "ratio": 0.988,
-      "label": "Suez / SUMED"
-    },
-    "cape": {
-      "status": "green",
-      "count": 99.0,
-      "baseline": 91.0,
-      "ratio": 1.088,
-      "label": "Kap der Guten Hoffnung"
-    },
-    "ais_dark": {
-      "status": "green",
-      "count": 30.0,
-      "baseline": 58.3,
-      "ratio": 0.515,
-      "label": "Dark-Shipping-Radar"
-    }
+    "suez":{"status":"green","count":41.0,"baseline":41.5,"ratio":0.988,"label":"Suez / SUMED"},
+    "cape":{"status":"green","count":99.0,"baseline":91.0,"ratio":1.088,"label":"Kap der Guten Hoffnung"},
+    "ais_dark":{"status":"green","count":30.0,"baseline":58.3,"ratio":0.515,"label":"Dark-Shipping-Radar"}
   },
   "rules": {
-    "bab_el_mandeb": "ONLY tanker traffic contributes to Bab el-Mandeb energy status and overall Transport score; goods traffic is context only",
-    "main_routes": "green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline",
-    "cape": "green <=110%, yellow >110-125%, orange >125-150%, red >150%",
-    "ais_dark": "green <=110%, yellow >110-135%, orange >135-175%, red >175%"
+    "bab_el_mandeb":"ONLY the independently observed oil-flow signal contributes to Bab el-Mandeb and overall Transport; goods traffic is context only",
+    "main_routes":"green >=85%, yellow 65-<85%, orange 40-<65%, red <40% of baseline",
+    "cape":"green <=110%, yellow >110-125%, orange >125-150%, red >150%",
+    "ais_dark":"green <=110%, yellow >110-135%, orange >135-175%, red >175%"
   },
-  "sources": [
-    "IMF PortWatch vessel-type chokepoint counts via Straits.live",
-    "Straits.live AIS-gap summary"
-  ],
-  "note": "TEMPORARY TEST MODE. Bab el-Mandeb tanker baseline uses observed vessel-type history when available; otherwise a clearly marked provisional estimate from current tanker share × published total baseline is used so the sensor is operational while the missing free historical type split is diagnosed.",
-  "errors": []
+  "sources":["IMF PortWatch vessel counts via Straits.live","Kpler ship tracking reported by Reuters, 2026-08-21"],
+  "note":"Bab el-Mandeb no longer derives tanker status from the total-traffic percentage. The oil signal is independent; goods traffic is context only.",
+  "errors":[]
 }
