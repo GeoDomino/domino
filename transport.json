@@ -5,7 +5,7 @@
   "summary": "auffällig",
   "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-08-23T09:02:32.068995+00:00",
+  "updated_at": "2026-08-23T09:59:28.373054+00:00",
   "source_date": "2026-08-16",
   "components": {
     "hormuz": {
@@ -75,9 +75,9 @@
     },
     "ais_dark": {
       "status": "green",
-      "count": 36.0,
-      "baseline": 63.9,
-      "ratio": 0.563,
+      "count": 41.0,
+      "baseline": 63.7,
+      "ratio": 0.644,
       "label": "Dark-Shipping-Radar"
     }
   },
