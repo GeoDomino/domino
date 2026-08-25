@@ -20,123 +20,136 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pandas openpyxl requests
+      - run: pip install requests
       - name: Fetch EIA OPEC spare capacity
         shell: bash
         run: |
           python <<'PY'
-          import io, json, math, re, requests, pandas as pd
+          import csv, io, json, math, re, requests, zipfile
           from datetime import datetime, timezone
 
-          # Official EIA STEO figure listed as "OPEC surplus crude oil production capacity".
-          URL='https://www.eia.gov/outlooks/steo/xls/Fig6.xlsx'
+          BULK_URL='https://www.eia.gov/opendata/bulk/STEO.zip'
+          SERIES_ID='COPS_OPEC'
           NOW=datetime.now(timezone.utc)
-          CUR=(NOW.year,(NOW.month-1)//3+1)
-          r=requests.get(URL,timeout=60,headers={'User-Agent':'DOMINO-dashboard/2.4 (+GitHub Actions)'})
+          CUR_YEAR=NOW.year
+          CUR_QUARTER=(NOW.month-1)//3+1
+
+          r=requests.get(BULK_URL,timeout=90,headers={'User-Agent':'DOMINO-dashboard/2.5 (+GitHub Actions)'})
           r.raise_for_status()
-          sheets=pd.read_excel(io.BytesIO(r.content),sheet_name=None,header=None)
+          z=zipfile.ZipFile(io.BytesIO(r.content))
 
-          def text(x):
-              return '' if pd.isna(x) else re.sub(r'\s+',' ',str(x)).strip()
-          def lower(x): return text(x).lower()
-          def num(x):
+          rows=[]
+
+          def add(period,value,source_member):
+              if period is None or value is None:
+                  return
+              s=str(period).strip()
+              m=re.match(r'^(20\d{2})[-/]?(\d{2})$',s)
+              if not m:
+                  return
+              y,mo=int(m.group(1)),int(m.group(2))
+              if not 1 <= mo <= 12:
+                  return
               try:
-                  v=float(x); return v if math.isfinite(v) else None
-              except Exception: return None
-          def quarter(x):
-              s=text(x).upper()
-              # Accept EIA forms such as Q3 2026, 2026 Q3, 3Q26 and Q3-26.
-              patterns=[
-                  r'Q\s*([1-4])\D*(20\d{2})',
-                  r'(20\d{2})\D*Q\s*([1-4])',
-                  r'([1-4])\s*Q\s*(20\d{2}|\d{2})',
-                  r'Q\s*([1-4])\D*(\d{2})'
-              ]
-              for i,p in enumerate(patterns):
-                  m=re.search(p,s)
-                  if not m: continue
-                  if i==1:
-                      y,q=int(m.group(1)),int(m.group(2))
-                  else:
-                      q,y=int(m.group(1)),int(m.group(2))
-                      if y<100: y+=2000
-                  return y,q
-              return None
+                  v=float(value)
+              except Exception:
+                  return
+              if math.isfinite(v) and 0 <= v <= 20:
+                  rows.append((y,mo,v,source_member))
 
-          candidates=[]
-          for sheet,df in sheets.items():
-              # Method A: locate the explicit OPEC total spare/surplus series row, then
-              # pair its numeric cells with quarter labels found in nearby header rows.
-              for rr in range(len(df)):
-                  labels=[lower(df.iat[rr,c]) for c in range(df.shape[1])]
-                  label=' | '.join(x for x in labels if x)
-                  if 'opec' not in label or 'capacity' not in label or ('spare' not in label and 'surplus' not in label):
-                      continue
-                  # Prefer total OPEC, not the separate Middle East subset.
-                  if 'middle east' in label: continue
-                  for cc in range(df.shape[1]):
-                      v=num(df.iat[rr,cc])
-                      if v is None or not (0 <= v <= 15): continue
-                      found=None
-                      for hr in range(max(0,rr-15),rr+1):
-                          p=quarter(df.iat[hr,cc])
-                          if p:
-                              found=p; break
-                      if found and found<=CUR:
-                          candidates.append((found,v,sheet,rr,cc,'aligned-quarter'))
+          def walk(obj,member):
+              if isinstance(obj,dict):
+                  sid=obj.get('seriesId') or obj.get('series_id') or obj.get('series') or obj.get('id')
+                  if str(sid).strip()==SERIES_ID:
+                      data=obj.get('data')
+                      if isinstance(data,list):
+                          for item in data:
+                              if isinstance(item,(list,tuple)) and len(item)>=2:
+                                  add(item[0],item[1],member)
+                              elif isinstance(item,dict):
+                                  add(item.get('period') or item.get('date'),item.get('value'),member)
+                      add(obj.get('period') or obj.get('date'),obj.get('value'),member)
+                  for v in obj.values():
+                      walk(v,member)
+              elif isinstance(obj,list):
+                  for v in obj:
+                      walk(v,member)
 
-              # Method B: quarter labels may be in the same row as values, as in the
-              # STEO data-browser export. Search locally around an explicit series label.
-              for rr in range(len(df)):
-                  for lc in range(df.shape[1]):
-                      lab=lower(df.iat[rr,lc])
-                      if 'opec' not in lab or 'capacity' not in lab or ('spare' not in lab and 'surplus' not in lab) or 'middle east' in lab:
+          for member in z.namelist():
+              if member.endswith('/'):
+                  continue
+              raw=z.read(member)
+              try:
+                  text=raw.decode('utf-8-sig')
+              except Exception:
+                  continue
+              if SERIES_ID not in text:
+                  continue
+
+              # JSON / NDJSON bulk files
+              try:
+                  walk(json.loads(text),member)
+              except Exception:
+                  for line in text.splitlines():
+                      if SERIES_ID not in line:
                           continue
-                      for r2 in range(max(0,rr-8),min(len(df),rr+9)):
-                          for cc in range(df.shape[1]):
-                              p=quarter(df.iat[r2,cc])
-                              if not p or p>CUR: continue
-                              # Look for a value in the same column or immediately below.
-                              for vr in range(r2,min(len(df),r2+8)):
-                                  v=num(df.iat[vr,cc])
-                                  if v is not None and 0<=v<=15:
-                                      candidates.append((p,v,sheet,vr,cc,'local-quarter'))
-                                      break
+                      try:
+                          walk(json.loads(line),member)
+                      except Exception:
+                          pass
 
-          if not candidates:
-              # Print workbook structure into Actions log so a future EIA layout change
-              # is diagnosable instead of silently creating a fantasy value.
-              for sheet,df in sheets.items():
-                  print('SHEET',sheet,'shape',df.shape)
-                  for rr in range(len(df)):
-                      row=' | '.join(text(df.iat[rr,c]) for c in range(df.shape[1]) if text(df.iat[rr,c]))
-                      if 'OPEC' in row.upper() or re.search(r'Q[1-4].*20\d{2}|20\d{2}.*Q[1-4]',row,re.I):
-                          print(rr,row[:1000])
-              raise RuntimeError('EIA OPEC spare capacity figure found no usable current-quarter value')
+              # CSV fallback
+              try:
+                  reader=csv.DictReader(io.StringIO(text))
+                  for d in reader:
+                      sid=d.get('seriesId') or d.get('series_id') or d.get('series') or d.get('id')
+                      if str(sid).strip()==SERIES_ID:
+                          add(d.get('period') or d.get('date'),d.get('value'),member)
+              except Exception:
+                  pass
 
-          # Prefer current quarter, total-series aligned candidates, and values from the
-          # explicit series row. Never substitute a future quarter.
-          candidates.sort(key=lambda z:(z[0], z[5]=='aligned-quarter'), reverse=True)
-          (year,quarter_no),value,sheet,row,col,method=candidates[0]
+          # Dedupe monthly observations. Prefer last occurrence from the bulk package.
+          ded={(y,m):(v,member) for y,m,v,member in rows}
+          qmonths=[m for m in range(1,13) if (m-1)//3+1==CUR_QUARTER]
+          qvals=[(m,*ded[(CUR_YEAR,m)]) for m in qmonths if (CUR_YEAR,m) in ded]
+
+          if len(qvals)<3:
+              available=sorted((y,m,v) for (y,m),(v,_) in ded.items() if y>=CUR_YEAR-1)
+              raise RuntimeError(f'EIA STEO bulk series {SERIES_ID}: current quarter incomplete; found {qvals}; recent={available[-18:]}')
+
+          value=sum(v for _,v,_ in qvals)/len(qvals)
+          source_members=sorted(set(member for _,_,member in qvals))
+
           if value >= 5.0: status='green'; points=0
           elif value >= 3.0: status='yellow'; points=1
           elif value >= 1.5: status='orange'; points=2
           else: status='red'; points=3
 
           path='oil-supply.json'
-          try: old=json.load(open(path,encoding='utf-8'))
-          except Exception: old={}
+          try:
+              old=json.load(open(path,encoding='utf-8'))
+          except Exception:
+              old={}
           old.setdefault('components',{})
           old['components']['spare_capacity']={
-              'sensor':2,'status':status,'points':points,'value':round(value,2),'unit':'mb/d',
+              'sensor':2,
+              'status':status,
+              'points':points,
+              'value':round(value,2),
+              'unit':'mb/d',
               'label':'Sensor 2 Ölversorgung · OPEC Reservekapazität',
-              'period':f'{year} Q{quarter_no}','date':f'{year}-Q{quarter_no}',
+              'period':f'{CUR_YEAR} Q{CUR_QUARTER}',
+              'date':f'{CUR_YEAR}-Q{CUR_QUARTER}',
+              'monthly_values':[{ 'month':f'{CUR_YEAR}-{m:02d}', 'value':round(v,3)} for m,v,_ in qvals],
               'source':'U.S. EIA Short-Term Energy Outlook · OPEC surplus crude oil production capacity',
-              'source_url':URL,'parser':'opec-spare-capacity-v2','sheet':sheet,'method':method
+              'series_id':SERIES_ID,
+              'source_url':BULK_URL,
+              'source_members':source_members,
+              'parser':'eia-steo-bulk-cops-opec-v3'
           }
           old['sensor2_updated']=NOW.isoformat()
-          old['sensor2_source_date']=f'{year}-Q{quarter_no}'
-          old['sensor2_note']='Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.'
+          old['sensor2_source_date']=f'{CUR_YEAR}-Q{CUR_QUARTER}'
+          old['sensor2_note']='Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.'
           with open(path,'w',encoding='utf-8') as f:
               json.dump(old,f,ensure_ascii=False,indent=2); f.write('\n')
           print(json.dumps(old['components']['spare_capacity'],ensure_ascii=False,indent=2))
