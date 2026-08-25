@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/update-oil-supply-sensor3.yml'
+  schedule:
+    - cron: '40 5 * * *'
 
 permissions:
   contents: write
@@ -23,18 +25,88 @@ jobs:
         shell: bash
         run: |
           python <<'PY'
-          import io, requests, pandas as pd
+          import io, json, math, requests, pandas as pd
+          from datetime import datetime, timezone
+
           URL='https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx'
-          r=requests.get(URL,timeout=60,headers={'User-Agent':'DOMINO-dashboard/2.5 (+GitHub Actions)'})
+          NOW=datetime.now(timezone.utc)
+          r=requests.get(URL,timeout=60,headers={'User-Agent':'DOMINO-dashboard/2.6 (+GitHub Actions)'})
           r.raise_for_status()
           sheets=pd.read_excel(io.BytesIO(r.content),sheet_name=None,header=None)
+
+          best=None
           for sheet,df in sheets.items():
-              print('SHEET',sheet,'shape',df.shape)
-              for rr in range(max(0,20),min(len(df),50)):
-                  vals=[]
-                  for c in range(df.shape[1]):
-                      x=df.iat[rr,c]
-                      if not pd.isna(x) and str(x).strip(): vals.append(f'c{c}={x}')
-                  if vals: print('ROW',rr,' || '.join(vals))
-          raise RuntimeError('diagnostic Fig10 layout dump')
+              # EIA Fig10 layout: date in col 0, OPEC total in col 8, non-OPEC total in col 10.
+              # Verify the header labels before trusting those columns.
+              header_ok=False
+              for rr in range(len(df)):
+                  row=' | '.join('' if pd.isna(df.iat[rr,c]) else str(df.iat[rr,c]) for c in range(df.shape[1])).lower()
+                  if 'estimated opec unplanned crude oil production outages' in row and 'estimated non-opec unplanned crude oil production outages' in row:
+                      header_ok=True
+                      break
+              if not header_ok or df.shape[1] <= 10:
+                  continue
+
+              for rr in range(len(df)):
+                  d=pd.to_datetime(df.iat[rr,0],errors='coerce')
+                  if pd.isna(d):
+                      continue
+                  d=pd.Timestamp(d)
+                  if d > pd.Timestamp(NOW.date()):
+                      continue
+                  try:
+                      opec=float(df.iat[rr,8]); non_opec=float(df.iat[rr,10])
+                  except Exception:
+                      continue
+                  if not (math.isfinite(opec) and math.isfinite(non_opec)):
+                      continue
+                  total=opec+non_opec
+                  if not 0 <= total <= 20:
+                      continue
+                  item=(d,total,opec,non_opec,sheet,rr)
+                  if best is None or d>best[0]:
+                      best=item
+
+          if best is None:
+              raise RuntimeError('EIA Fig10: no usable dated OPEC/non-OPEC outage totals found')
+
+          date,value,opec,non_opec,sheet,row=best
+          if value >= 5.0: status='red'; points=3
+          elif value >= 3.0: status='orange'; points=2
+          elif value >= 1.5: status='yellow'; points=1
+          else: status='green'; points=0
+
+          path='oil-supply.json'
+          try: old=json.load(open(path,encoding='utf-8'))
+          except Exception: old={}
+          old.setdefault('components',{})
+          old['components']['unplanned_outages']={
+              'sensor':3,
+              'status':status,
+              'points':points,
+              'value':round(value,2),
+              'unit':'mb/d',
+              'opec':round(opec,2),
+              'non_opec':round(non_opec,2),
+              'label':'Sensor 3 Ölversorgung · Ungeplante Produktionsausfälle',
+              'date':date.date().isoformat(),
+              'source':'U.S. EIA Short-Term Energy Outlook · Estimated unplanned crude oil production outages',
+              'source_url':URL,
+              'parser':'eia-fig10-unplanned-outages-v3',
+              'sheet':sheet,
+              'row':int(row)
+          }
+          old['sensor3_updated']=NOW.isoformat()
+          old['sensor3_source_date']=date.date().isoformat()
+          old['sensor3_note']='Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.'
+          with open(path,'w',encoding='utf-8') as f:
+              json.dump(old,f,ensure_ascii=False,indent=2); f.write('\n')
+          print(json.dumps(old['components']['unplanned_outages'],ensure_ascii=False,indent=2))
           PY
+
+      - name: Commit sensor 3 data
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add oil-supply.json
+          git diff --cached --quiet || (git commit -m "Update oil supply sensor 3 outages" && git push)
