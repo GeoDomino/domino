@@ -54,10 +54,20 @@
       "parser": "eia-steo-bulk-cops-opec-v4"
     },
     "unplanned_outages": {
-      "status": "unknown",
-      "value": null,
+      "sensor": 3,
+      "status": "red",
+      "points": 3,
+      "value": 10.05,
       "unit": "mb/d",
-      "label": "Ungeplante Ausfälle"
+      "opec": 7.04,
+      "non_opec": 3.02,
+      "label": "Sensor 3 Ölversorgung · Ungeplante Produktionsausfälle",
+      "date": "2026-07-01",
+      "source": "U.S. EIA Short-Term Energy Outlook · Estimated unplanned crude oil production outages",
+      "source_url": "https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx",
+      "parser": "eia-fig10-unplanned-outages-v3",
+      "sheet": "10",
+      "row": 57
     }
   },
   "sensor1_updated": "2026-08-25T08:55:05.533497+00:00",
@@ -66,5 +76,8 @@
   "note": "DOMINO Ölversorgung: Sensor 1 aktiv; weitere Sensoren werden separat verifiziert.",
   "sensor2_updated": "2026-08-25T11:39:36.797752+00:00",
   "sensor2_source_date": "2026-Q3",
-  "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag."
+  "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.",
+  "sensor3_updated": "2026-08-25T11:55:33.032093+00:00",
+  "sensor3_source_date": "2026-07-01",
+  "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag."
 }
