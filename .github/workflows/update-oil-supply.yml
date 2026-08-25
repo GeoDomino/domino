@@ -16,223 +16,59 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pandas openpyxl requests lxml
-      - name: Build oil-supply.json from EIA data
+      - name: Aggregate verified oil supply sensors
         run: |
           python - <<'PY'
-          import io, json, math, os, re, requests, pandas as pd
+          import json
           from datetime import datetime, timezone
 
-          TODAY = pd.Timestamp.utcnow().tz_localize(None)
-          UA = {'User-Agent':'DOMINO-dashboard/2.0 (+GitHub Actions)'}
+          with open('oil-supply.json', encoding='utf-8') as f:
+              data = json.load(f)
 
-          def norm(x):
-              return re.sub(r'\s+',' ',str(x)).strip().lower()
+          components = data.get('components', {})
+          required = ['supply_demand_balance', 'spare_capacity', 'unplanned_outages']
+          missing = [k for k in required if components.get(k, {}).get('status') not in ('green','yellow','orange','red')]
+          if missing:
+              raise RuntimeError('Oil supply sensors not ready: ' + ', '.join(missing))
 
-          def get_bytes(url):
-              r=requests.get(url,timeout=60,headers=UA)
-              r.raise_for_status()
-              return r.content
+          points = [int(components[k].get('points', 0)) for k in required]
+          total = sum(points)
+          # Three verified sensors, each 0..3 points. Crisis interaction matters:
+          # two red sensors are enough for an overall red oil-supply signal.
+          red_count = sum(components[k]['status'] == 'red' for k in required)
+          orange_or_worse = sum(components[k]['status'] in ('orange','red') for k in required)
 
-          def book(url):
-              return pd.read_excel(io.BytesIO(get_bytes(url)),sheet_name=None,header=None)
+          if red_count >= 2 or total >= 7:
+              overall = 'red'
+          elif total >= 5 or orange_or_worse >= 2:
+              overall = 'orange'
+          elif total >= 2:
+              overall = 'yellow'
+          else:
+              overall = 'green'
 
-          def find_series(sheets, keywords, aggregate=False):
-              """Find latest dated value in EIA STEO workbook using nearby header labels."""
-              best=None
-              for _,df in sheets.items():
-                  if df.empty: continue
-                  labels={}
-                  scan_rows=min(25,len(df))
-                  for r in range(scan_rows):
-                      for c in range(df.shape[1]):
-                          s=norm(df.iat[r,c])
-                          if s and s!='nan' and all(k in s for k in keywords):
-                              labels[c]=s
-                  if not labels:
-                      continue
-                  for r in range(len(df)):
-                      date=None
-                      for c in range(min(4,df.shape[1])):
-                          d=pd.to_datetime(df.iat[r,c],errors='coerce')
-                          if not pd.isna(d) and pd.Timestamp('2000-01-01') < d < pd.Timestamp('2035-01-01'):
-                              date=pd.Timestamp(d); break
-                      if date is None or date>TODAY: continue
-                      vals=[]
-                      for c in labels:
-                          try:
-                              v=float(df.iat[r,c])
-                              if math.isfinite(v): vals.append(v)
-                          except Exception: pass
-                      if not vals: continue
-                      val=sum(vals) if aggregate else vals[0]
-                      if best is None or date>best[0]: best=(date,val)
-              if best is None:
-                  raise RuntimeError('No matching EIA series for '+str(keywords))
-              return best
-
-          # 1) World supply-demand balance from STEO Fig2.
-          fig2=book('https://www.eia.gov/outlooks/steo/xls/Fig2.xlsx')
-          try:
-              bal_date,balance=find_series(fig2,['balance'])
-          except Exception:
-              p_date,prod=find_series(fig2,['production'])
-              c_date,cons=find_series(fig2,['consumption'])
-              bal_date=max(p_date,c_date)
-              balance=prod-cons
-
-          # 2) OPEC spare capacity from STEO Fig6.
-          fig6=book('https://www.eia.gov/outlooks/steo/xls/Fig6.xlsx')
-          try:
-              spare_date,spare=find_series(fig6,['surplus','capacity'])
-          except Exception:
-              spare_date,spare=find_series(fig6,['capacity'])
-
-          # 3) Unplanned outages from STEO Fig10.
-          fig10=book('https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx')
-          try:
-              outage_date,outages=find_series(fig10,['unplanned','outage'],aggregate=True)
-          except Exception:
-              outage_date,outages=find_series(fig10,['outage'],aggregate=True)
-
-          # 4) Heavy/sour proxy: monthly Gulf Coast refinery input quality.
-          # This is deliberately a proxy, not a claim about global availability.
-          # If Gulf Coast feedstock becomes materially lighter/sweeter than its recent
-          # norm, DOMINO treats that as possible stress in heavy/sour availability.
-          quality_status='unknown'; quality_points=0; quality_value=None; quality_date=None
-          quality_note='US Gulf Coast refinery input quality proxy; not a direct global heavy-sour availability measure.'
-          try:
-              html=get_bytes('https://www.eia.gov/dnav/pet/pet_pnp_crq_dcu_r30_m.htm').decode('utf-8','ignore')
-              tables=pd.read_html(io.StringIO(html))
-              # EIA page exposes recent months in a compact table. Extract sulfur/API rows.
-              sulfur=[]; api=[]
-              for t in tables:
-                  for _,row in t.iterrows():
-                      text=' '.join(norm(x) for x in row.tolist())
-                      nums=[]
-                      for x in row.tolist():
-                          try:
-                              v=float(str(x).replace(',',''))
-                              if math.isfinite(v): nums.append(v)
-                          except Exception: pass
-                      if 'sulfur content' in text and nums: sulfur=nums
-                      if 'api gravity' in text and nums: api=nums
-              if sulfur and api:
-                  latest_s=sulfur[-1]; latest_a=api[-1]
-                  med_s=float(pd.Series(sulfur[-6:]).median())
-                  med_a=float(pd.Series(api[-6:]).median())
-                  # Higher API = lighter; lower sulfur = sweeter. Both moving together
-                  # away from recent norm is the warning pattern.
-                  api_shift=latest_a-med_a
-                  sulfur_shift=med_s-latest_s
-                  stress=max(0,api_shift/1.5)+max(0,sulfur_shift/0.15)
-                  if stress>=2.0: quality_status='orange'; quality_points=2
-                  elif stress>=0.9: quality_status='yellow'; quality_points=1
-                  else: quality_status='green'; quality_points=0
-                  quality_value=round(stress,2)
-                  quality_date=TODAY.date().isoformat()
-          except Exception as e:
-              quality_note += ' Abruf derzeit nicht auswertbar: '+str(e)[:120]
-
-          def balance_status(v):
-              deficit=max(0,-v)
-              if deficit>=3.0:return 'red',3
-              if deficit>=1.5:return 'orange',2
-              if deficit>=0.5:return 'yellow',1
-              return 'green',0
-          def spare_status(v):
-              if v<=1.0:return 'red',3
-              if v<=2.0:return 'orange',2
-              if v<=3.0:return 'yellow',1
-              return 'green',0
-          def outage_status(v):
-              if v>=5.0:return 'red',3
-              if v>=3.0:return 'orange',2
-              if v>=1.5:return 'yellow',1
-              return 'green',0
-
-          sb,xb=balance_status(balance)
-          ss,xs=spare_status(spare)
-          so,xo=outage_status(outages)
-
-          # Load previous snapshot/history to measure direction and acceleration.
-          old={}
-          if os.path.exists('oil-supply.json'):
-              try:
-                  with open('oil-supply.json',encoding='utf-8') as f: old=json.load(f)
-              except Exception: old={}
-          history=old.get('history',[]) if isinstance(old,dict) else []
-          previous=history[-1] if history else None
-
-          trend_status='green'; trend_points=0; trend_text='stabil'
-          if previous:
-              worsening=0.0
-              try:
-                  # Less balance, less spare capacity and more outages are worsening.
-                  db=float(previous['balance'])-float(balance)
-                  ds=float(previous['spare'])-float(spare)
-                  do=float(outages)-float(previous['outages'])
-                  worsening=max(0,db/0.5)+max(0,ds/0.5)+max(0,do/0.5)
-                  if worsening>=3.0: trend_status='red'; trend_points=3; trend_text='verschlechtert sich schnell'
-                  elif worsening>=1.7: trend_status='orange'; trend_points=2; trend_text='verschlechtert sich'
-                  elif worsening>=0.7: trend_status='yellow'; trend_points=1; trend_text='leicht schlechter'
-              except Exception: pass
-
-          # Base weighting: physical balance dominates. Heavy-sour is only 10% and
-          # contributes zero points when unavailable, rather than inventing data.
-          score=0.45*xb+0.25*xs+0.20*xo+0.10*quality_points
-          # Trend can add up to 0.45 points, enough to advance an already stressed
-          # system but not enough to create a crisis by itself.
-          score += 0.15*trend_points
-
-          # Emergency interaction rules: preserve nonlinear system stress.
-          forced=None
-          if sb=='red' and ss in ('red','orange'): forced='red'
-          elif sb in ('red','orange') and ss=='red': forced='red'
-          elif sb=='orange' and (ss=='orange' or so in ('orange','red')): forced='orange'
-          elif trend_status=='red' and sb in ('yellow','orange','red'): forced='orange'
-
-          if score>=2.35: overall='red'
-          elif score>=1.45: overall='orange'
-          elif score>=0.55: overall='yellow'
-          else: overall='green'
-          rank={'green':0,'yellow':1,'orange':2,'red':3}
-          if forced and rank[forced]>rank[overall]: overall=forced
-
-          labels={'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT','unknown':'?'}
-          dates=[bal_date,spare_date,outage_date]
-          source_date=max(dates).date().isoformat()
-
-          snap={'source_date':source_date,'balance':round(balance,3),'spare':round(spare,3),'outages':round(outages,3)}
-          if not history or history[-1].get('source_date')!=source_date or any(history[-1].get(k)!=snap[k] for k in ('balance','spare','outages')):
-              history.append(snap)
-          history=history[-12:]
-
-          out={
-            'version':'2.0',
-            'status':overall,'label':labels[overall],
-            'score':round(score,2),
-            'updated':datetime.now(timezone.utc).isoformat(),
-            'source_date':source_date,
-            'components':{
-              'supply_demand_balance':{'status':sb,'value':round(balance,2),'unit':'mb/d','label':'Angebot/Nachfrage','date':bal_date.date().isoformat()},
-              'spare_capacity':{'status':ss,'value':round(spare,2),'unit':'mb/d','label':'OPEC Reservekapazität','date':spare_date.date().isoformat()},
-              'unplanned_outages':{'status':so,'value':round(outages,2),'unit':'mb/d','label':'Ungeplante Ausfälle','date':outage_date.date().isoformat()},
-              'heavy_sour_proxy':{'status':quality_status,'value':quality_value,'unit':'Stressindex','label':'Heavy-Sour-Proxy','date':quality_date,'note':quality_note},
-              'trend':{'status':trend_status,'value':trend_points,'unit':'Stufe','label':'Trend','date':source_date,'text':trend_text}
-            },
-            'history':history,
-            'note':'DOMINO Ölversorgung v2.0: harte EIA-Daten plus Trend und Heavy-Sour-Proxy. Raffinerien, Lager und Transport bleiben separate Hauptindikatoren.',
-            'sources':[
-              'U.S. EIA STEO Fig2 – World liquid fuels production and consumption balance',
-              'U.S. EIA STEO Fig6 – OPEC surplus crude oil production capacity',
-              'U.S. EIA STEO Fig10 – Estimated unplanned crude oil production outages',
-              'U.S. EIA Gulf Coast refinery crude oil input qualities – Heavy-Sour proxy'
-            ]
+          labels = {'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT'}
+          data['version'] = '2.2'
+          data['status'] = overall
+          data['label'] = labels[overall]
+          data['score'] = total
+          data['updated'] = datetime.now(timezone.utc).isoformat()
+          dates = [components[k].get('date') for k in required if components[k].get('date')]
+          data['source_date'] = max(dates) if dates else None
+          data['note'] = ('DOMINO Ölversorgung: Gesamtampel aus den drei verifizierten Sensoren '
+                          'Angebot/Nachfrage, OPEC-Reservekapazität und ungeplante Produktionsausfälle.')
+          data['aggregation'] = {
+              'method': 'three_verified_sensors_v1',
+              'points_total': total,
+              'points_max': 9,
+              'red_sensors': red_count,
+              'orange_or_red_sensors': orange_or_worse
           }
+
           with open('oil-supply.json','w',encoding='utf-8') as f:
-              json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
-          print(json.dumps(out,ensure_ascii=False,indent=2))
+              json.dump(data,f,ensure_ascii=False,indent=2)
+              f.write('\n')
+          print(json.dumps({'status':overall,'score':total,'red_sensors':red_count},ensure_ascii=False))
           PY
       - name: Commit if changed
         run: |
