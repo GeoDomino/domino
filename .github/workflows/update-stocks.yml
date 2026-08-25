@@ -23,8 +23,9 @@ jobs:
           python-version: '3.12'
       - run: pip install pandas openpyxl xlrd requests
       - name: Fetch EIA inventory series and calculate DOMINO stress
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           import io, json, math, os, requests, pandas as pd
           from datetime import datetime, timezone, date
 
