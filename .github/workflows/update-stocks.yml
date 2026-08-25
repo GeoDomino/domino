@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import io, json, math, os, requests, pandas as pd
+          import io, json, math, requests, pandas as pd
           from datetime import datetime, timezone, date
 
           UA={'User-Agent':'DOMINO-dashboard/2.0 (+GitHub Actions)'}
@@ -35,7 +35,8 @@ jobs:
 
           SERIES={
             'spr':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAS_MBBL_W.xls',
-            'commercial':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAE_MBBL_W.xls',
+            # Commercial crude oil, excluding lease stocks and excluding the Strategic Petroleum Reserve.
+            'commercial':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAX_MBBL_W.xls',
             'distillate':'https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPD0_SAE_MBBL_W.xls',
             'days_supply':'https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPD0_VSD_DAYS_W.xls'
           }
@@ -93,7 +94,6 @@ jobs:
           dist=series_from_xls(SERIES['distillate'])
           dos=series_from_xls(SERIES['days_supply'])
 
-          # Keep five years for empirical calibration, while preserving the latest point.
           def tail(s,n=260): return s[-n:]
           spr5,com5,dist5,dos5=map(tail,(spr,commercial,dist,dos))
 
@@ -104,7 +104,6 @@ jobs:
 
           spr_level=0 if spr_m>=400 else 1 if spr_m>=350 else 2 if spr_m>=300 else 3
           spr_trend_level=0 if spr_change>=0 else 1 if spr_change>-2 else 2 if spr_change>-5 else 3
-
           com_pct=pct_rank([v for _,v in com5],cv); com_level=low_level(com_pct)
           dist_pct=pct_rank([v for _,v in dist5],dv); dist_level=low_level(dist_pct)
           dos_pct=pct_rank([v for _,v in dos5],pv); dos_level=low_level(dos_pct)
@@ -139,7 +138,7 @@ jobs:
           except: status_since=TODAY.isoformat(); days=1
 
           out={
-            'version':'2.0','status':statuses[overall],'label':labels[overall],'level':overall,
+            'version':'2.1','status':statuses[overall],'label':labels[overall],'level':overall,
             'score':round(overall_score,2),'status_since':status_since,'days_in_status':days,
             'source_date':max(sd,cd,dd,pd).isoformat(),'updated_at':NOW.isoformat(),
             'components':{
@@ -157,7 +156,7 @@ jobs:
               'draw_speed_percentile':{'green':'<60 or build','yellow':'60-<80','orange':'80-<95','red':'>=95'}
             },
             'sources':SERIES,
-            'note':'EIA weekly inventory data; workflow checks daily for a new release. Percentiles use the latest 260 weekly observations (~5 years).'
+            'note':'EIA weekly inventory data; workflow checks daily for a new release. Commercial crude uses EIA Commercial Crude Oil (Excl. Lease Stock), i.e. excludes SPR. Percentiles use the latest 260 weekly observations (~5 years).'
           }
           with open('stocks.json','w',encoding='utf-8') as f:
               json.dump(out,f,ensure_ascii=False,indent=2);f.write('\n')
