@@ -1,13 +1,13 @@
 {
-  "version": "2.0",
-  "status": "red",
-  "label": "ROT",
-  "level": 3,
-  "score": 2.5,
+  "version": "2.1",
+  "status": "orange",
+  "label": "ORANGE",
+  "level": 2,
+  "score": 1.9,
   "status_since": "2026-08-25",
   "days_in_status": 1,
   "source_date": "2026-08-14",
-  "updated_at": "2026-08-25T09:02:39.311721+00:00",
+  "updated_at": "2026-08-25T09:10:43.678645+00:00",
   "components": {
     "spr": {
       "level": 3,
@@ -20,9 +20,9 @@
       "source_date": "2026-08-14"
     },
     "commercial_crude": {
-      "level": 3,
-      "value_million_bbl": 722.241,
-      "percentile": 1.2,
+      "level": 0,
+      "value_million_bbl": 428.815,
+      "percentile": 51.9,
       "source_date": "2026-08-14"
     },
     "distillate_stocks": {
@@ -72,9 +72,9 @@
   },
   "sources": {
     "spr": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAS_MBBL_W.xls",
-    "commercial": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAE_MBBL_W.xls",
+    "commercial": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAX_MBBL_W.xls",
     "distillate": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPD0_SAE_MBBL_W.xls",
     "days_supply": "https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPD0_VSD_DAYS_W.xls"
   },
-  "note": "EIA weekly inventory data; workflow checks daily for a new release. Percentiles use the latest 260 weekly observations (~5 years)."
+  "note": "EIA weekly inventory data; workflow checks daily for a new release. Commercial crude uses EIA Commercial Crude Oil (Excl. Lease Stock), i.e. excludes SPR. Percentiles use the latest 260 weekly observations (~5 years)."
 }
