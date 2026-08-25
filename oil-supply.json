@@ -1,10 +1,10 @@
 {
-  "version": "2.1",
-  "status": "unknown",
-  "label": "WARTET",
-  "updated": null,
-  "source_date": null,
-  "score": null,
+  "version": "2.2",
+  "status": "red",
+  "label": "ROT",
+  "updated": "2026-08-25T12:01:00+00:00",
+  "source_date": "2026-Q3",
+  "score": 8,
   "components": {
     "supply_demand_balance": {
       "sensor": 1,
@@ -32,25 +32,14 @@
       "period": "2026 Q3",
       "date": "2026-Q3",
       "monthly_values": [
-        {
-          "month": "2026-07",
-          "value": 0.02
-        },
-        {
-          "month": "2026-08",
-          "value": 0.02
-        },
-        {
-          "month": "2026-09",
-          "value": 0.02
-        }
+        {"month": "2026-07", "value": 0.02},
+        {"month": "2026-08", "value": 0.02},
+        {"month": "2026-09", "value": 0.02}
       ],
       "source": "U.S. EIA Short-Term Energy Outlook · OPEC surplus crude oil production capacity",
       "series_id": "COPS_OPEC",
       "source_url": "https://www.eia.gov/opendata/bulk/STEO.zip",
-      "source_members": [
-        "STEO.txt"
-      ],
+      "source_members": ["STEO.txt"],
       "parser": "eia-steo-bulk-cops-opec-v4"
     },
     "unplanned_outages": {
@@ -73,11 +62,18 @@
   "sensor1_updated": "2026-08-25T08:55:05.533497+00:00",
   "sensor1_source_date": "2026-Q3",
   "sensor1_note": "Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.",
-  "note": "DOMINO Ölversorgung: Sensor 1 aktiv; weitere Sensoren werden separat verifiziert.",
   "sensor2_updated": "2026-08-25T11:39:36.797752+00:00",
   "sensor2_source_date": "2026-Q3",
   "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.",
   "sensor3_updated": "2026-08-25T11:55:33.032093+00:00",
   "sensor3_source_date": "2026-07-01",
-  "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag."
+  "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.",
+  "aggregation": {
+    "method": "three_verified_sensors_v1",
+    "points_total": 8,
+    "points_max": 9,
+    "red_sensors": 2,
+    "orange_or_red_sensors": 3
+  },
+  "note": "DOMINO Ölversorgung: Gesamtampel aus den drei verifizierten Sensoren Angebot/Nachfrage, OPEC-Reservekapazität und ungeplante Produktionsausfälle."
 }
