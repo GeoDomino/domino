@@ -1,11 +1,80 @@
 {
   "version": "2.0",
-  "status": "unknown",
-  "label": "WARTET",
-  "level": null,
-  "days_in_status": null,
-  "source_date": null,
-  "updated_at": null,
-  "components": {},
-  "note": "Wartet auf ersten automatischen EIA-Abruf."
+  "status": "red",
+  "label": "ROT",
+  "level": 3,
+  "score": 2.5,
+  "status_since": "2026-08-25",
+  "days_in_status": 1,
+  "source_date": "2026-08-14",
+  "updated_at": "2026-08-25T09:02:39.311721+00:00",
+  "components": {
+    "spr": {
+      "level": 3,
+      "value_million_bbl": 293.426,
+      "source_date": "2026-08-14"
+    },
+    "spr_trend": {
+      "level": 3,
+      "weekly_change_million_bbl": -5.268,
+      "source_date": "2026-08-14"
+    },
+    "commercial_crude": {
+      "level": 3,
+      "value_million_bbl": 722.241,
+      "percentile": 1.2,
+      "source_date": "2026-08-14"
+    },
+    "distillate_stocks": {
+      "level": 3,
+      "value_million_bbl": 105.619,
+      "percentile": 7.7,
+      "weekly_change_million_bbl": -1.53,
+      "source_date": "2026-08-14"
+    },
+    "days_supply": {
+      "level": 1,
+      "value_days": 28.4,
+      "percentile": 20.8,
+      "source_date": "2026-08-14"
+    },
+    "draw_speed": {
+      "level": 0,
+      "draw_percentile": 44.5,
+      "weekly_change_million_bbl": -1.53,
+      "source_date": "2026-08-14"
+    },
+    "diesel_stress": {
+      "level": 2,
+      "score": 1.55,
+      "formula": "40% stock percentile + 35% days-of-supply percentile + 25% draw-speed percentile"
+    }
+  },
+  "thresholds": {
+    "spr_million_bbl": {
+      "green": ">=400",
+      "yellow": "350-<400",
+      "orange": "300-<350",
+      "red": "<300"
+    },
+    "historical_low_percentile": {
+      "green": ">35",
+      "yellow": "20-35",
+      "orange": "10-20",
+      "red": "<=10"
+    },
+    "draw_speed_percentile": {
+      "green": "<60 or build",
+      "yellow": "60-<80",
+      "orange": "80-<95",
+      "red": ">=95"
+    }
+  },
+  "sources": {
+    "spr": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAS_MBBL_W.xls",
+    "commercial": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPC0_SAE_MBBL_W.xls",
+    "distillate": "https://www.eia.gov/dnav/pet/xls/PET_STOC_WSTK_A_EPD0_SAE_MBBL_W.xls",
+    "days_supply": "https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPD0_VSD_DAYS_W.xls"
+  },
+  "note": "EIA weekly inventory data; workflow checks daily for a new release. Percentiles use the latest 260 weekly observations (~5 years)."
 }
