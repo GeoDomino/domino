@@ -31,7 +31,17 @@
       const d=await r.json(); if(typeof d.level!=='number')return;
       const lamp=document.getElementById('stockLight'),date=document.getElementById('stockDate');
       if(lamp)lamp.style.background=LEVEL_COLORS[d.level]||'var(--unknown)';
-      if(date)date.textContent=d.days_in_status===1?'seit heute':`seit ${Math.max(1,d.days_in_status-1)} Tagen`;
+      if(date){
+        const old=date.querySelector('.stock-trend-arrow'); if(old)old.remove();
+        date.textContent=d.days_in_status===1?'seit heute':`seit ${Math.max(1,d.days_in_status-1)} Tagen`;
+        const arrow=document.createElement('span');
+        arrow.className='stock-trend-arrow';
+        arrow.textContent=' ↑';
+        arrow.title='Ampel eskaliert / Verschlechterung';
+        arrow.setAttribute('aria-label','Ampel eskaliert');
+        arrow.style.cssText='font-size:17px;font-weight:900;color:var(--red);margin-left:4px;vertical-align:-1px';
+        date.appendChild(arrow);
+      }
       replaceDetail(d);
     }catch(e){console.warn('stocks-ui',e)}
   }
