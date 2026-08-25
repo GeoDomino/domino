@@ -30,65 +30,54 @@ jobs:
 
           URL='https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx'
           NOW=datetime.now(timezone.utc)
-          CUR=(NOW.year,(NOW.month-1)//3+1)
           r=requests.get(URL,timeout=60,headers={'User-Agent':'DOMINO-dashboard/2.5 (+GitHub Actions)'})
           r.raise_for_status()
           sheets=pd.read_excel(io.BytesIO(r.content),sheet_name=None,header=None)
 
-          def text(x):
+          def txt(x):
               return '' if pd.isna(x) else re.sub(r'\s+',' ',str(x)).strip()
-          def low(x): return text(x).lower()
           def num(x):
               try:
                   v=float(x); return v if math.isfinite(v) else None
               except Exception: return None
-          def quarter(x):
-              s=text(x).upper()
-              pats=[r'Q\s*([1-4])\D*(20\d{2})',r'(20\d{2})\D*Q\s*([1-4])',r'([1-4])\s*Q\s*(20\d{2}|\d{2})']
-              for i,p in enumerate(pats):
-                  m=re.search(p,s)
-                  if not m: continue
-                  if i==1: y,q=int(m.group(1)),int(m.group(2))
-                  else:
-                      q,y=int(m.group(1)),int(m.group(2))
-                      if y<100: y+=2000
-                  return y,q
-              return None
 
-          candidates=[]
+          best=None
           for sheet,df in sheets.items():
-              for rr in range(len(df)):
-                  rowtxt=' | '.join(low(df.iat[rr,c]) for c in range(df.shape[1]) if low(df.iat[rr,c]))
-                  if 'outage' not in rowtxt:
+              for hr in range(len(df)):
+                  row=[txt(df.iat[hr,c]).lower() for c in range(df.shape[1])]
+                  opec_col=next((c for c,s in enumerate(row) if 'opec' in s and 'unplanned' in s and 'outage' in s and 'non-opec' not in s),None)
+                  non_col=next((c for c,s in enumerate(row) if 'non-opec' in s and 'unplanned' in s and 'outage' in s),None)
+                  if opec_col is None or non_col is None:
                       continue
-                  # Prefer total/estimated unplanned crude oil production outage rows.
-                  if 'planned' in rowtxt and 'unplanned' not in rowtxt:
-                      continue
-                  for cc in range(df.shape[1]):
-                      v=num(df.iat[rr,cc])
-                      if v is None or not (0 <= v <= 20):
+                  for rr in range(hr+1,len(df)):
+                      date=None
+                      for c in range(min(4,df.shape[1])):
+                          d=pd.to_datetime(df.iat[rr,c],errors='coerce')
+                          if not pd.isna(d):
+                              d=pd.Timestamp(d).tz_localize(None) if getattr(pd.Timestamp(d),'tzinfo',None) else pd.Timestamp(d)
+                              if pd.Timestamp('2000-01-01') <= d <= pd.Timestamp(NOW.date()):
+                                  date=d; break
+                      if date is None:
                           continue
-                      p=None
-                      for hr in range(max(0,rr-15),rr+1):
-                          p=quarter(df.iat[hr,cc])
-                          if p: break
-                      if p and p<=CUR:
-                          candidates.append((p,v,sheet,rr,cc,rowtxt))
+                      ov=num(df.iat[rr,opec_col]); nv=num(df.iat[rr,non_col])
+                      if ov is None or nv is None:
+                          continue
+                      total=ov+nv
+                      if not 0 <= total <= 20:
+                          continue
+                      item=(date,total,ov,nv,sheet,hr,rr,opec_col,non_col)
+                      if best is None or date>best[0]:
+                          best=item
 
-          if not candidates:
+          if best is None:
               for sheet,df in sheets.items():
                   print('SHEET',sheet,'shape',df.shape)
                   for rr in range(len(df)):
-                      row=' | '.join(text(df.iat[rr,c]) for c in range(df.shape[1]) if text(df.iat[rr,c]))
-                      if 'OUTAGE' in row.upper() or re.search(r'Q[1-4].*20\d{2}|20\d{2}.*Q[1-4]',row,re.I):
-                          print(rr,row[:1200])
-              raise RuntimeError('EIA Fig10 found no usable current-quarter unplanned outage value')
+                      row=' | '.join(txt(df.iat[rr,c]) for c in range(df.shape[1]) if txt(df.iat[rr,c]))
+                      if 'OUTAGE' in row.upper(): print(rr,row[:1200])
+              raise RuntimeError('EIA Fig10: could not align OPEC and non-OPEC outage columns with dated values')
 
-          # For a given current period prefer the largest total-style outage row, because
-          # Fig10 can contain regional components in addition to the aggregate.
-          current=[x for x in candidates if x[0]==max(z[0] for z in candidates)]
-          (year,q),value,sheet,row,col,label=max(current,key=lambda z:z[1])
-
+          date,value,opec,non_opec,sheet,hr,rr,oc,nc=best
           if value >= 5.0: status='red'; points=3
           elif value >= 3.0: status='orange'; points=2
           elif value >= 1.5: status='yellow'; points=1
@@ -99,22 +88,16 @@ jobs:
           except Exception: old={}
           old.setdefault('components',{})
           old['components']['unplanned_outages']={
-              'sensor':3,
-              'status':status,
-              'points':points,
-              'value':round(value,2),
-              'unit':'mb/d',
+              'sensor':3,'status':status,'points':points,'value':round(value,2),'unit':'mb/d',
+              'opec':round(opec,2),'non_opec':round(non_opec,2),
               'label':'Sensor 3 Ölversorgung · Ungeplante Produktionsausfälle',
-              'period':f'{year} Q{q}',
-              'date':f'{year}-Q{q}',
+              'date':date.date().isoformat(),
               'source':'U.S. EIA Short-Term Energy Outlook · Estimated unplanned crude oil production outages',
-              'source_url':URL,
-              'parser':'eia-fig10-unplanned-outages-v1',
-              'sheet':sheet
+              'source_url':URL,'parser':'eia-fig10-unplanned-outages-v2','sheet':sheet
           }
           old['sensor3_updated']=NOW.isoformat()
-          old['sensor3_source_date']=f'{year}-Q{q}'
-          old['sensor3_note']='Misst ungeplante Rohöl-Produktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.'
+          old['sensor3_source_date']=date.date().isoformat()
+          old['sensor3_note']='Misst die Summe der von der EIA geschätzten ungeplanten OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.'
           with open(path,'w',encoding='utf-8') as f:
               json.dump(old,f,ensure_ascii=False,indent=2); f.write('\n')
           print(json.dumps(old['components']['unplanned_outages'],ensure_ascii=False,indent=2))
