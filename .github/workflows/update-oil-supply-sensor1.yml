@@ -24,19 +24,21 @@ jobs:
       - name: Fetch EIA world supply-demand balance
         shell: python
         run: |
-          import io, json, math, os, re, requests, pandas as pd
+          import io, json, math, re, requests, pandas as pd
           from datetime import datetime, timezone
 
           URL='https://www.eia.gov/outlooks/steo/xls/Fig2.xlsx'
           NOW=datetime.now(timezone.utc)
-          TODAY=pd.Timestamp(NOW.date())
-          UA={'User-Agent':'DOMINO-dashboard/2.1 (+GitHub Actions)'}
+          CUR_YEAR=NOW.year
+          CUR_Q=(NOW.month-1)//3+1
+          UA={'User-Agent':'DOMINO-dashboard/2.2 (+GitHub Actions)'}
 
           r=requests.get(URL,timeout=60,headers=UA)
           r.raise_for_status()
           sheets=pd.read_excel(io.BytesIO(r.content),sheet_name=None,header=None)
 
           def txt(x):
+              if pd.isna(x): return ''
               return re.sub(r'\s+',' ',str(x)).strip().lower()
 
           def num(x):
@@ -46,70 +48,102 @@ jobs:
               except Exception:
                   return None
 
-          def asdate(x):
+          def quarter_from_value(x):
+              if pd.isna(x): return None
+              # Real Excel/Pandas date
               try:
                   d=pd.to_datetime(x,errors='coerce')
-                  if pd.isna(d): return None
-                  d=pd.Timestamp(d).tz_localize(None) if getattr(pd.Timestamp(d),'tzinfo',None) else pd.Timestamp(d)
-                  if pd.Timestamp('2000-01-01') <= d <= pd.Timestamp('2035-12-31'):
-                      return d
+                  if not pd.isna(d):
+                      d=pd.Timestamp(d)
+                      if 2000 <= d.year <= 2035:
+                          return (d.year,(d.month-1)//3+1)
               except Exception:
                   pass
+              s=txt(x).upper()
+              # Q3 2026 / 2026 Q3 / 3Q26 etc.
+              m=re.search(r'Q\s*([1-4]).*?(20\d{2})',s)
+              if m: return (int(m.group(2)),int(m.group(1)))
+              m=re.search(r'(20\d{2}).*?Q\s*([1-4])',s)
+              if m: return (int(m.group(1)),int(m.group(2)))
+              m=re.search(r'([1-4])\s*Q\s*(\d{2,4})',s)
+              if m:
+                  y=int(m.group(2)); y=y+2000 if y<100 else y
+                  return (y,int(m.group(1)))
               return None
 
-          def horizontal(df):
+          def row_text(df,rr):
+              return ' '.join(txt(x) for x in df.iloc[rr,:min(df.shape[1],12)].tolist())
+
+          def find_rows(df):
               prod=[]; cons=[]
               for rr in range(len(df)):
-                  row=' '.join(txt(x) for x in df.iloc[rr,:min(df.shape[1],8)].tolist())
-                  if 'world production' in row or ('production' in row and 'world' in row): prod.append(rr)
-                  if 'world consumption' in row or ('consumption' in row and 'world' in row): cons.append(rr)
-              candidates=[]
+                  s=row_text(df,rr)
+                  # Current EIA wording is usually "world liquid fuels production/consumption".
+                  if 'world' in s and 'production' in s and ('fuel' in s or 'liquid' in s): prod.append(rr)
+                  elif 'world' in s and 'production' in s: prod.append(rr)
+                  if 'world' in s and ('consumption' in s or 'demand' in s) and ('fuel' in s or 'liquid' in s): cons.append(rr)
+                  elif 'world' in s and ('consumption' in s or 'demand' in s): cons.append(rr)
+              return prod,cons
+
+          def periods_for_columns(df,pr,cr):
+              periods={}
+              top=max(0,min(pr,cr)-15)
+              bottom=min(pr,cr)
+              # 1) Direct quarter/date labels in nearby header cells.
+              for rr in range(top,bottom):
+                  for c in range(df.shape[1]):
+                      q=quarter_from_value(df.iat[rr,c])
+                      if q: periods[c]=q
+              # 2) Common EIA layout: year row + Q1/Q2/Q3/Q4 row.
+              for yrrow in range(top,bottom):
+                  years=[]
+                  last_year=None
+                  for c in range(df.shape[1]):
+                      v=df.iat[yrrow,c]
+                      y=None
+                      try:
+                          f=float(v)
+                          if f.is_integer() and 2000 <= int(f) <= 2035: y=int(f)
+                      except Exception:
+                          m=re.fullmatch(r'20\d{2}',txt(v))
+                          if m: y=int(m.group(0))
+                      if y is not None: last_year=y
+                      years.append(last_year)
+                  if not any(years): continue
+                  for qrow in range(yrrow,min(bottom,yrrow+4)):
+                      for c in range(df.shape[1]):
+                          s=txt(df.iat[qrow,c]).upper()
+                          m=re.fullmatch(r'Q\s*([1-4])',s)
+                          if m and years[c]: periods[c]=(years[c],int(m.group(1)))
+              return periods
+
+          def extract(df):
+              prod,cons=find_rows(df)
+              hits=[]
               for pr in prod:
                   for cr in cons:
-                      if abs(pr-cr)>8: continue
-                      for dr in range(max(0,min(pr,cr)-8), min(len(df),max(pr,cr)+9)):
-                          datecols=[]
-                          for c in range(df.shape[1]):
-                              d=asdate(df.iat[dr,c])
-                              if d is not None: datecols.append((c,d))
-                          if len(datecols)<2: continue
-                          vals=[]
-                          for c,d in datecols:
-                              p=num(df.iat[pr,c]); q=num(df.iat[cr,c])
-                              if p is not None and q is not None and d<=TODAY:
-                                  vals.append((d,p-q,p,q))
-                          if vals:
-                              vals.sort(key=lambda z:z[0]); candidates.append(vals[-1])
-              return max(candidates,key=lambda z:z[0]) if candidates else None
-
-          def vertical(df):
-              headers={}
-              for rr in range(min(30,len(df))):
-                  for c in range(df.shape[1]):
-                      s=txt(df.iat[rr,c])
-                      if 'production' in s and 'world' in s: headers.setdefault('p',c)
-                      if 'consumption' in s and 'world' in s: headers.setdefault('c',c)
-              if not {'p','c'}<=set(headers): return None
-              vals=[]
-              for rr in range(len(df)):
-                  d=None
-                  for c in range(min(5,df.shape[1])):
-                      d=asdate(df.iat[rr,c])
-                      if d is not None: break
-                  if d is None or d>TODAY: continue
-                  p=num(df.iat[rr,headers['p']]); q=num(df.iat[rr,headers['c']])
-                  if p is not None and q is not None: vals.append((d,p-q,p,q))
-              return max(vals,key=lambda z:z[0]) if vals else None
+                      if abs(pr-cr)>12: continue
+                      periods=periods_for_columns(df,pr,cr)
+                      for c,q in periods.items():
+                          p=num(df.iat[pr,c]); d=num(df.iat[cr,c])
+                          if p is None or d is None: continue
+                          if q <= (CUR_YEAR,CUR_Q): hits.append((q,p-d,p,d,pr,cr,c))
+              return max(hits,key=lambda z:z[0]) if hits else None
 
           found=[]
+          diagnostics=[]
           for name,df in sheets.items():
               if df.empty: continue
-              hit=horizontal(df) or vertical(df)
+              pr,cr=find_rows(df)
+              diagnostics.append({'sheet':name,'production_rows':pr,'consumption_rows':cr,'shape':list(df.shape)})
+              hit=extract(df)
               if hit: found.append((hit,name))
-          if not found:
-              raise RuntimeError('EIA Fig2 parsed, but no aligned world production/consumption series were found')
 
-          (d,balance,production,consumption),sheet=max(found,key=lambda z:z[0][0])
+          if not found:
+              print(json.dumps({'diagnostics':diagnostics},ensure_ascii=False,indent=2))
+              raise RuntimeError('EIA Fig2 parsed, but current-quarter world production/consumption values were not found')
+
+          ((year,quarter),balance,production,consumption,pr,cr,col),sheet=max(found,key=lambda z:z[0][0])
           deficit=max(0,-balance)
           if deficit>=5.0: status='red'; points=3
           elif deficit>=1.5: status='orange'; points=2
@@ -117,30 +151,23 @@ jobs:
           else: status='green'; points=0
 
           path='oil-supply.json'
-          try:
-              old=json.load(open(path,encoding='utf-8'))
-          except Exception:
-              old={}
-          old.setdefault('version','2.1')
+          try: old=json.load(open(path,encoding='utf-8'))
+          except Exception: old={}
+          old.setdefault('version','2.2')
           old.setdefault('status','unknown')
           old.setdefault('label','WARTET')
           old.setdefault('score',None)
           old.setdefault('components',{})
           old['components']['supply_demand_balance']={
-              'sensor':1,
-              'status':status,
-              'points':points,
-              'value':round(balance,2),
-              'production':round(production,2),
-              'consumption':round(consumption,2),
-              'unit':'mb/d',
+              'sensor':1,'status':status,'points':points,'value':round(balance,2),
+              'production':round(production,2),'consumption':round(consumption,2),'unit':'mb/d',
               'label':'Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance',
-              'date':d.date().isoformat(),
+              'period':f'{year} Q{quarter}','date':f'{year}-Q{quarter}',
               'source':'U.S. EIA Short-Term Energy Outlook, World liquid fuels production and consumption balance (Fig2)',
-              'source_url':URL
+              'source_url':URL,'parser':'quarter-header-v2','sheet':sheet
           }
           old['sensor1_updated']=NOW.isoformat()
-          old['sensor1_source_date']=d.date().isoformat()
+          old['sensor1_source_date']=f'{year}-Q{quarter}'
           old['sensor1_note']='Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.'
           with open(path,'w',encoding='utf-8') as f:
               json.dump(old,f,ensure_ascii=False,indent=2); f.write('\n')
@@ -152,5 +179,3 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add oil-supply.json
           git diff --cached --quiet || (git commit -m "Update oil supply sensor 1 balance" && git push)
-
-# trigger: 2026-08-20T12:14Z
