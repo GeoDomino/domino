@@ -2,7 +2,7 @@
   "version": "2.2",
   "status": "red",
   "label": "ROT",
-  "updated": "2026-08-25T12:01:00+00:00",
+  "updated": "2026-08-26T06:03:03.069985+00:00",
   "source_date": "2026-Q3",
   "score": 8,
   "components": {
@@ -32,14 +32,25 @@
       "period": "2026 Q3",
       "date": "2026-Q3",
       "monthly_values": [
-        {"month": "2026-07", "value": 0.02},
-        {"month": "2026-08", "value": 0.02},
-        {"month": "2026-09", "value": 0.02}
+        {
+          "month": "2026-07",
+          "value": 0.02
+        },
+        {
+          "month": "2026-08",
+          "value": 0.02
+        },
+        {
+          "month": "2026-09",
+          "value": 0.02
+        }
       ],
       "source": "U.S. EIA Short-Term Energy Outlook · OPEC surplus crude oil production capacity",
       "series_id": "COPS_OPEC",
       "source_url": "https://www.eia.gov/opendata/bulk/STEO.zip",
-      "source_members": ["STEO.txt"],
+      "source_members": [
+        "STEO.txt"
+      ],
       "parser": "eia-steo-bulk-cops-opec-v4"
     },
     "unplanned_outages": {
