@@ -24,7 +24,7 @@ jobs:
       - name: Fetch EIA weekly physical oil data
         run: |
           python - <<'PY'
-          import io, json, re, requests, pandas as pd
+          import io, json, math, re, requests, pandas as pd
           from datetime import datetime, timezone
 
           UA={'User-Agent':'DOMINO-dashboard/3.0 (+GitHub Actions)'}
@@ -38,7 +38,9 @@ jobs:
 
           def num(x):
             s=str(x).replace(',','').strip()
-            try:return float(s)
+            try:
+              v=float(s)
+              return v if math.isfinite(v) else None
             except:return None
 
           def read_series(url, needle):
