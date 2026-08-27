@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "status": "green",
+  "label": "GRÜN",
+  "level": 0,
+  "score": 0.0,
+  "source_date": "2026-08-21",
+  "updated_at": "2026-08-27T19:50:00+00:00",
+  "components": {
+    "canada_imports": {"weight": 0.30, "level": 0, "value_mbd": 3.988, "baseline_4w_mbd": 3.887, "deviation_pct": 2.6, "label": "Kanada → USA Rohöl"},
+    "commercial_crude_stocks": {"weight": 0.30, "level": 0, "value_million_bbl": 428.91, "baseline_4w_million_bbl": 416.18, "deviation_pct": 3.06, "label": "Kommerzielle Rohöllager"},
+    "total_crude_imports": {"weight": 0.15, "level": 0, "value_mbd": 6.158, "baseline_4w_mbd": 6.453, "deviation_pct": -4.58, "label": "Gesamte Rohölimporte"},
+    "domestic_production": {"weight": 0.15, "level": 0, "value_mbd": 13.843, "baseline_4w_mbd": 13.809, "deviation_pct": 0.25, "label": "US-Rohölförderung"},
+    "refinery_inputs": {"weight": 0.10, "level": 0, "value_mbd": 17.393, "baseline_4w_mbd": 17.266, "deviation_pct": 0.74, "label": "Raffinerie-Rohöleinsatz"}
+  },
+  "weights": {"canada_imports":30,"commercial_crude_stocks":30,"total_crude_imports":15,"domestic_production":15,"refinery_inputs":10},
+  "method": "Abweichung des neuesten Wochenwerts vom Mittel der vier vorangegangenen Wochen; gewichtete Stressstufen 0–3. Kanada/Importe: gelb ab -5 %, orange ab -10 %, rot ab -20 %. Lager: gelb ab -2 %, orange ab -5 %, rot ab -10 %. Förderung: gelb ab -1 %, orange ab -2.5 %, rot ab -5 %. Raffinerieeinsatz: gelb ab -2 %, orange ab -5 %, rot ab -10 %. Kombinationen können die Gesamtampel hochstufen.",
+  "sources": {
+    "canada_imports": "https://www.eia.gov/dnav/pet/pet_move_wimpc_s1_4.htm",
+    "commercial_crude_stocks": "https://www.eia.gov/dnav/pet/pet_stoc_wstk_a_EPC0_SAX_mbbl_w.htm",
+    "total_crude_imports": "https://www.eia.gov/dnav/pet/pet_move_wkly_a_epc0_imx_mbblpd_w.htm",
+    "domestic_production": "https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm",
+    "refinery_inputs": "https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm"
+  }
+}
