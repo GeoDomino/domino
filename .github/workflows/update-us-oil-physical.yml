@@ -1,0 +1,133 @@
+name: Update US physical oil supply
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-us-oil-physical.yml'
+  schedule:
+    - cron: '20 16 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas lxml requests
+      - name: Fetch EIA weekly physical oil data
+        run: |
+          python - <<'PY'
+          import json, re, requests, pandas as pd
+          from datetime import datetime, timezone
+
+          UA={'User-Agent':'DOMINO-dashboard/3.0 (+GitHub Actions)'}
+          SOURCES={
+            'canada_imports':'https://www.eia.gov/dnav/pet/pet_move_wimpc_s1_w.htm',
+            'commercial_crude_stocks':'https://www.eia.gov/dnav/pet/pet_stoc_wstk_a_EPC0_SAX_mbbl_w.htm',
+            'total_crude_imports':'https://www.eia.gov/dnav/pet/pet_move_wkly_a_epc0_imx_mbblpd_w.htm',
+            'domestic_production':'https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm',
+            'refinery_inputs':'https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm'
+          }
+
+          def num(x):
+            s=str(x).replace(',','').strip()
+            try:return float(s)
+            except:return None
+
+          def read_series(url, needle):
+            html=requests.get(url,timeout=60,headers=UA).text
+            tabs=pd.read_html(html)
+            for df in tabs:
+              for _,row in df.iterrows():
+                first=str(row.iloc[0]).lower()
+                if needle(first):
+                  vals=[]
+                  for x in row.iloc[1:]:
+                    v=num(x)
+                    if v is not None: vals.append(v)
+                  if len(vals)>=5:
+                    dates=[]
+                    for c in df.columns:
+                      txt=' '.join(map(str,c)) if isinstance(c,tuple) else str(c)
+                      m=re.search(r'(\d{2}/\d{2}/\d{2})',txt)
+                      if m: dates.append(pd.to_datetime(m.group(1)).date())
+                    return vals[-6:], (max(dates).isoformat() if dates else None)
+            raise RuntimeError('series not found '+url)
+
+          can,dc=read_series(SOURCES['canada_imports'],lambda s:'canada' in s)
+          stk,ds=read_series(SOURCES['commercial_crude_stocks'],lambda s:s.strip()=='u.s.' or s.strip()=='u.s')
+          imp,di=read_series(SOURCES['total_crude_imports'],lambda s:s.strip()=='u.s.' or s.strip()=='u.s')
+          pro,dp=read_series(SOURCES['domestic_production'],lambda s:s.strip()=='u.s.' or s.strip()=='u.s')
+          ref,dr=read_series(SOURCES['refinery_inputs'],lambda s:s.strip()=='u.s.' or s.strip()=='u.s')
+
+          def metric(vals, scale, cuts):
+            latest=vals[-1]*scale
+            base=sum(vals[-5:-1])/4*scale
+            dev=(latest/base-1)*100 if base else 0
+            # cuts are negative thresholds yellow/orange/red
+            if dev<=cuts[2]: lvl=3
+            elif dev<=cuts[1]: lvl=2
+            elif dev<=cuts[0]: lvl=1
+            else: lvl=0
+            return latest,base,dev,lvl
+
+          C=metric(can,0.001,(-5,-10,-20))
+          S=metric(stk,0.001,(-2,-5,-10))
+          I=metric(imp,0.001,(-5,-10,-20))
+          P=metric(pro,0.001,(-1,-2.5,-5))
+          R=metric(ref,0.001,(-2,-5,-10))
+          weights={'canada_imports':.30,'commercial_crude_stocks':.30,'total_crude_imports':.15,'domestic_production':.15,'refinery_inputs':.10}
+          vals={'canada_imports':C,'commercial_crude_stocks':S,'total_crude_imports':I,'domestic_production':P,'refinery_inputs':R}
+          score=sum(weights[k]*vals[k][3] for k in weights)
+          if score>=2.0: level=3
+          elif score>=1.25: level=2
+          elif score>=0.5: level=1
+          else: level=0
+          # nonlinear confirmation: simultaneous import loss + inventory draw means real physical stress
+          if C[3]>=2 and I[3]>=2 and S[3]>=2: level=max(level,3)
+          elif sum(x[3]>=2 for x in (C,S,I,P,R))>=3: level=max(level,2)
+          labels=['GRÜN','GELB','ORANGE','ROT']; status=['green','yellow','orange','red'][level]
+          dates=[x for x in (dc,ds,di,dp,dr) if x]
+          source_date=max(dates) if dates else None
+          def obj(label,x,weight,unit):
+            return {'label':label,'weight':weight,'level':x[3],'value':round(x[0],3),'baseline_4w':round(x[1],3),'deviation_pct':round(x[2],2),'unit':unit}
+          out={'version':'1.0','status':status,'label':labels[level],'level':level,'score':round(score,2),'source_date':source_date,'updated_at':datetime.now(timezone.utc).isoformat(),'components':{
+            'canada_imports':obj('Kanada → USA Rohöl',C,30,'mb/d'),
+            'commercial_crude_stocks':obj('Kommerzielle Rohöllager',S,30,'Mio. bbl'),
+            'total_crude_imports':obj('Gesamte Rohölimporte',I,15,'mb/d'),
+            'domestic_production':obj('US-Rohölförderung',P,15,'mb/d'),
+            'refinery_inputs':obj('Raffinerie-Rohöleinsatz',R,10,'mb/d')},
+            'sources':SOURCES,
+            'method':'Neuester EIA-Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet. Kombinationen aus Importverlust und Lagerabbau können eskalieren.'}
+          json.dump(out,open('us-oil-physical.json','w',encoding='utf-8'),ensure_ascii=False,indent=2);open('us-oil-physical.json','a').write('\n')
+
+          try: oil=json.load(open('oil-supply.json',encoding='utf-8'))
+          except: oil={}
+          oil.setdefault('components',{})['us_physical_supply']={'sensor':4,'status':status,'points':level,'value':round(score,2),'unit':'weighted stress 0-3','label':'Sensor 4 Ölversorgung · US-Ölversorgung physisch','date':source_date,'source':'U.S. EIA Weekly Petroleum Data','detail_file':'us-oil-physical.json'}
+          oil['sensor4_updated']=out['updated_at'];oil['sensor4_source_date']=source_date
+          existing=[oil['components'].get(k,{}) for k in ('supply_demand_balance','spare_capacity','unplanned_outages','us_physical_supply')]
+          pts=[int(x.get('points',0)) for x in existing]; reds=sum(x.get('status')=='red' for x in existing)
+          total=sum(pts)
+          if reds>=2 or total>=9: overall='red'
+          elif total>=6: overall='orange'
+          elif total>=3: overall='yellow'
+          else: overall='green'
+          oil['status']=overall;oil['label']={'green':'GRÜN','yellow':'GELB','orange':'ORANGE','red':'ROT'}[overall]
+          oil['score']=total;oil['version']='2.3';oil['aggregation']={'method':'four_verified_sensors_v1','points_total':total,'points_max':12,'red_sensors':reds}
+          oil['note']='DOMINO Ölversorgung: Gesamtampel aus globaler Balance, OPEC-Reserve, ungeplanten Ausfällen und physischer US-Ölversorgung.'
+          json.dump(oil,open('oil-supply.json','w',encoding='utf-8'),ensure_ascii=False,indent=2);open('oil-supply.json','a').write('\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit data
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add us-oil-physical.json oil-supply.json
+          git diff --cached --quiet || (git commit -m "Update physical US oil supply" && git push)
