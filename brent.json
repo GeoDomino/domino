@@ -1,9 +1,8 @@
 {
-  "date": "2026-08-28",
-  "value": 88.1,
-  "source": "Yahoo Finance BZ=F",
-  "market_timestamp": "2026-08-28T20:59:45+00:00",
-  "age_days": 1,
-  "stale": false,
-  "updated_at": "2026-08-29T18:23:23.631343+00:00"
+  "date": "2026-08-25",
+  "value": 88.24,
+  "source": "FRED DCOILBRENTEU",
+  "age_days": 5,
+  "stale": true,
+  "updated_at": "2026-08-30T00:23:28.020845+00:00"
 }
