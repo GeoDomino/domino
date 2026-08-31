@@ -87,7 +87,7 @@
   "sensor2_updated": "2026-08-31T05:38:33.733805+00:00",
   "sensor2_source_date": "2026-Q3",
   "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.",
-  "sensor3_updated": "2026-08-30T05:43:27.705626+00:00",
+  "sensor3_updated": "2026-08-31T05:43:38.490971+00:00",
   "sensor3_source_date": "2026-07-01",
   "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.",
   "aggregation": {
