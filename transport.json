@@ -1,11 +1,11 @@
 {
   "version": "2.7",
-  "status": "orange",
-  "label": "ORANGE",
-  "summary": "stark gestört",
-  "score": 1.7,
+  "status": "red",
+  "label": "RED",
+  "summary": "kritisch",
+  "score": 2.43,
   "days_in_status": 1,
-  "updated_at": "2026-09-01T14:46:22.825265+00:00",
+  "updated_at": "2026-09-01T15:08:05.998704+00:00",
   "source_date": "2026-08-23",
   "components": {
     "hormuz": {
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 6.0,
+        "count": null,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
-        "status": "green",
-        "count": 29.0,
-        "baseline": 33.0,
-        "ratio": 0.879,
-        "display": "29 Schiffe · 88 % vom Normalwert"
+        "status": "unknown",
+        "count": null,
+        "baseline": null,
+        "ratio": null,
+        "display": "wartet auf Daten"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 29.0,
-      "total_baseline": 33.0
+      "total_count": null,
+      "total_baseline": null
     },
     "suez": {
-      "status": "green",
-      "count": 37.0,
-      "baseline": 41.5,
+      "status": "unknown",
+      "count": null,
+      "baseline": null,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
-        "status": "green",
-        "count": 37.0,
+        "status": "unknown",
+        "count": null,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -67,10 +67,10 @@
       "wait_time_hours": null
     },
     "cape": {
-      "status": "green",
-      "count": 84.0,
-      "baseline": 91.0,
-      "ratio": 0.923,
+      "status": "unknown",
+      "count": null,
+      "baseline": null,
+      "ratio": null,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
@@ -94,5 +94,7 @@
     "Portcast public Suez congestion page for median waiting time"
   ],
   "note": "TEMPORARY TEST MODE every 15 min. Suez now separates traffic load from actual waiting time; red is reserved for >=72h waiting time.",
-  "errors": []
+  "errors": [
+    "chokepoints: 500 Server Error: Internal Server Error for url: https://straits.live/api/v1/chokepoints?history=1"
+  ]
 }
