@@ -3,9 +3,9 @@
   "status": "red",
   "label": "RED",
   "summary": "kritisch",
-  "score": 2.43,
+  "score": 2.27,
   "days_in_status": 1,
-  "updated_at": "2026-09-01T15:08:05.998704+00:00",
+  "updated_at": "2026-09-01T15:44:45.600999+00:00",
   "source_date": "2026-08-23",
   "components": {
     "hormuz": {
@@ -74,10 +74,10 @@
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "red",
-      "count": 111.0,
-      "baseline": 57.0,
-      "ratio": 1.947,
+      "status": "unknown",
+      "count": null,
+      "baseline": null,
+      "ratio": null,
       "label": "Dark-Shipping-Radar"
     }
   },
@@ -95,6 +95,7 @@
   ],
   "note": "TEMPORARY TEST MODE every 15 min. Suez now separates traffic load from actual waiting time; red is reserved for >=72h waiting time.",
   "errors": [
-    "chokepoints: 500 Server Error: Internal Server Error for url: https://straits.live/api/v1/chokepoints?history=1"
+    "chokepoints: 500 Server Error: Internal Server Error for url: https://straits.live/api/v1/chokepoints?history=1",
+    "ais-gaps: 500 Server Error: Internal Server Error for url: https://straits.live/api/v1/ais-gaps"
   ]
 }
