@@ -1,14 +1,26 @@
 {
   "market": "Europa",
-  "benchmark": "ICE Low Sulphur Gasoil Futures",
-  "ticker": "LGO=F",
-  "value": null,
+  "benchmark": "ICE Low Sulphur Gasoil Futures (Rotterdam)",
+  "ticker": "GASOIL_USD",
+  "value": 1445.75,
   "unit": "USD/t",
-  "source_date": null,
-  "updated_at": null,
-  "status": "unknown",
-  "level": null,
-  "days_in_status": null,
-  "source": "Yahoo Finance delayed futures quote",
-  "note": "Wartet auf ersten automatischen Abruf."
+  "source_date": "2026-09-02",
+  "updated_at": "2026-09-02T13:15:34.473Z",
+  "status": "orange",
+  "level": 2,
+  "days_in_status": 1,
+  "source": "OilPriceAPI public ICE Gasoil reference page",
+  "thresholds": {
+    "green_below": 900,
+    "yellow_from": 900,
+    "orange_from": 1200,
+    "red_from": 1500
+  },
+  "history": [
+    {
+      "date": "2026-09-02",
+      "value": 1445.75
+    }
+  ],
+  "note": "Automatischer Ersatzabruf aktiv, falls der primäre Börsenticker keinen Wert liefert."
 }
