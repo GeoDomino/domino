@@ -5,14 +5,14 @@
   "summary": "stark gestört",
   "score": 1.4,
   "days_in_status": 1,
-  "updated_at": "2026-09-02T11:51:24.010360+00:00",
+  "updated_at": "2026-09-02T12:12:17.795276+00:00",
   "source_date": "2026-08-30",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 3.0,
+      "count": 6.0,
       "baseline": 85.0,
-      "ratio": 0.035,
+      "ratio": 0.071,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
