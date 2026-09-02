@@ -18,7 +18,7 @@ jobs:
       - name: Fetch Europe + Asia and calculate East-West spread
         shell: python
         run: |
-          import json, math, statistics, urllib.request, os
+          import json, math, statistics, urllib.request, os, re
           from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
 
@@ -62,10 +62,18 @@ jobs:
               if price is None: raise RuntimeError(f'No quote for {ticker}')
               return float(price), hist
 
+          def public_europe_gasoil():
+              url='https://www.oilpriceapi.com/live/gasoil-price'
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 DOMINO/1.0'})
+              html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
+              m=re.search(r'ICE Gasoil \(Rotterdam\) Price[\\s\\S]{0,4000}?\\$([0-9,]+(?:\\.[0-9]+)?)',html,re.I)
+              if not m: raise RuntimeError('No public Europe gasoil quote found')
+              return float(m.group(1).replace(',','')), []
+
           def level(value, t):
               return 0 if value<t[0] else 1 if value<t[1] else 2 if value<t[2] else 3
 
-          def save_market(cfg, value, hist):
+          def save_market(cfg, value, hist, source='Yahoo Finance delayed futures quote'):
               lvl=level(value,cfg['thresholds'])
               source_date=hist[-1][0] if hist else now.date().isoformat()
               old={}
@@ -83,7 +91,7 @@ jobs:
                 'market':cfg['name'],'benchmark':cfg['benchmark'],'ticker':cfg['ticker'],
                 'value':round(value,3),'unit':cfg['unit'],'source_date':source_date,
                 'updated_at':now.isoformat(),'status':['green','yellow','orange','red'][lvl],
-                'level':lvl,'days_in_status':days,'source':'Yahoo Finance delayed futures quote',
+                'level':lvl,'days_in_status':days,'source':source,
                 'thresholds':{'green_below':cfg['thresholds'][0],'yellow_from':cfg['thresholds'][0],
                               'orange_from':cfg['thresholds'][1],'red_from':cfg['thresholds'][2]},
                 'history':[{'date':d,'value':round(v,3)} for d,v in hist[-260:]]
@@ -101,7 +109,15 @@ jobs:
                   v,h=yahoo(cfg['ticker']); data[key]=save_market(cfg,v,h)
                   print(cfg['name'],v,cfg['unit'])
               except Exception as e:
-                  print('WARN',cfg['name'],e)
+                  print('WARN primary',cfg['name'],e)
+                  if key=='eu':
+                      try:
+                          v,h=public_europe_gasoil()
+                          data[key]=save_market(cfg,v,h,'OilPriceAPI public ICE Gasoil reference page')
+                          print(cfg['name'],'fallback',v,cfg['unit'])
+                          continue
+                      except Exception as fallback_error:
+                          print('WARN fallback',cfg['name'],fallback_error)
                   try: data[key]=json.load(open(cfg['file']))
                   except: pass
 
