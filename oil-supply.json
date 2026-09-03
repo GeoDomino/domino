@@ -1,5 +1,5 @@
 {
-  "version": "2.2",
+  "version": "2.3",
   "status": "red",
   "label": "ROT",
   "updated": "2026-09-03T05:37:24.319851+00:00",
@@ -71,12 +71,12 @@
     },
     "us_physical_supply": {
       "sensor": 4,
-      "status": "yellow",
-      "points": 1,
-      "value": 0.6,
+      "status": "green",
+      "points": 0,
+      "value": 0.0,
       "unit": "weighted stress 0-3",
       "label": "Sensor 4 Ölversorgung · US-Ölversorgung physisch",
-      "date": "2026-08-21",
+      "date": "2026-08-28",
       "source": "U.S. EIA Weekly Petroleum Data",
       "detail_file": "us-oil-physical.json"
     }
@@ -91,13 +91,12 @@
   "sensor3_source_date": "2026-07-01",
   "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.",
   "aggregation": {
-    "method": "three_verified_sensors_v1",
+    "method": "four_verified_sensors_v1",
     "points_total": 8,
-    "points_max": 9,
-    "red_sensors": 2,
-    "orange_or_red_sensors": 3
+    "points_max": 12,
+    "red_sensors": 2
   },
-  "note": "DOMINO Ölversorgung: Gesamtampel aus den drei verifizierten Sensoren Angebot/Nachfrage, OPEC-Reservekapazität und ungeplante Produktionsausfälle.",
-  "sensor4_updated": "2026-09-02T16:29:31.208781+00:00",
-  "sensor4_source_date": "2026-08-21"
+  "note": "DOMINO Ölversorgung: Gesamtampel aus globaler Balance, OPEC-Reserve, ungeplanten Ausfällen und physischer US-Ölversorgung.",
+  "sensor4_updated": "2026-09-03T16:28:35.292431+00:00",
+  "sensor4_source_date": "2026-08-28"
 }
