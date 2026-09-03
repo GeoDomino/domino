@@ -2,13 +2,13 @@
   "market": "Asien",
   "benchmark": "NYMEX Singapore Gasoil (Platts) Futures (delayed Yahoo quote)",
   "ticker": "SGB=F",
-  "value": 164.822,
+  "value": 167.035,
   "unit": "USD/bbl",
-  "source_date": "2026-09-01",
-  "updated_at": "2026-09-03T02:17:12.294415+00:00",
+  "source_date": "2026-09-02",
+  "updated_at": "2026-09-03T07:13:42.556921+00:00",
   "status": "red",
   "level": 3,
-  "days_in_status": 6,
+  "days_in_status": 7,
   "source": "Yahoo Finance delayed futures quote",
   "thresholds": {
     "green_below": 100,
@@ -17,10 +17,6 @@
     "red_from": 150
   },
   "history": [
-    {
-      "date": "2025-09-02",
-      "value": 88.538
-    },
     {
       "date": "2025-09-03",
       "value": 88.957
@@ -1024,6 +1020,10 @@
     {
       "date": "2026-09-01",
       "value": 164.822
+    },
+    {
+      "date": "2026-09-02",
+      "value": 167.035
     }
   ]
 }

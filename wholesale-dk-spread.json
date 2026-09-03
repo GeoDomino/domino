@@ -1,10 +1,26 @@
 {
   "name": "Ost-West Spread",
-  "value_usd_bbl": null,
-  "state": "still",
+  "method": "Singapore SGB minus ICE LGO converted at 7.45 bbl/t",
+  "value_usd_bbl": -27.025,
+  "baseline_median": -27.025,
+  "deviation_percentile": 100.0,
+  "speed_percentile": 0.0,
+  "stress_score": 100.0,
+  "state": "fast",
   "direction": "cw",
-  "days_in_state": null,
-  "source_date": null,
-  "updated_at": null,
-  "note": "Wartet auf belastbare Europa- und Asienwerte."
+  "days_in_state": 1,
+  "source_date": "2026-09-03",
+  "updated_at": "2026-09-03T07:13:42.556921+00:00",
+  "rules": {
+    "still": "<90th percentile",
+    "slow": "90th–<97.5th percentile",
+    "fast": "≥97.5th percentile"
+  },
+  "note": "DOMINO model spread; not a proprietary Platts/ICE EFS assessment.",
+  "history": [
+    {
+      "date": "2026-09-02",
+      "spread": -27.025
+    }
+  ]
 }
