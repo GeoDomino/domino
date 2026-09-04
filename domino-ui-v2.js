@@ -25,13 +25,17 @@
 
   function installCreditChain(){
     const g=document.getElementById('financeGrid');
-    if(g&&g.children.length>=8){
-      g.children[2].outerHTML=watchCard('Unternehmensliquidität','Working Capital','Kosten vor Zahlungseingang');
-      g.children[3].outerHTML=watchCard('Insolvenzen','Ausfallrate','Logistik · Industrie · Bau');
-      g.children[4].outerHTML=watchCard('Kreditqualität','Stage 2 / NPL','Zahlungsausfälle erreichen Banken');
-      g.children[5].outerHTML=watchCard('Kreditklemme','Standards · Spreads','Refinanzierung wird schwieriger');
-      g.children[6].outerHTML=watchCard('Sicherheiten','Fahrzeuge · CRE','Wertverlust verstärkt Bankrisiko');
-      g.children[7].outerHTML=watchCard('Reparaturkapital','Neuinvestition','Finanziert das System Ersatzkapazität?');
+    if(g){
+      g.innerHTML=`
+        <div class="card"><div class="name">US-Finanzierung</div><div class="light" style="background:var(--green)"><span class="statusword">GRÜN</span></div><div class="price">1,37 Bio. $</div><div class="small">Jul–Dez 2026 · geplant</div></div>
+        <div class="card"><div class="name">Dollar / Yen</div><div class="light" id="yenLight"><span class="statusword" id="yenStatus">Lädt</span></div><div class="price" id="yenPrice">–</div><div class="small" id="yenDate">–</div><div class="error" id="yenError"></div></div>
+        ${watchCard('Unternehmensliquidität','Working Capital','Kosten vor Zahlungseingang')}
+        ${watchCard('Insolvenzen','Ausfallrate','Logistik · Industrie · Bau')}
+        ${watchCard('Kreditqualität','Stage 2 / NPL','Zahlungsausfälle erreichen Banken')}
+        ${watchCard('Kreditklemme','Standards · Spreads','Refinanzierung wird schwieriger')}
+        ${watchCard('Sicherheiten','Fahrzeuge · CRE','Wertverlust verstärkt Bankrisiko')}
+        ${watchCard('Reparaturkapital','Neuinvestition','Finanziert das System Ersatzkapazität?')}`;
+      setTimeout(()=>{if(typeof window.loadYen==='function')window.loadYen()},0);
     }
     const body=document.querySelector('.page:nth-child(3) .detailbody');
     if(body&&!document.getElementById('creditChainRules')){
