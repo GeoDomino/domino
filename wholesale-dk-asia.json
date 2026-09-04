@@ -5,7 +5,7 @@
   "value": 167.035,
   "unit": "USD/bbl",
   "source_date": "2026-09-02",
-  "updated_at": "2026-09-04T02:13:14.500080+00:00",
+  "updated_at": "2026-09-04T07:13:00.174888+00:00",
   "status": "red",
   "level": 3,
   "days_in_status": 7,
@@ -17,10 +17,6 @@
     "red_from": 150
   },
   "history": [
-    {
-      "date": "2025-09-03",
-      "value": 88.957
-    },
     {
       "date": "2025-09-04",
       "value": 88.168
