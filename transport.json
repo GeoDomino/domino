@@ -5,7 +5,7 @@
   "summary": "stark gestört",
   "score": 1.55,
   "days_in_status": 1,
-  "updated_at": "2026-09-05T18:09:42.952311+00:00",
+  "updated_at": "2026-09-05T18:25:51.546175+00:00",
   "source_date": "2026-08-30",
   "components": {
     "hormuz": {
@@ -75,9 +75,9 @@
     },
     "ais_dark": {
       "status": "orange",
-      "count": 97.0,
+      "count": 95.0,
       "baseline": 68.9,
-      "ratio": 1.408,
+      "ratio": 1.379,
       "label": "Dark-Shipping-Radar"
     }
   },
