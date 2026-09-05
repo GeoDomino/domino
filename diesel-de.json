@@ -7,7 +7,7 @@
   "status": "yellow",
   "label": "GELB",
   "trend_pct_last_observation": 0.0,
-  "updated_at": "2026-09-04T06:40:13.231845+00:00",
+  "updated_at": "2026-09-05T06:38:12.688396+00:00",
   "source": "ADAC bundesweiter Wochenmittelwert",
   "source_url": "https://www.adac.de/reise-freizeit/reiseplanung/reiseziele/deutschland/tanken-laden/",
   "thresholds": {
@@ -79,6 +79,10 @@
     },
     {
       "date": "2026-09-04",
+      "value": 2.23
+    },
+    {
+      "date": "2026-09-05",
       "value": 2.23
     }
   ]
