@@ -5,7 +5,7 @@
   "summary": "stark gestört",
   "score": 1.4,
   "days_in_status": 1,
-  "updated_at": "2026-09-06T09:08:42.603767+00:00",
+  "updated_at": "2026-09-06T09:24:39.658981+00:00",
   "source_date": "2026-08-30",
   "components": {
     "hormuz": {
@@ -94,5 +94,7 @@
     "Portcast public Suez congestion page for median waiting time"
   ],
   "note": "TEMPORARY TEST MODE every 15 min. Suez now separates traffic load from actual waiting time; red is reserved for >=72h waiting time.",
-  "errors": []
+  "errors": [
+    "attack-news: 503 Server Error: Service Unavailable for url: https://news.google.com/rss/search?q=Bab+el-Mandeb+Houthi+tanker+attack+OR+oil+tanker+strike+OR+missile+OR+drone&hl=en-US&gl=US&ceid="
+  ]
 }
