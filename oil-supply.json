@@ -1,8 +1,8 @@
 {
-  "version": "2.3",
+  "version": "2.2",
   "status": "red",
   "label": "ROT",
-  "updated": "2026-09-05T04:43:35.197802+00:00",
+  "updated": "2026-09-06T04:44:20.656176+00:00",
   "source_date": "2026-Q3",
   "score": 8,
   "components": {
@@ -91,12 +91,13 @@
   "sensor3_source_date": "2026-07-01",
   "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.",
   "aggregation": {
-    "method": "four_verified_sensors_v1",
+    "method": "three_verified_sensors_v1",
     "points_total": 8,
-    "points_max": 12,
-    "red_sensors": 2
+    "points_max": 9,
+    "red_sensors": 2,
+    "orange_or_red_sensors": 3
   },
-  "note": "DOMINO Ölversorgung: Gesamtampel aus globaler Balance, OPEC-Reserve, ungeplanten Ausfällen und physischer US-Ölversorgung.",
+  "note": "DOMINO Ölversorgung: Gesamtampel aus den drei verifizierten Sensoren Angebot/Nachfrage, OPEC-Reservekapazität und ungeplante Produktionsausfälle.",
   "sensor4_updated": "2026-09-05T16:26:42.087310+00:00",
   "sensor4_source_date": "2026-08-28"
 }
