@@ -2,14 +2,14 @@
   "version": "1.0",
   "market": "USA",
   "product": "DK",
-  "value": 5.652,
+  "value": 5.599,
   "unit": "USD/gal",
   "status": "orange",
   "label": "ORANGE",
   "level": 2,
-  "trend_pct_last_observation": 3.63,
-  "source_date": "2026-08-24",
-  "updated_at": "2026-09-01T10:34:46.095922+00:00",
+  "trend_pct_last_observation": -0.94,
+  "source_date": "2026-08-31",
+  "updated_at": "2026-09-08T10:33:49.667410+00:00",
   "source": "U.S. EIA / FRED GASDESW",
   "thresholds": {
     "green_below": 3.6,
@@ -33,6 +33,10 @@
     {
       "date": "2026-08-24",
       "value": 5.652
+    },
+    {
+      "date": "2026-08-31",
+      "value": 5.599
     }
   ]
 }
