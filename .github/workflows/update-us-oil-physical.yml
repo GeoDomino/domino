@@ -20,14 +20,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pandas lxml requests
+      - run: pip install pandas lxml requests xlrd
       - name: Fetch EIA weekly physical oil data
         run: |
           python - <<'PY'
           import io, json, math, re, requests, pandas as pd
-          from datetime import datetime, timezone
+          from datetime import datetime, timezone, timedelta
           UA={'User-Agent':'DOMINO-dashboard/3.0 (+GitHub Actions)'}
-          SOURCES={'canada_imports':'https://www.eia.gov/dnav/pet/pet_move_wimpc_s1_w.htm','commercial_crude_stocks':'https://www.eia.gov/dnav/pet/pet_stoc_wstk_a_EPC0_SAX_mbbl_w.htm','total_crude_imports':'https://www.eia.gov/dnav/pet/pet_move_wkly_a_epc0_imx_mbblpd_w.htm','domestic_production':'https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm','refinery_inputs':'https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm'}
+          SOURCES={'canada_imports':'https://www.eia.gov/dnav/pet/pet_move_wimpc_s1_w.htm','commercial_crude_stocks':'https://www.eia.gov/dnav/pet/pet_stoc_wstk_a_EPC0_SAX_mbbl_w.htm','total_crude_imports':'https://www.eia.gov/dnav/pet/pet_move_wkly_a_epc0_imx_mbblpd_w.htm','domestic_production':'https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm','domestic_production_history':'https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPC0_FPF_MBBLPD_W.xls','refinery_inputs':'https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm'}
           def num(x):
             try:
               v=float(str(x).replace(',','').strip()); return v if math.isfinite(v) else None
@@ -45,20 +45,44 @@ jobs:
                       if m: dates.append(pd.to_datetime(m.group(1)).date())
                     return vals[-6:],(max(dates).isoformat() if dates else None)
             raise RuntimeError('series not found '+url)
+          def production_year_ago(latest_date):
+            raw=requests.get(SOURCES['domestic_production_history'],timeout=60,headers=UA).content
+            sheets=pd.read_excel(io.BytesIO(raw),sheet_name=None,header=None)
+            points=[]
+            for df in sheets.values():
+              for _,row in df.iterrows():
+                if len(row)<2: continue
+                d=pd.to_datetime(row.iloc[0],errors='coerce')
+                v=num(row.iloc[1])
+                if pd.notna(d) and v is not None:
+                  points.append((d.date(),v))
+            if not points: raise RuntimeError('production history not found')
+            target=latest_date-timedelta(days=364)
+            eligible=[p for p in points if 330 <= (latest_date-p[0]).days <= 400]
+            if not eligible: raise RuntimeError('no year-ago production value')
+            return min(eligible,key=lambda p:abs((p[0]-target).days))
           can,dc=read_series(SOURCES['canada_imports'],lambda s:'canada' in s); stk,ds=read_series(SOURCES['commercial_crude_stocks'],lambda s:s.strip() in ('u.s.','u.s')); imp,di=read_series(SOURCES['total_crude_imports'],lambda s:s.strip() in ('u.s.','u.s')); pro,dp=read_series(SOURCES['domestic_production'],lambda s:s.strip() in ('u.s.','u.s')); ref,dr=read_series(SOURCES['refinery_inputs'],lambda s:s.strip() in ('u.s.','u.s'))
           def metric(vals,scale,cuts,comparison='4w_average'):
             latest=vals[-1]*scale; base=(vals[-2]*scale if comparison=='previous_week' else sum(vals[-5:-1])/4*scale); dev=(latest/base-1)*100 if base else 0
             lvl=3 if dev<=cuts[2] else 2 if dev<=cuts[1] else 1 if dev<=cuts[0] else 0
             return latest,base,dev,lvl
-          C=metric(can,.001,(-5,-10,-20),'previous_week'); S=metric(stk,.001,(-2,-5,-10),'previous_week'); I=metric(imp,.001,(-5,-10,-20),'previous_week'); P=metric(pro,.001,(-1,-2.5,-5)); R=metric(ref,.001,(-2,-5,-10))
+          def metric_yoy(latest_raw,year_ago_raw,scale,cuts):
+            latest=latest_raw*scale; base=year_ago_raw*scale; dev=(latest/base-1)*100 if base else 0
+            lvl=3 if dev<=cuts[2] else 2 if dev<=cuts[1] else 1 if dev<=cuts[0] else 0
+            return latest,base,dev,lvl
+          C=metric(can,.001,(-5,-10,-20),'previous_week'); S=metric(stk,.001,(-2,-5,-10),'previous_week'); I=metric(imp,.001,(-5,-10,-20),'previous_week')
+          prod_year_date,prod_year_value=production_year_ago(pd.to_datetime(dp).date()); P=metric_yoy(pro[-1],prod_year_value,.001,(-1,-2.5,-5)); R=metric(ref,.001,(-2,-5,-10))
           weights={'canada_imports':.30,'commercial_crude_stocks':.30,'total_crude_imports':.15,'domestic_production':.15,'refinery_inputs':.10}; vals={'canada_imports':C,'commercial_crude_stocks':S,'total_crude_imports':I,'domestic_production':P,'refinery_inputs':R}; score=sum(weights[k]*vals[k][3] for k in weights)
           level=3 if score>=2 else 2 if score>=1.25 else 1 if score>=.5 else 0
           if C[3]>=2 and I[3]>=2 and S[3]>=2: level=max(level,3)
           elif sum(x[3]>=2 for x in (C,S,I,P,R))>=3: level=max(level,2)
           labels=['GRÜN','GELB','ORANGE','ROT']; status=['green','yellow','orange','red'][level]; dates=[x for x in (dc,ds,di,dp,dr) if x]; source_date=max(dates) if dates else None
-          def obj(label,x,weight,unit,comparison='4w_average'):
-            out={'label':label,'weight':weight,'level':x[3],'value':round(x[0],3),'deviation_pct':round(x[2],2),'unit':unit,'comparison':comparison}; out['previous_week' if comparison=='previous_week' else 'baseline_4w']=round(x[1],3); return out
-          out={'version':'1.3','status':status,'label':labels[level],'level':level,'score':round(score,2),'source_date':source_date,'updated_at':datetime.now(timezone.utc).isoformat(),'components':{'canada_imports':obj('Kanada → USA Rohöl',C,30,'mb/d','previous_week'),'commercial_crude_stocks':obj('Kommerzielle Rohöllager',S,30,'Mio. bbl','previous_week'),'total_crude_imports':obj('Gesamte Rohölimporte',I,15,'mb/d','previous_week'),'domestic_production':obj('US-Rohölförderung',P,15,'mb/d'),'refinery_inputs':obj('Raffinerie-Rohöleinsatz',R,10,'mb/d')},'sources':SOURCES,'method':'Kanada → USA Rohöl, kommerzielle Rohöllager und gesamte Rohölimporte: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. US-Förderung und Raffinerieeinsatz: neuester Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet.'}
+          def obj(label,x,weight,unit,comparison='4w_average',comparison_date=None):
+            out={'label':label,'weight':weight,'level':x[3],'value':round(x[0],3),'deviation_pct':round(x[2],2),'unit':unit,'comparison':comparison}
+            key={'previous_week':'previous_week','year_over_year':'year_ago'}.get(comparison,'baseline_4w'); out[key]=round(x[1],3)
+            if comparison_date: out['comparison_date']=comparison_date.isoformat()
+            return out
+          out={'version':'1.4','status':status,'label':labels[level],'level':level,'score':round(score,2),'source_date':source_date,'updated_at':datetime.now(timezone.utc).isoformat(),'components':{'canada_imports':obj('Kanada → USA Rohöl',C,30,'mb/d','previous_week'),'commercial_crude_stocks':obj('Kommerzielle Rohöllager',S,30,'Mio. bbl','previous_week'),'total_crude_imports':obj('Gesamte Rohölimporte',I,15,'mb/d','previous_week'),'domestic_production':obj('US-Rohölförderung',P,15,'mb/d','year_over_year',prod_year_date),'refinery_inputs':obj('Raffinerie-Rohöleinsatz',R,10,'mb/d')},'sources':SOURCES,'method':'Kanada → USA Rohöl, kommerzielle Rohöllager und gesamte Rohölimporte: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. US-Rohölförderung: neuester Wochenwert gegen den zeitlich nächstgelegenen EIA-Wochenwert rund 52 Wochen zuvor. Raffinerieeinsatz: neuester Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet.'}
           with open('us-oil-physical.json','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2);f.write('\n')
           try: oil=json.load(open('oil-supply.json',encoding='utf-8'))
           except: oil={}
