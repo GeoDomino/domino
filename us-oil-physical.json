@@ -1,5 +1,5 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "status": "green",
   "label": "GRÜN",
   "level": 0,
@@ -32,10 +32,10 @@
       "weight": 15,
       "level": 0,
       "value": 6.77,
-      "deviation_pct": 3.01,
+      "deviation_pct": 9.94,
       "unit": "mb/d",
-      "comparison": "4w_average",
-      "baseline_4w": 6.572
+      "comparison": "previous_week",
+      "previous_week": 6.158
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
@@ -65,5 +65,5 @@
     "domestic_production": "https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm",
     "refinery_inputs": "https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm"
   },
-  "method": "Kanada → USA Rohöl und kommerzielle Rohöllager: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. Übrige Teilwerte: neuester EIA-Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet. Kombinationen aus Importverlust und Lagerabbau können eskalieren."
+  "method": "Kanada → USA Rohöl, kommerzielle Rohöllager und gesamte Rohölimporte: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. US-Förderung und Raffinerieeinsatz: neuester Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet."
 }
