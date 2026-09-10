@@ -1,61 +1,62 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "status": "green",
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
-  "source_date": "2026-08-28",
-  "updated_at": "2026-09-10T18:04:14.760554+00:00",
+  "source_date": "2026-09-04",
+  "updated_at": "2026-09-10T18:12:48.797497+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 4.011,
-      "deviation_pct": 13.75,
+      "value": 3.926,
+      "deviation_pct": -2.12,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.526
+      "previous_week": 4.011
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
       "level": 0,
-      "value": 424.46,
-      "deviation_pct": -1.04,
+      "value": 424.069,
+      "deviation_pct": -0.09,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 428.91
+      "previous_week": 424.46
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
       "level": 0,
-      "value": 6.77,
-      "deviation_pct": 9.94,
+      "value": 6.824,
+      "deviation_pct": 0.8,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 6.158
+      "previous_week": 6.77
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
       "weight": 15,
       "level": 0,
-      "value": 13.862,
-      "deviation_pct": 0.3,
+      "value": 13.947,
+      "deviation_pct": 3.35,
       "unit": "mb/d",
-      "comparison": "4w_average",
-      "baseline_4w": 13.821
+      "comparison": "year_over_year",
+      "year_ago": 13.495,
+      "comparison_date": "2025-09-05"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
       "level": 0,
-      "value": 17.496,
-      "deviation_pct": 1.25,
+      "value": 17.586,
+      "deviation_pct": 1.27,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 17.28
+      "baseline_4w": 17.366
     }
   },
   "sources": {
@@ -63,7 +64,8 @@
     "commercial_crude_stocks": "https://www.eia.gov/dnav/pet/pet_stoc_wstk_a_EPC0_SAX_mbbl_w.htm",
     "total_crude_imports": "https://www.eia.gov/dnav/pet/pet_move_wkly_a_epc0_imx_mbblpd_w.htm",
     "domestic_production": "https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm",
+    "domestic_production_history": "https://www.eia.gov/dnav/pet/xls/PET_SUM_SNDW_A_EPC0_FPF_MBBLPD_W.xls",
     "refinery_inputs": "https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm"
   },
-  "method": "Kanada → USA Rohöl, kommerzielle Rohöllager und gesamte Rohölimporte: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. US-Förderung und Raffinerieeinsatz: neuester Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet."
+  "method": "Kanada → USA Rohöl, kommerzielle Rohöllager und gesamte Rohölimporte: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. US-Rohölförderung: neuester Wochenwert gegen den zeitlich nächstgelegenen EIA-Wochenwert rund 52 Wochen zuvor. Raffinerieeinsatz: neuester Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet."
 }

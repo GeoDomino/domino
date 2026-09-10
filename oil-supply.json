@@ -76,7 +76,7 @@
       "value": 0.0,
       "unit": "weighted stress 0-3",
       "label": "Sensor 4 Ölversorgung · US-Ölversorgung physisch",
-      "date": "2026-08-28",
+      "date": "2026-09-04",
       "source": "U.S. EIA Weekly Petroleum Data",
       "detail_file": "us-oil-physical.json"
     }
@@ -97,6 +97,6 @@
     "red_sensors": 2
   },
   "note": "DOMINO Ölversorgung: Gesamtampel aus globaler Balance, OPEC-Reserve, ungeplanten Ausfällen und physischer US-Ölversorgung.",
-  "sensor4_updated": "2026-09-10T18:04:14.760554+00:00",
-  "sensor4_source_date": "2026-08-28"
+  "sensor4_updated": "2026-09-10T18:12:48.797497+00:00",
+  "sensor4_source_date": "2026-09-04"
 }
