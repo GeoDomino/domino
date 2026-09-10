@@ -10,9 +10,9 @@
       "sensor": 1,
       "status": "orange",
       "points": 2,
-      "value": -3.83,
-      "production": 99.66,
-      "consumption": 103.5,
+      "value": -2.96,
+      "production": 100.27,
+      "consumption": 103.23,
       "unit": "mb/d",
       "label": "Sensor 1 Ölversorgung · Angebot/Nachfrage-Balance",
       "period": "2026 Q3",
@@ -81,7 +81,7 @@
       "detail_file": "us-oil-physical.json"
     }
   },
-  "sensor1_updated": "2026-09-09T05:32:47.440808+00:00",
+  "sensor1_updated": "2026-09-10T05:32:21.799495+00:00",
   "sensor1_source_date": "2026-Q3",
   "sensor1_note": "Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.",
   "sensor2_updated": "2026-09-09T05:43:23.781018+00:00",
