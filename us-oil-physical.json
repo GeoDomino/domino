@@ -1,20 +1,21 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "green",
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
   "source_date": "2026-08-28",
-  "updated_at": "2026-09-09T16:30:40.753921+00:00",
+  "updated_at": "2026-09-10T17:45:00+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
       "value": 4.011,
-      "baseline_4w": 3.988,
-      "deviation_pct": 0.57,
-      "unit": "mb/d"
+      "previous_week": 3.526,
+      "deviation_pct": 13.75,
+      "unit": "mb/d",
+      "comparison": "previous_week"
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
@@ -23,7 +24,8 @@
       "value": 424.46,
       "baseline_4w": 422.281,
       "deviation_pct": 0.52,
-      "unit": "Mio. bbl"
+      "unit": "Mio. bbl",
+      "comparison": "4w_average"
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
@@ -32,7 +34,8 @@
       "value": 6.77,
       "baseline_4w": 6.572,
       "deviation_pct": 3.01,
-      "unit": "mb/d"
+      "unit": "mb/d",
+      "comparison": "4w_average"
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
@@ -41,7 +44,8 @@
       "value": 13.862,
       "baseline_4w": 13.821,
       "deviation_pct": 0.3,
-      "unit": "mb/d"
+      "unit": "mb/d",
+      "comparison": "4w_average"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
@@ -50,7 +54,8 @@
       "value": 17.496,
       "baseline_4w": 17.28,
       "deviation_pct": 1.25,
-      "unit": "mb/d"
+      "unit": "mb/d",
+      "comparison": "4w_average"
     }
   },
   "sources": {
@@ -60,5 +65,5 @@
     "domestic_production": "https://www.eia.gov/dnav/pet/pet_sum_sndw_a_epc0_fpf_mbblpd_w.htm",
     "refinery_inputs": "https://www.eia.gov/dnav/pet/pet_pnp_wiup_a_epc0_yiy_mbblpd_w.htm"
   },
-  "method": "Neuester EIA-Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet. Kombinationen aus Importverlust und Lagerabbau können eskalieren."
+  "method": "Kanada → USA Rohöl: neuester EIA-Wochenwert gegen unmittelbare Vorwoche. Übrige Teilwerte: neuester EIA-Wochenwert gegen Mittel der vier vorangegangenen Wochen; 30/30/15/15/10 gewichtet. Kombinationen aus Importverlust und Lagerabbau können eskalieren."
 }
