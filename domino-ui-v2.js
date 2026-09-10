@@ -44,5 +44,5 @@
   }
 
   setTimeout(()=>{installStructuralBreakLayer();installCreditChain()},0);
-  for(const [src,v] of [['stocks-ui.js','20260827-2'],['transport-ui.js','20260821-7'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4'],['us-oil-physical-ui.js','20260827-1']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
+  for(const [src,v] of [['stocks-ui.js','20260827-2'],['transport-ui.js','20260821-7'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4'],['us-oil-physical-ui.js','20260910-1']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
 })();
