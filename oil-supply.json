@@ -57,17 +57,17 @@
       "sensor": 3,
       "status": "red",
       "points": 3,
-      "value": 10.05,
+      "value": 11.59,
       "unit": "mb/d",
-      "opec": 7.04,
-      "non_opec": 3.02,
+      "opec": 8.8,
+      "non_opec": 2.79,
       "label": "Sensor 3 Ölversorgung · Ungeplante Produktionsausfälle",
-      "date": "2026-07-01",
+      "date": "2026-08-01",
       "source": "U.S. EIA Short-Term Energy Outlook · Estimated unplanned crude oil production outages",
       "source_url": "https://www.eia.gov/outlooks/steo/xls/Fig10.xlsx",
       "parser": "eia-fig10-unplanned-outages-v3",
       "sheet": "10",
-      "row": 57
+      "row": 58
     },
     "us_physical_supply": {
       "sensor": 4,
@@ -87,8 +87,8 @@
   "sensor2_updated": "2026-09-10T05:43:28.509778+00:00",
   "sensor2_source_date": "2026-Q3",
   "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.",
-  "sensor3_updated": "2026-09-09T05:46:53.633123+00:00",
-  "sensor3_source_date": "2026-07-01",
+  "sensor3_updated": "2026-09-10T05:46:31.792650+00:00",
+  "sensor3_source_date": "2026-08-01",
   "sensor3_note": "Misst die Summe der EIA-Schätzungen für ungeplante OPEC- und Nicht-OPEC-Rohölproduktionsausfälle. Ampel: grün <1,5; gelb 1,5 bis <3; orange 3 bis <5; rot >=5 Mio. Barrel/Tag.",
   "aggregation": {
     "method": "three_verified_sensors_v1",
