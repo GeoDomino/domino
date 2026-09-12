@@ -1,10 +1,12 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "green",
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
-  "updated_at": "2026-09-12T18:45:46.241432+00:00",
+  "status_since": "2026-09-12",
+  "days_in_status": 1,
+  "updated_at": "2026-09-12T18:48:43.505287+00:00",
   "components": {
     "hy_spread": {
       "label": "ICE BofA Single-B HY OAS",
@@ -52,5 +54,5 @@
       "red_gte": 2.5
     }
   },
-  "method": "60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht."
+  "method": "60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht. status_since und days_in_status speichern die Dauer der aktuellen Ampelfarbe dauerhaft im Datenbestand."
 }
