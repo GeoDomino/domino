@@ -4,7 +4,7 @@
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
-  "updated_at": "2026-09-12T18:45:00Z",
+  "updated_at": "2026-09-12T18:45:46.241432+00:00",
   "components": {
     "hy_spread": {
       "label": "ICE BofA Single-B HY OAS",
@@ -26,13 +26,31 @@
       "weight": 40,
       "large_middle": 0.0,
       "small": 1.8,
-      "series": ["DRTSCILM", "DRTSCIS"]
+      "series": [
+        "DRTSCILM",
+        "DRTSCIS"
+      ]
     }
   },
   "thresholds": {
-    "hy_spread": {"green_lt": 3.0, "yellow_lt": 4.0, "orange_lt": 6.0, "red_gte": 6.0},
-    "sloos": {"green_lte": 5.0, "yellow_lte": 15.0, "orange_lte": 30.0, "red_gt": 30.0},
-    "combined": {"green_lt": 0.75, "yellow_lt": 1.5, "orange_lt": 2.5, "red_gte": 2.5}
+    "hy_spread": {
+      "green_lt": 3.0,
+      "yellow_lt": 4.0,
+      "orange_lt": 6.0,
+      "red_gte": 6.0
+    },
+    "sloos": {
+      "green_lte": 5.0,
+      "yellow_lte": 15.0,
+      "orange_lte": 30.0,
+      "red_gt": 30.0
+    },
+    "combined": {
+      "green_lt": 0.75,
+      "yellow_lt": 1.5,
+      "orange_lt": 2.5,
+      "red_gte": 2.5
+    }
   },
   "method": "60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht."
 }
