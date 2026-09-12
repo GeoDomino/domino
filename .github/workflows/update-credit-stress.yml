@@ -1,0 +1,114 @@
+name: Update credit stress
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25 14 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-credit-stress.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install pandas requests
+      - name: Fetch FRED credit stress data
+        run: |
+          python - <<'PY'
+          import io, json, requests
+          from datetime import datetime, timezone
+          import pandas as pd
+
+          def fred_series(series):
+              url=f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}'
+              r=requests.get(url,timeout=30)
+              r.raise_for_status()
+              df=pd.read_csv(io.StringIO(r.text))
+              value_col=[c for c in df.columns if c!='DATE'][0]
+              df[value_col]=pd.to_numeric(df[value_col],errors='coerce')
+              df=df.dropna(subset=[value_col])
+              if df.empty:
+                  raise RuntimeError(f'No valid observations for {series}')
+              row=df.iloc[-1]
+              return str(row['DATE']), float(row[value_col])
+
+          hy_date,hy=fred_series('BAMLH0A2HYB')
+          lm_date,lm=fred_series('DRTSCILM')
+          sm_date,sm=fred_series('DRTSCIS')
+          sloos=(lm+sm)/2
+          sloos_date=max(lm_date,sm_date)
+
+          def hy_level(v):
+              if v>=6: return 3
+              if v>=4: return 2
+              if v>=3: return 1
+              return 0
+
+          def sloos_level(v):
+              if v>30: return 3
+              if v>15: return 2
+              if v>5: return 1
+              return 0
+
+          hyl=hy_level(hy)
+          sl=sloos_level(sloos)
+          score=round(0.60*hyl+0.40*sl,2)
+          if score>=2.5:
+              level,status,label=3,'red','ROT'
+          elif score>=1.5:
+              level,status,label=2,'orange','ORANGE'
+          elif score>=0.75:
+              level,status,label=1,'yellow','GELB'
+          else:
+              level,status,label=0,'green','GRÜN'
+
+          out={
+            'version':'1.0',
+            'status':status,
+            'label':label,
+            'level':level,
+            'score':score,
+            'updated_at':datetime.now(timezone.utc).isoformat(),
+            'components':{
+              'hy_spread':{
+                'label':'ICE BofA Single-B HY OAS','value':round(hy,2),'unit':'%','date':hy_date,
+                'level':hyl,'status':['green','yellow','orange','red'][hyl],'weight':60,'series':'BAMLH0A2HYB'
+              },
+              'sloos':{
+                'label':'SLOOS Kreditstandards','value':round(sloos,2),'unit':'% netto verschärfend','date':sloos_date,
+                'level':sl,'status':['green','yellow','orange','red'][sl],'weight':40,
+                'large_middle':round(lm,2),'small':round(sm,2),'series':['DRTSCILM','DRTSCIS']
+              }
+            },
+            'thresholds':{
+              'hy_spread':{'green_lt':3.0,'yellow_lt':4.0,'orange_lt':6.0,'red_gte':6.0},
+              'sloos':{'green_lte':5.0,'yellow_lte':15.0,'orange_lte':30.0,'red_gt':30.0},
+              'combined':{'green_lt':0.75,'yellow_lt':1.5,'orange_lt':2.5,'red_gte':2.5}
+            },
+            'method':'60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht.'
+          }
+          with open('credit-stress.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2)
+              f.write('\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit data
+        run: |
+          git config user.name 'DOMINO Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add credit-stress.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update credit stress indicator'
+            git pull --rebase origin main
+            git push
+          fi
