@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "status": "green",
+  "label": "GRÜN",
+  "level": 0,
+  "direction": "yen_stronger",
+  "usd_jpy": 154.04,
+  "date": "2026-09-11",
+  "change_5d_pct": -0.49,
+  "change_20d_pct": -2.98,
+  "position_level": 0,
+  "speed_level": 0,
+  "updated_at": "2026-09-12T00:00:00Z",
+  "source": "ECB euro foreign exchange reference rates (JPY/EUR divided by USD/EUR)",
+  "thresholds": {
+    "position": {
+      "green": "145-158",
+      "yellow": "140-<145 or >158-162",
+      "orange": "135-<140 or >162-166",
+      "red": "<135 or >166"
+    },
+    "speed_5d_abs_pct": {
+      "green_lt": 3.0,
+      "yellow_lt": 4.0,
+      "orange_lt": 5.0,
+      "red_gte": 5.0
+    }
+  },
+  "method": "Bidirektionaler USD/JPY-Wippensensor. Niveau und 5-Handelstage-Geschwindigkeit werden getrennt bewertet; die hoehere Warnstufe bestimmt die Ampel. Fallender USD/JPY bedeutet staerkerer Yen, steigender USD/JPY schwächerer Yen. Carry Trade, Treasury-Verkaeufe und Interventionen werden nicht direkt in die Ampel eingerechnet."
+}
