@@ -20,12 +20,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install US financing UI loader
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('domino-ui-v2.js')
+          s=p.read_text(encoding='utf-8')
+          if 'us-financing-ui.js' not in s:
+              loader="  {const s=document.createElement('script');s.src='us-financing-ui.js?v=20260912-1';document.body.appendChild(s)}\n"
+              pos=s.rfind('})();')
+              if pos<0: raise RuntimeError('Could not find domino-ui-v2.js closure')
+              s=s[:pos]+loader+s[pos:]
+              p.write_text(s,encoding='utf-8')
+          PY
       - name: Install dependencies
         run: pip install requests beautifulsoup4
       - name: Fetch Treasury auctions and Fed intervention state
         run: |
           python - <<'PY'
-          import json, statistics, requests, re
+          import json, statistics, requests
           from datetime import datetime, timezone, date, timedelta
           from pathlib import Path
           from bs4 import BeautifulSoup
@@ -46,7 +59,6 @@ jobs:
               except: return None
 
           def is_relevant(x):
-              # Coupon market is the cleanest absorption test. Bills are frequent and would dominate the signal.
               return x.get('security_type') in ('Note','Bond') and num(x.get('bid_to_cover_ratio')) is not None and x.get('auction_date') <= today.isoformat()
 
           auctions=[x for x in rows if is_relevant(x)]
@@ -84,11 +96,7 @@ jobs:
               if cind is not None and i_med:
                   q=cind/i_med
                   dims.append(0 if q>=0.92 else 1 if q>=0.82 else 2 if q>=0.70 else 3)
-              if not dims:
-                  level=0
-              else:
-                  # Bid-to-cover is most important; dealer/indirect composition confirms weakness.
-                  level=max(dims[0], round(sum(dims)/len(dims)))
+              level=0 if not dims else max(dims[0],round(sum(dims)/len(dims)))
               level=max(0,min(3,int(level)))
               return level,btc_med,d_med,i_med,cdealer,cind
 
@@ -111,8 +119,7 @@ jobs:
           latest=evaluated[0]
           last3=evaluated[:3]
           weights=[0.60,0.25,0.15]
-          recent_score=sum(a['level']*weights[i] for i,a in enumerate(last3)) / sum(weights[:len(last3)])
-          # Repeated serious weakness is more important than one noisy print.
+          recent_score=sum(a['level']*weights[i] for i,a in enumerate(last3))/sum(weights[:len(last3)])
           if sum(a['level']>=2 for a in last3)>=2: recent_score=max(recent_score,1.5)
           if sum(a['level']==3 for a in last3)>=2: recent_score=max(recent_score,2.5)
           if recent_score>=2.5: level=3
@@ -122,34 +129,25 @@ jobs:
           status=['green','yellow','orange','red'][level]
           label=['GRÜN','GELB','ORANGE','ROT'][level]
 
-          old={}
           p=Path('us-financing.json')
-          if p.exists():
-              try: old=json.loads(p.read_text(encoding='utf-8'))
-              except: old={}
+          try: old=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          except: old={}
 
           def inclusive_days(s):
               try: return max(1,(today-date.fromisoformat(s)).days+1)
               except: return 1
 
-          if old.get('status')==status and old.get('status_since'):
-              status_since=old['status_since']
-          else:
-              status_since=today.isoformat()
+          status_since=old.get('status_since') if old.get('status')==status and old.get('status_since') else today.isoformat()
 
-          # Fed intervention layer. Normal reinvestment, rollovers and reserve-management purchases are excluded.
           fed_urls=[
             'https://www.newyorkfed.org/markets/domestic-market-operations/monetary-policy-implementation/treasury-securities/treasury-securities-operational-details',
             'https://www.newyorkfed.org/markets/domestic-market-operations'
           ]
-          evidence=[]
-          text=''
+          evidence=[]; text=''
           for u in fed_urls:
               try:
-                  rr=requests.get(u,timeout=30,headers={'User-Agent':'GeoDomino/1.0'})
-                  rr.raise_for_status()
-                  t=' '.join(BeautifulSoup(rr.text,'html.parser').stripped_strings)
-                  text += ' '+t[:22000]
+                  rr=requests.get(u,timeout=30,headers={'User-Agent':'GeoDomino/1.0'});rr.raise_for_status()
+                  text+=' '+' '.join(BeautifulSoup(rr.text,'html.parser').stripped_strings)[:22000]
               except Exception as e:
                   evidence.append('Fed-Seite nicht lesbar: '+str(e)[:90])
           low=text.lower()
@@ -158,46 +156,32 @@ jobs:
           fast_hit=next((t for t in fast_terms if t in low),None)
           slow_hit=next((t for t in slow_terms if t in low),None)
           if fast_hit:
-              istate,ilabel,ispeed='fast','SCHNELLE INTERVENTION',2
-              evidence.append('NY Fed: '+fast_hit)
+              istate,ilabel,ispeed='fast','SCHNELLE INTERVENTION',2;evidence.append('NY Fed: '+fast_hit)
           elif slow_hit:
-              istate,ilabel,ispeed='slow','INTERVENTION',1
-              evidence.append('NY Fed: '+slow_hit)
+              istate,ilabel,ispeed='slow','INTERVENTION',1;evidence.append('NY Fed: '+slow_hit)
           else:
-              istate,ilabel,ispeed='stopped','KEIN AUSSERORDENTLICHER EINGRIFF',0
-              evidence.append('Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt.')
+              istate,ilabel,ispeed='stopped','KEIN AUSSERORDENTLICHER EINGRIFF',0;evidence.append('Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt.')
 
           oldi=old.get('intervention') or {}
-          if oldi.get('state')==istate and oldi.get('state_since'):
-              state_since=oldi['state_since']
-          else:
-              state_since=today.isoformat()
+          state_since=oldi.get('state_since') if oldi.get('state')==istate and oldi.get('state_since') else today.isoformat()
 
           out={
             'version':'1.1','status':status,'label':label,'level':level,'score':round(recent_score,2),
-            'status_since':status_since,'days_in_status':inclusive_days(status_since),
-            'updated_at':datetime.now(timezone.utc).isoformat(),
+            'status_since':status_since,'days_in_status':inclusive_days(status_since),'updated_at':datetime.now(timezone.utc).isoformat(),
             'financing_plan':{'period':'Jul–Dez 2026','net_market_borrowing_usd_bn':1367,'q3_usd_bn':739,'q4_usd_bn':628},
             'latest_auction':latest,'recent_auctions':evaluated[:6],
-            'intervention':{
-              'state':istate,'label':ilabel,'state_since':state_since,'days_in_state':inclusive_days(state_since),
-              'speed':ispeed,'reason':'Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.',
-              'evidence':evidence
-            },
-            'thresholds':{
-              'auction':'Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.',
-              'combined':'Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot.'
-            },
+            'intervention':{'state':istate,'label':ilabel,'state_since':state_since,'days_in_state':inclusive_days(state_since),'speed':ispeed,'reason':'Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.','evidence':evidence},
+            'thresholds':{'auction':'Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.','combined':'Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot.'},
             'method':'Täglicher offizieller FiscalData-Abruf relevanter Treasury Notes/Bonds. Bills werden wegen ihrer hohen Frequenz nicht zur Ampelwertung benutzt. Fed-Pfeil separat und konservativ: normale Geldmarkt-/Reserveoperationen zählen nicht als Krisenintervention.'
           }
           p.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
-      - name: Commit data
+      - name: Commit data and UI loader
         run: |
           git config user.name 'DOMINO Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add us-financing.json
+          git add us-financing.json domino-ui-v2.js
           if ! git diff --cached --quiet; then
             git commit -m 'Update US financing stress indicator'
             git pull --rebase origin main
