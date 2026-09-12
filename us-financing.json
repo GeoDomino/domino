@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "status": "green",
+  "label": "GRÜN",
+  "level": 0,
+  "status_since": "2026-09-12",
+  "days_in_status": 1,
+  "updated_at": "2026-09-12T18:00:00Z",
+  "financing_plan": {
+    "period": "Jul–Dez 2026",
+    "net_market_borrowing_usd_bn": 1367,
+    "q3_usd_bn": 739,
+    "q4_usd_bn": 628
+  },
+  "latest_auction": {
+    "date": null,
+    "security": "Wartet auf ersten automatischen Lauf",
+    "bid_to_cover": null,
+    "dealer_share_pct": null,
+    "indirect_share_pct": null,
+    "score": null,
+    "status": "unknown"
+  },
+  "recent_auctions": [],
+  "intervention": {
+    "state": "stopped",
+    "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
+    "state_since": "2026-09-12",
+    "days_in_state": 1,
+    "speed": 0,
+    "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht als Krisenintervention. Der Pfeil dreht nur bei zusätzlichen Maßnahmen wegen Treasury-Marktstress.",
+    "evidence": []
+  },
+  "method": "Tägliche Prüfung relevanter US-Treasury-Auktionen. Bewertet werden vor allem Notes und Bonds anhand Bid-to-Cover sowie Dealer- und Indirect-Take-up relativ zu den letzten vergleichbaren Auktionen. Der Fed-Pfeil ist davon unabhängig und reagiert nur auf außergewöhnliche Stützungsmaßnahmen wegen Marktstress."
+}
