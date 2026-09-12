@@ -75,13 +75,32 @@ jobs:
           else:
               level,status,label=0,'green','GRÜN'
 
+          now=datetime.now(timezone.utc)
+          today=now.date()
+          status_since=today.isoformat()
+          try:
+              with open('credit-stress.json','r',encoding='utf-8') as f:
+                  old=json.load(f)
+              if old.get('status')==status and old.get('status_since'):
+                  status_since=old['status_since']
+          except Exception:
+              pass
+          try:
+              since_date=datetime.fromisoformat(status_since).date()
+          except Exception:
+              since_date=today
+              status_since=today.isoformat()
+          days_in_status=max(1,(today-since_date).days+1)
+
           out={
-            'version':'1.0',
+            'version':'1.1',
             'status':status,
             'label':label,
             'level':level,
             'score':score,
-            'updated_at':datetime.now(timezone.utc).isoformat(),
+            'status_since':status_since,
+            'days_in_status':days_in_status,
+            'updated_at':now.isoformat(),
             'components':{
               'hy_spread':{
                 'label':'ICE BofA Single-B HY OAS','value':round(hy,2),'unit':'%','date':hy_date,
@@ -98,7 +117,7 @@ jobs:
               'sloos':{'green_lte':5.0,'yellow_lte':15.0,'orange_lte':30.0,'red_gt':30.0},
               'combined':{'green_lt':0.75,'yellow_lt':1.5,'orange_lt':2.5,'red_gte':2.5}
             },
-            'method':'60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht.'
+            'method':'60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht. status_since und days_in_status speichern die Dauer der aktuellen Ampelfarbe dauerhaft im Datenbestand.'
           }
           with open('credit-stress.json','w',encoding='utf-8') as f:
               json.dump(out,f,ensure_ascii=False,indent=2)
