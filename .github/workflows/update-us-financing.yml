@@ -24,14 +24,12 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('domino-ui-v2.js')
-          s=p.read_text(encoding='utf-8')
+          p=Path('domino-ui-v2.js'); s=p.read_text(encoding='utf-8')
           if 'us-financing-ui.js' not in s:
               loader="  {const s=document.createElement('script');s.src='us-financing-ui.js?v=20260912-1';document.body.appendChild(s)}\n"
               pos=s.rfind('})();')
               if pos<0: raise RuntimeError('Could not find domino-ui-v2.js closure')
-              s=s[:pos]+loader+s[pos:]
-              p.write_text(s,encoding='utf-8')
+              p.write_text(s[:pos]+loader+s[pos:],encoding='utf-8')
           PY
       - name: Install dependencies
         run: pip install requests beautifulsoup4
@@ -44,12 +42,9 @@ jobs:
           from bs4 import BeautifulSoup
 
           API='https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query'
-          FIELDS='cusip,security_type,security_term,original_security_term,auction_date,issue_date,reopening,tips,floating_rate,bid_to_cover_ratio,total_accepted,primary_dealer_accepted,direct_bidder_accepted,indirect_bidder_accepted,high_yield,high_discnt_rate'
-          today=date.today()
-          start=(today-timedelta(days=220)).isoformat()
-          params={'format':'json','fields':FIELDS,'filter':f'auction_date:gte:{start}','sort':'-auction_date','page[size]':'1000'}
-          r=requests.get(API,params=params,timeout=40,headers={'User-Agent':'GeoDomino/1.0'})
-          r.raise_for_status()
+          today=date.today(); start=(today-timedelta(days=220)).isoformat()
+          params={'format':'json','filter':f'auction_date:gte:{start}','sort':'-auction_date','page[size]':'1000'}
+          r=requests.get(API,params=params,timeout=40,headers={'User-Agent':'GeoDomino/1.0'}); r.raise_for_status()
           rows=r.json().get('data',[])
 
           def num(v):
@@ -62,120 +57,86 @@ jobs:
               return x.get('security_type') in ('Note','Bond') and num(x.get('bid_to_cover_ratio')) is not None and x.get('auction_date') <= today.isoformat()
 
           auctions=[x for x in rows if is_relevant(x)]
-          if not auctions:
-              raise RuntimeError('No completed Note/Bond auctions returned by FiscalData')
+          if not auctions: raise RuntimeError('No completed Note/Bond auctions returned by FiscalData')
 
           def key(x):
-              return (x.get('original_security_term') or x.get('security_term') or '', x.get('tips') or '', x.get('floating_rate') or '')
+              return (x.get('original_security_term') or x.get('security_term') or '', x.get('tips') or x.get('inflation_index_security') or '', x.get('floating_rate') or '')
 
           def shares(x):
               total=num(x.get('total_accepted'))
               if not total or total<=0: return None,None
-              dealer=num(x.get('primary_dealer_accepted'))
-              indirect=num(x.get('indirect_bidder_accepted'))
+              dealer=num(x.get('primary_dealer_accepted')); indirect=num(x.get('indirect_bidder_accepted'))
               return (dealer/total*100 if dealer is not None else None, indirect/total*100 if indirect is not None else None)
 
-          def median(vals):
+          def med(vals):
               vals=[v for v in vals if v is not None]
               return statistics.median(vals) if vals else None
 
-          def auction_level(cur):
+          def level_for(cur):
               same=[x for x in auctions if key(x)==key(cur) and x.get('auction_date') < cur.get('auction_date')][:8]
-              btc=num(cur.get('bid_to_cover_ratio'))
-              cdealer,cind=shares(cur)
-              btc_med=median([num(x.get('bid_to_cover_ratio')) for x in same])
-              d_med=median([shares(x)[0] for x in same])
-              i_med=median([shares(x)[1] for x in same])
+              btc=num(cur.get('bid_to_cover_ratio')); dealer,indirect=shares(cur)
+              bm=med([num(x.get('bid_to_cover_ratio')) for x in same]); dm=med([shares(x)[0] for x in same]); im=med([shares(x)[1] for x in same])
               dims=[]
-              if btc is not None and btc_med:
-                  q=btc/btc_med
-                  dims.append(0 if q>=0.97 else 1 if q>=0.93 else 2 if q>=0.88 else 3)
-              if cdealer is not None and d_med:
-                  q=cdealer/d_med
-                  dims.append(0 if q<=1.10 else 1 if q<=1.25 else 2 if q<=1.45 else 3)
-              if cind is not None and i_med:
-                  q=cind/i_med
-                  dims.append(0 if q>=0.92 else 1 if q>=0.82 else 2 if q>=0.70 else 3)
-              level=0 if not dims else max(dims[0],round(sum(dims)/len(dims)))
-              level=max(0,min(3,int(level)))
-              return level,btc_med,d_med,i_med,cdealer,cind
+              if btc is not None and bm:
+                  q=btc/bm; dims.append(0 if q>=.97 else 1 if q>=.93 else 2 if q>=.88 else 3)
+              if dealer is not None and dm:
+                  q=dealer/dm; dims.append(0 if q<=1.10 else 1 if q<=1.25 else 2 if q<=1.45 else 3)
+              if indirect is not None and im:
+                  q=indirect/im; dims.append(0 if q>=.92 else 1 if q>=.82 else 2 if q>=.70 else 3)
+              lev=0 if not dims else max(dims[0],round(sum(dims)/len(dims)))
+              return max(0,min(3,int(lev))),bm,dm,im,dealer,indirect
 
           evaluated=[]
           for x in auctions[:12]:
-              lev,btc_med,d_med,i_med,dealer,indirect=auction_level(x)
-              term=x.get('original_security_term') or x.get('security_term') or x.get('security_type')
+              lev,bm,dm,im,dealer,indirect=level_for(x)
               evaluated.append({
-                  'date':x.get('auction_date'),'security':term,'cusip':x.get('cusip'),
-                  'bid_to_cover':num(x.get('bid_to_cover_ratio')),
-                  'bid_to_cover_baseline':round(btc_med,3) if btc_med is not None else None,
-                  'dealer_share_pct':round(dealer,1) if dealer is not None else None,
-                  'dealer_baseline_pct':round(d_med,1) if d_med is not None else None,
-                  'indirect_share_pct':round(indirect,1) if indirect is not None else None,
-                  'indirect_baseline_pct':round(i_med,1) if i_med is not None else None,
-                  'high_yield':num(x.get('high_yield')),
-                  'level':lev,'status':['green','yellow','orange','red'][lev]
+                'date':x.get('auction_date'),'security':x.get('original_security_term') or x.get('security_term') or x.get('security_type'),'cusip':x.get('cusip'),
+                'bid_to_cover':num(x.get('bid_to_cover_ratio')),'bid_to_cover_baseline':round(bm,3) if bm is not None else None,
+                'dealer_share_pct':round(dealer,1) if dealer is not None else None,'dealer_baseline_pct':round(dm,1) if dm is not None else None,
+                'indirect_share_pct':round(indirect,1) if indirect is not None else None,'indirect_baseline_pct':round(im,1) if im is not None else None,
+                'high_yield':num(x.get('high_yield')),'level':lev,'status':['green','yellow','orange','red'][lev]
               })
 
-          latest=evaluated[0]
-          last3=evaluated[:3]
-          weights=[0.60,0.25,0.15]
-          recent_score=sum(a['level']*weights[i] for i,a in enumerate(last3))/sum(weights[:len(last3)])
-          if sum(a['level']>=2 for a in last3)>=2: recent_score=max(recent_score,1.5)
-          if sum(a['level']==3 for a in last3)>=2: recent_score=max(recent_score,2.5)
-          if recent_score>=2.5: level=3
-          elif recent_score>=1.5: level=2
-          elif recent_score>=0.75: level=1
-          else: level=0
-          status=['green','yellow','orange','red'][level]
-          label=['GRÜN','GELB','ORANGE','ROT'][level]
+          latest=evaluated[0]; last3=evaluated[:3]; weights=[.60,.25,.15]
+          score=sum(a['level']*weights[i] for i,a in enumerate(last3))/sum(weights[:len(last3)])
+          if sum(a['level']>=2 for a in last3)>=2: score=max(score,1.5)
+          if sum(a['level']==3 for a in last3)>=2: score=max(score,2.5)
+          level=3 if score>=2.5 else 2 if score>=1.5 else 1 if score>=.75 else 0
+          status=['green','yellow','orange','red'][level]; label=['GRÜN','GELB','ORANGE','ROT'][level]
 
           p=Path('us-financing.json')
           try: old=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
           except: old={}
-
-          def inclusive_days(s):
+          def days(s):
               try: return max(1,(today-date.fromisoformat(s)).days+1)
               except: return 1
-
           status_since=old.get('status_since') if old.get('status')==status and old.get('status_since') else today.isoformat()
 
-          fed_urls=[
-            'https://www.newyorkfed.org/markets/domestic-market-operations/monetary-policy-implementation/treasury-securities/treasury-securities-operational-details',
-            'https://www.newyorkfed.org/markets/domestic-market-operations'
-          ]
+          fed_urls=['https://www.newyorkfed.org/markets/domestic-market-operations/monetary-policy-implementation/treasury-securities/treasury-securities-operational-details','https://www.newyorkfed.org/markets/domestic-market-operations']
           evidence=[]; text=''
           for u in fed_urls:
               try:
-                  rr=requests.get(u,timeout=30,headers={'User-Agent':'GeoDomino/1.0'});rr.raise_for_status()
+                  rr=requests.get(u,timeout=30,headers={'User-Agent':'GeoDomino/1.0'}); rr.raise_for_status()
                   text+=' '+' '.join(BeautifulSoup(rr.text,'html.parser').stripped_strings)[:22000]
-              except Exception as e:
-                  evidence.append('Fed-Seite nicht lesbar: '+str(e)[:90])
+              except Exception as e: evidence.append('Fed-Seite nicht lesbar: '+str(e)[:90])
           low=text.lower()
           fast_terms=['restore smooth market functioning','severe market disruption','market dysfunction','emergency treasury purchases','support the smooth functioning of the treasury market']
           slow_terms=['additional treasury purchase operations','temporary treasury purchase operations','market functioning purchases','address strains in the treasury market']
-          fast_hit=next((t for t in fast_terms if t in low),None)
-          slow_hit=next((t for t in slow_terms if t in low),None)
-          if fast_hit:
-              istate,ilabel,ispeed='fast','SCHNELLE INTERVENTION',2;evidence.append('NY Fed: '+fast_hit)
-          elif slow_hit:
-              istate,ilabel,ispeed='slow','INTERVENTION',1;evidence.append('NY Fed: '+slow_hit)
-          else:
-              istate,ilabel,ispeed='stopped','KEIN AUSSERORDENTLICHER EINGRIFF',0;evidence.append('Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt.')
-
-          oldi=old.get('intervention') or {}
-          state_since=oldi.get('state_since') if oldi.get('state')==istate and oldi.get('state_since') else today.isoformat()
+          fh=next((t for t in fast_terms if t in low),None); sh=next((t for t in slow_terms if t in low),None)
+          if fh: istate,ilabel,ispeed='fast','SCHNELLE INTERVENTION',2; evidence.append('NY Fed: '+fh)
+          elif sh: istate,ilabel,ispeed='slow','INTERVENTION',1; evidence.append('NY Fed: '+sh)
+          else: istate,ilabel,ispeed='stopped','KEIN AUSSERORDENTLICHER EINGRIFF',0; evidence.append('Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt.')
+          oldi=old.get('intervention') or {}; state_since=oldi.get('state_since') if oldi.get('state')==istate and oldi.get('state_since') else today.isoformat()
 
           out={
-            'version':'1.1','status':status,'label':label,'level':level,'score':round(recent_score,2),
-            'status_since':status_since,'days_in_status':inclusive_days(status_since),'updated_at':datetime.now(timezone.utc).isoformat(),
+            'version':'1.1','status':status,'label':label,'level':level,'score':round(score,2),'status_since':status_since,'days_in_status':days(status_since),'updated_at':datetime.now(timezone.utc).isoformat(),
             'financing_plan':{'period':'Jul–Dez 2026','net_market_borrowing_usd_bn':1367,'q3_usd_bn':739,'q4_usd_bn':628},
             'latest_auction':latest,'recent_auctions':evaluated[:6],
-            'intervention':{'state':istate,'label':ilabel,'state_since':state_since,'days_in_state':inclusive_days(state_since),'speed':ispeed,'reason':'Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.','evidence':evidence},
+            'intervention':{'state':istate,'label':ilabel,'state_since':state_since,'days_in_state':days(state_since),'speed':ispeed,'reason':'Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.','evidence':evidence},
             'thresholds':{'auction':'Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.','combined':'Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot.'},
             'method':'Täglicher offizieller FiscalData-Abruf relevanter Treasury Notes/Bonds. Bills werden wegen ihrer hohen Frequenz nicht zur Ampelwertung benutzt. Fed-Pfeil separat und konservativ: normale Geldmarkt-/Reserveoperationen zählen nicht als Krisenintervention.'
           }
-          p.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          print(json.dumps(out,ensure_ascii=False,indent=2))
+          p.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
       - name: Commit data and UI loader
         run: |
