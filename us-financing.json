@@ -1,11 +1,12 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "green",
   "label": "GRÜN",
   "level": 0,
+  "score": 0.0,
   "status_since": "2026-09-12",
   "days_in_status": 1,
-  "updated_at": "2026-09-12T18:00:00Z",
+  "updated_at": "2026-09-12T19:04:03.339019+00:00",
   "financing_plan": {
     "period": "Jul–Dez 2026",
     "net_market_borrowing_usd_bn": 1367,
@@ -13,23 +14,119 @@
     "q4_usd_bn": 628
   },
   "latest_auction": {
-    "date": null,
-    "security": "Wartet auf ersten automatischen Lauf",
-    "bid_to_cover": null,
-    "dealer_share_pct": null,
-    "indirect_share_pct": null,
-    "score": null,
-    "status": "unknown"
+    "date": "2026-09-10",
+    "security": "30-Year",
+    "cusip": "912810UW6",
+    "bid_to_cover": 2.61,
+    "bid_to_cover_baseline": 2.39,
+    "dealer_share_pct": 2.2,
+    "dealer_baseline_pct": 9.3,
+    "indirect_share_pct": 79.3,
+    "indirect_baseline_pct": 54.4,
+    "high_yield": 5.308,
+    "level": 0,
+    "status": "green"
   },
-  "recent_auctions": [],
+  "recent_auctions": [
+    {
+      "date": "2026-09-10",
+      "security": "30-Year",
+      "cusip": "912810UW6",
+      "bid_to_cover": 2.61,
+      "bid_to_cover_baseline": 2.39,
+      "dealer_share_pct": 2.2,
+      "dealer_baseline_pct": 9.3,
+      "indirect_share_pct": 79.3,
+      "indirect_baseline_pct": 54.4,
+      "high_yield": 5.308,
+      "level": 0,
+      "status": "green"
+    },
+    {
+      "date": "2026-09-09",
+      "security": "10-Year",
+      "cusip": "91282CRF0",
+      "bid_to_cover": 2.71,
+      "bid_to_cover_baseline": 2.45,
+      "dealer_share_pct": 4.3,
+      "dealer_baseline_pct": 9.4,
+      "indirect_share_pct": 79.0,
+      "indirect_baseline_pct": 61.0,
+      "high_yield": 4.834,
+      "level": 0,
+      "status": "green"
+    },
+    {
+      "date": "2026-09-08",
+      "security": "3-Year",
+      "cusip": "91282CRL7",
+      "bid_to_cover": 2.72,
+      "bid_to_cover_baseline": 2.62,
+      "dealer_share_pct": 10.8,
+      "dealer_baseline_pct": 11.2,
+      "indirect_share_pct": 61.7,
+      "indirect_baseline_pct": 59.6,
+      "high_yield": 4.474,
+      "level": 0,
+      "status": "green"
+    },
+    {
+      "date": "2026-08-27",
+      "security": "7-Year",
+      "cusip": "91282CRJ2",
+      "bid_to_cover": 2.5,
+      "bid_to_cover_baseline": 2.5,
+      "dealer_share_pct": 10.8,
+      "dealer_baseline_pct": 10.7,
+      "indirect_share_pct": 53.7,
+      "indirect_baseline_pct": 56.6,
+      "high_yield": 4.512,
+      "level": 0,
+      "status": "green"
+    },
+    {
+      "date": "2026-08-26",
+      "security": "2-Year",
+      "cusip": "91282CRD5",
+      "bid_to_cover": 3.14,
+      "bid_to_cover_baseline": 3.19,
+      "dealer_share_pct": 33.1,
+      "dealer_baseline_pct": 33.2,
+      "indirect_share_pct": 66.5,
+      "indirect_baseline_pct": 58.0,
+      "high_yield": null,
+      "level": 0,
+      "status": "green"
+    },
+    {
+      "date": "2026-08-26",
+      "security": "5-Year",
+      "cusip": "91282CRK9",
+      "bid_to_cover": 2.37,
+      "bid_to_cover_baseline": 2.325,
+      "dealer_share_pct": 8.9,
+      "dealer_baseline_pct": 11.3,
+      "indirect_share_pct": 54.3,
+      "indirect_baseline_pct": 55.9,
+      "high_yield": 4.393,
+      "level": 0,
+      "status": "green"
+    }
+  ],
   "intervention": {
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
     "days_in_state": 1,
     "speed": 0,
-    "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht als Krisenintervention. Der Pfeil dreht nur bei zusätzlichen Maßnahmen wegen Treasury-Marktstress.",
-    "evidence": []
+    "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
+    "evidence": [
+      "Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt."
+    ]
   },
-  "method": "Tägliche Prüfung relevanter US-Treasury-Auktionen. Bewertet werden vor allem Notes und Bonds anhand Bid-to-Cover sowie Dealer- und Indirect-Take-up relativ zu den letzten vergleichbaren Auktionen. Der Fed-Pfeil ist davon unabhängig und reagiert nur auf außergewöhnliche Stützungsmaßnahmen wegen Marktstress."
+  "thresholds": {
+    "auction": "Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.",
+    "combined": "Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot."
+  },
+  "method": "Täglicher offizieller FiscalData-Abruf relevanter Treasury Notes/Bonds. Bills werden wegen ihrer hohen Frequenz nicht zur Ampelwertung benutzt. Fed-Pfeil separat und konservativ: normale Geldmarkt-/Reserveoperationen zählen nicht als Krisenintervention."
 }
