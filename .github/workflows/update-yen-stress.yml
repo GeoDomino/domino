@@ -1,0 +1,88 @@
+name: Update USD JPY balance sensor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 16 * * 1-5'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-yen-stress.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Fetch ECB exchange rates and calculate balance stress
+        run: |
+          python - <<'PY'
+          import json, requests, xml.etree.ElementTree as ET
+          from datetime import datetime, timezone
+
+          url='https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml'
+          r=requests.get(url,timeout=30)
+          r.raise_for_status()
+          root=ET.fromstring(r.content)
+          rows=[]
+          for cube in root.iter():
+              date=cube.attrib.get('time')
+              if not date: continue
+              rates={c.attrib.get('currency'):float(c.attrib['rate']) for c in cube if c.attrib.get('currency') in ('USD','JPY')}
+              if 'USD' in rates and 'JPY' in rates:
+                  rows.append((date,rates['JPY']/rates['USD']))
+          rows.sort()
+          if len(rows)<21: raise RuntimeError('Not enough ECB observations')
+          date,rate=rows[-1]
+          prev5=rows[-6][1]
+          prev20=rows[-21][1]
+          ch5=(rate/prev5-1)*100
+          ch20=(rate/prev20-1)*100
+
+          def position(v):
+              if v<135 or v>166: return 3
+              if v<140 or v>162: return 2
+              if v<145 or v>158: return 1
+              return 0
+          def speed(v):
+              a=abs(v)
+              if a>=5: return 3
+              if a>=4: return 2
+              if a>=3: return 1
+              return 0
+
+          pl=position(rate); sl=speed(ch5); level=max(pl,sl)
+          status=['green','yellow','orange','red'][level]
+          label=['GRÜN','GELB','ORANGE','ROT'][level]
+          direction='yen_weaker' if ch5>0 else 'yen_stronger' if ch5<0 else 'stable'
+          out={
+            'version':'1.0','status':status,'label':label,'level':level,'direction':direction,
+            'usd_jpy':round(rate,2),'date':date,'change_5d_pct':round(ch5,2),'change_20d_pct':round(ch20,2),
+            'position_level':pl,'speed_level':sl,'updated_at':datetime.now(timezone.utc).isoformat(),
+            'source':'ECB euro foreign exchange reference rates (JPY/EUR divided by USD/EUR)',
+            'thresholds':{
+              'position':{'green':'145-158','yellow':'140-<145 or >158-162','orange':'135-<140 or >162-166','red':'<135 or >166'},
+              'speed_5d_abs_pct':{'green_lt':3.0,'yellow_lt':4.0,'orange_lt':5.0,'red_gte':5.0}
+            },
+            'method':'Bidirektionaler USD/JPY-Wippensensor. Niveau und 5-Handelstage-Geschwindigkeit werden getrennt bewertet; die hoehere Warnstufe bestimmt die Ampel. Fallender USD/JPY bedeutet staerkerer Yen, steigender USD/JPY schwaecherer Yen. Carry Trade, Treasury-Verkaeufe und Interventionen werden nicht direkt in die Ampel eingerechnet.'
+          }
+          with open('yen-stress.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2); f.write('\n')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit data
+        run: |
+          git config user.name 'DOMINO Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add yen-stress.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update USD JPY balance sensor'
+            git pull --rebase origin main
+            git push
+          fi
