@@ -1,12 +1,12 @@
 {
   "version": "1.1",
-  "status": "green",
-  "label": "GRÜN",
-  "level": 0,
-  "score": 0.6,
-  "status_since": "2026-09-12",
-  "days_in_status": 5,
-  "updated_at": "2026-09-16T23:13:39.881699+00:00",
+  "status": "yellow",
+  "label": "GELB",
+  "level": 1,
+  "score": 1.45,
+  "status_since": "2026-09-17",
+  "days_in_status": 1,
+  "updated_at": "2026-09-17T23:03:48.363075+00:00",
   "financing_plan": {
     "period": "Jul–Dez 2026",
     "net_market_borrowing_usd_bn": 1367,
@@ -14,20 +14,34 @@
     "q4_usd_bn": 628
   },
   "latest_auction": {
-    "date": "2026-09-15",
-    "security": "20-Year",
-    "cusip": "912810UX4",
-    "bid_to_cover": 2.57,
-    "bid_to_cover_baseline": 2.64,
-    "dealer_share_pct": 16.7,
-    "dealer_baseline_pct": 8.6,
-    "indirect_share_pct": 52.1,
-    "indirect_baseline_pct": 59.6,
-    "high_yield": 5.42,
-    "level": 1,
-    "status": "yellow"
+    "date": "2026-09-17",
+    "security": "10-Year",
+    "cusip": "91282CRE3",
+    "bid_to_cover": 2.24,
+    "bid_to_cover_baseline": 2.47,
+    "dealer_share_pct": 10.5,
+    "dealer_baseline_pct": 8.8,
+    "indirect_share_pct": 51.1,
+    "indirect_baseline_pct": 61.2,
+    "high_yield": 2.653,
+    "level": 2,
+    "status": "orange"
   },
   "recent_auctions": [
+    {
+      "date": "2026-09-17",
+      "security": "10-Year",
+      "cusip": "91282CRE3",
+      "bid_to_cover": 2.24,
+      "bid_to_cover_baseline": 2.47,
+      "dealer_share_pct": 10.5,
+      "dealer_baseline_pct": 8.8,
+      "indirect_share_pct": 51.1,
+      "indirect_baseline_pct": 61.2,
+      "high_yield": 2.653,
+      "level": 2,
+      "status": "orange"
+    },
     {
       "date": "2026-09-15",
       "security": "20-Year",
@@ -97,27 +111,13 @@
       "high_yield": 4.512,
       "level": 0,
       "status": "green"
-    },
-    {
-      "date": "2026-08-26",
-      "security": "2-Year",
-      "cusip": "91282CRD5",
-      "bid_to_cover": 3.14,
-      "bid_to_cover_baseline": 3.19,
-      "dealer_share_pct": 33.1,
-      "dealer_baseline_pct": 33.2,
-      "indirect_share_pct": 66.5,
-      "indirect_baseline_pct": 58.0,
-      "high_yield": null,
-      "level": 0,
-      "status": "green"
     }
   ],
   "intervention": {
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
-    "days_in_state": 5,
+    "days_in_state": 6,
     "speed": 0,
     "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
     "evidence": [
