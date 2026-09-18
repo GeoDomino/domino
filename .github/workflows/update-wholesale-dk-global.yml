@@ -117,7 +117,14 @@ jobs:
                           print(cfg['name'],'fallback',v,cfg['unit'])
                           continue
                       except Exception as fallback_error:
-                          print('WARN fallback',cfg['name'],fallback_error)
+                          print('WARN OilPriceAPI fallback',cfg['name'],fallback_error)
+                      try:
+                          v,h=tradingview_europe_gasoil()
+                          data[key]=save_market(cfg,v,h,'TradingView public ICE Low Sulphur Gasoil continuous contract page')
+                          print(cfg['name'],'TradingView fallback',v,cfg['unit'])
+                          continue
+                      except Exception as fallback_error:
+                          print('WARN TradingView fallback',cfg['name'],fallback_error)
                   try: data[key]=json.load(open(cfg['file']))
                   except: pass
 
