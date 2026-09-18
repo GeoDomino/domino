@@ -2,6 +2,9 @@ name: Update wholesale DK global
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/update-wholesale-dk-global.yml'
   schedule:
     # Candidate UTC hours. The script gates each market by its real local time,
     # so DST in Europe/New York is handled by zoneinfo instead of hard-coded UTC.
