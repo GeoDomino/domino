@@ -103,6 +103,27 @@ jobs:
                   if 300 <= v <= 5000: return v,[]
               raise RuntimeError('No public TradingView ICE gasoil quote found')
 
+          def investing_europe_gasoil():
+              # Public delayed ICE London Gas Oil page. No login/API key required.
+              url='https://www.investing.com/commodities/london-gas-oil-contracts'
+              req=urllib.request.Request(url,headers={
+                  'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
+                  'Accept':'text/html,application/xhtml+xml',
+                  'Accept-Language':'en-US,en;q=0.9'
+              })
+              html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
+              patterns=[
+                  r'data-test="instrument-price-last"[^>]*>\\s*([0-9,.]+)',
+                  r'"last"\\s*:\\s*"([0-9,.]+)"',
+                  r'London Gas Oil[^<]{0,120}</[^>]+>[\\s\\S]{0,2500}?([0-9]{1,2},[0-9]{3}\\.[0-9]{1,2})'
+              ]
+              for pat in patterns:
+                  m=re.search(pat,html,re.I)
+                  if m:
+                      v=float(m.group(1).replace(',',''))
+                      if 300 <= v <= 5000: return v,[]
+              raise RuntimeError('No public Investing.com London Gas Oil quote found')
+
           def level(value, t):
               return 0 if value<t[0] else 1 if value<t[1] else 2 if value<t[2] else 3
 
@@ -158,6 +179,13 @@ jobs:
                           continue
                       except Exception as fallback_error:
                           print('WARN TradingView fallback',cfg['name'],fallback_error)
+                      try:
+                          v,h=investing_europe_gasoil()
+                          data[key]=save_market(cfg,v,h,'Investing.com delayed ICE London Gas Oil quote')
+                          print(cfg['name'],'Investing fallback',v,cfg['unit'])
+                          continue
+                      except Exception as fallback_error:
+                          print('WARN Investing fallback',cfg['name'],fallback_error)
                   try: data[key]=json.load(open(cfg['file']))
                   except: pass
 
