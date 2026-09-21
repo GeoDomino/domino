@@ -2,6 +2,9 @@ name: Update US diesel
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/update-diesel-us.yml'
   schedule:
     - cron: "25 10 * * 2"
 
@@ -17,7 +20,7 @@ jobs:
         shell: python
         run: |
           import csv, io, json, os, urllib.request
-          from datetime import datetime, timezone
+          from datetime import datetime, timezone, date
 
           url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GASDESW"
           req = urllib.request.Request(url, headers={"User-Agent":"DOMINO-Diesel-US/1.0"})
@@ -67,8 +70,23 @@ jobs:
           if len(history) >= 2 and history[-2]["value"]:
               trend = round((history[-1]["value"] / history[-2]["value"] - 1) * 100, 2)
 
+          # Data-quality guard. EIA/FRED is weekly; by Sunday a value from the
+          # previous Sunday is already one full release cycle old.
+          source_day = datetime.fromisoformat(latest["date"]).date()
+          today = datetime.now(timezone.utc).date()
+          age_days = (today - source_day).days
+          expected_max_age_days = 8
+          quality_reasons = []
+          if age_days > expected_max_age_days:
+              quality_reasons.append(f"EIA-Wochenwert {age_days} Tage alt")
+          if not (1.5 <= v <= 15.0):
+              quality_reasons.append("Preis außerhalb Plausibilitätsbereich")
+          if trend is not None and abs(trend) >= 20:
+              quality_reasons.append(f"Wochensprung {trend:+.1f}% verlangt Gegenprüfung")
+          data_quality = "compromised" if quality_reasons else "ok"
+
           out = {
-              "version":"1.0",
+              "version":"1.1",
               "market":"USA",
               "product":"DK",
               "value":round(v,3),
@@ -80,6 +98,12 @@ jobs:
               "source_date":latest["date"],
               "updated_at":datetime.now(timezone.utc).isoformat(),
               "source":"U.S. EIA / FRED GASDESW",
+              "data_quality":data_quality,
+              "data_quality_ok":data_quality == "ok",
+              "data_age_days":age_days,
+              "expected_max_age_days":expected_max_age_days,
+              "quality_reasons":quality_reasons,
+              "quality_method":"Freshness + physical sanity range + weekly jump check. A failed check preserves the market value/status but requires gray UI until validated.",
               "thresholds":{"green_below":3.60,"yellow_from":3.60,"orange_from":4.70,"red_from":5.80},
               "history":history
           }
@@ -96,5 +120,6 @@ jobs:
             echo "Keine Aenderung"
           else
             git commit -m "Update US diesel price"
+            git pull --rebase origin main
             git push
           fi
