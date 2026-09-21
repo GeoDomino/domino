@@ -1,0 +1,81 @@
+name: Update LNG cost sensor
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/update-lng-cost.yml'
+  schedule:
+    - cron: "20 16 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch TTF and calculate LNG cost stress
+        shell: python
+        run: |
+          import json, urllib.request
+          from datetime import datetime, timezone
+
+          URL='https://query1.finance.yahoo.com/v8/finance/chart/TTF=F?range=3mo&interval=1d&includePrePost=false'
+          req=urllib.request.Request(URL,headers={'User-Agent':'Mozilla/5.0 DOMINO/1.0'})
+          raw=json.load(urllib.request.urlopen(req,timeout=30))
+          r=raw['chart']['result'][0]
+          ts=r.get('timestamp') or []
+          closes=((r.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []
+          hist=[]
+          for t,v in zip(ts,closes):
+              if v is None: continue
+              d=datetime.fromtimestamp(t,timezone.utc).date().isoformat()
+              hist.append((d,float(v)))
+          if len(hist)<21: raise RuntimeError('Not enough TTF observations')
+          date,value=hist[-1]
+          c5=(value/hist[-6][1]-1)*100
+          c20=(value/hist[-21][1]-1)*100
+
+          def price_level(v):
+              return 3 if v>=100 else 2 if v>=65 else 1 if v>=45 else 0
+          def speed_level(v):
+              v=max(0,v)
+              return 3 if v>=35 else 2 if v>=20 else 1 if v>=10 else 0
+
+          pl=price_level(value); sl=speed_level(c5); level=max(pl,sl)
+          names=['green','yellow','orange','red']; labels=['GRÜN','GELB','ORANGE','ROT']
+          old={}
+          try: old=json.load(open('lng-cost.json'))
+          except: pass
+          if old.get('level')==level:
+              since=old.get('status_since') or old.get('source_date') or date
+          else:
+              since=date
+          try:
+              a=datetime.fromisoformat(since).date(); b=datetime.fromisoformat(date).date()
+              days=max(1,(b-a).days+1)
+          except: days=1
+
+          out={
+            'version':'1.1','name':'LNG-Kosten','status':names[level],'label':labels[level],
+            'level':level,'value':round(value,3),'unit':'EUR/MWh','source_date':date,
+            'updated_at':datetime.now(timezone.utc).isoformat(),
+            'change_5d_pct':round(c5,2),'change_20d_pct':round(c20,2),
+            'price_level':pl,'speed_level':sl,'status_since':since,'days_in_status':days,
+            'source':'Yahoo Finance Dutch TTF Natural Gas Calendar (TTF=F), delayed quote',
+            'thresholds':{'green_below':45,'yellow_from':45,'orange_from':65,'red_from':100},
+            'speed_thresholds_5d':{'yellow_from':10,'orange_from':20,'red_from':35},
+            'method':'Higher warning level of absolute TTF price and positive 5-trading-day acceleration. Falling prices do not create speed stress.',
+            'context':{'alsi':'LNG inventory and send-out are diagnostic context; not scored yet.','agsi':'Underground gas storage is diagnostic context; not scored yet.'},
+            'history':[{'date':d,'value':round(v,3)} for d,v in hist[-90:]]
+          }
+          json.dump(out,open('lng-cost.json','w'),indent=2,ensure_ascii=False)
+
+      - name: Commit
+        run: |
+          git config user.name "DOMINO Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lng-cost.json
+          git diff --cached --quiet || (git commit -m "Update LNG cost sensor" && git push)
