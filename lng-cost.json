@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "name": "LNG-Kosten",
+  "status": "orange",
+  "label": "ORANGE",
+  "level": 2,
+  "value": 79.518,
+  "unit": "EUR/MWh",
+  "source_date": "2026-09-18",
+  "updated_at": "2026-09-21T05:16:00Z",
+  "change_5d_pct": 14.03,
+  "change_20d_pct": 39.69,
+  "days_in_status": 1,
+  "source": "Yahoo Finance TTF=F delayed quote; TradingView/ICE TTF reference cross-check",
+  "thresholds": {
+    "green_below": 45,
+    "yellow_from": 45,
+    "orange_from": 65,
+    "red_from": 100
+  },
+  "speed_thresholds_5d": {
+    "yellow_from": 10,
+    "orange_from": 20,
+    "red_from": 35
+  },
+  "method": "TTF price stress sensor. Final level is the higher of absolute TTF price level and 5-trading-day price acceleration. ALSI LNG inventory/send-out and AGSI storage are diagnostic context and do not yet alter the traffic light.",
+  "note": "First stage: price pressure only. Industrial transmission to power, chemicals, steel and other inputs will be added separately."
+}
