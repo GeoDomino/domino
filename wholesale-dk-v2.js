@@ -15,7 +15,15 @@
   const style=document.createElement('style');style.textContent=css;document.head.appendChild(style);
 
   const levelColor=l=>['var(--green)','var(--yellow)','var(--orange)','var(--red)'][l]||'var(--unknown)';
-  const row=(name,level,days)=>`<div class="wdk-row"><b>${name}</b><span class="wdk-dot" style="background:${levelColor(level)}">${days??'–'}</span></div>`;
+  function businessAge(date){
+    if(!date)return 999;
+    const d=new Date(date+'T12:00:00Z'),now=new Date(),today=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),12));
+    let n=0,x=new Date(d);
+    while(x<today){x.setUTCDate(x.getUTCDate()+1);const w=x.getUTCDay();if(w!==0&&w!==6)n++}
+    return n;
+  }
+  const stale=d=>!d||businessAge(d.source_date)>1;
+  const row=(name,d)=>{const bad=stale(d),level=bad?null:d?.level,days=bad?'!':(d?.days_in_status??'–');return `<div class="wdk-row"><b>${name}</b><span class="wdk-dot" style="background:${levelColor(level)}" title="${bad?'Daten veraltet / kompromittiert':'Daten aktuell'}">${days}</span></div>`};
   const fmt=(x,d=3)=>typeof x==='number'?x.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
   async function get(file){try{const r=await fetch(file+'?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json()}catch(e){return null}}
   function card(){for(const n of document.querySelectorAll('.name'))if(/Kraftstoff-Großhandel|Großhandel DK/.test(n.textContent||''))return n.closest('.card');return null}
@@ -31,7 +39,7 @@
     ]);
 
     document.getElementById('wdkrows').innerHTML=
-      row('Amerika',us?.level,us?.days_in_status)+row('Europa',eu?.level,eu?.days_in_status)+row('Asien',asia?.level,asia?.days_in_status);
+      row('Amerika',us)+row('Europa',eu)+row('Asien',asia);
 
     const arrow=document.getElementById('wdkArrow');
     if(spread){
@@ -45,7 +53,7 @@
     if(b){
       document.getElementById('wdkDetails')?.remove();
       const market=(d,label)=>d&&typeof d.value==='number'
-        ?`<b>${label}:</b> ${fmt(d.value)} ${d.unit} · ${['grün','gelb','orange','rot'][d.level]||'offen'} · ${d.days_in_status??'–'} Tage`
+        ?`<b>${label}:</b> ${fmt(d.value)} ${d.unit} · ${stale(d)?'<span style="color:var(--muted)">GRAU · DATEN VERALTET</span>':(['grün','gelb','orange','rot'][d.level]||'offen')} · ${stale(d)?'Quelle '+(d.source_date||'unbekannt'):(d.days_in_status??'–')+' Tage'}`
         :`<b>${label}:</b> noch kein belastbarer Abruf`;
       const sp=spread&&typeof spread.value_usd_bbl==='number'
         ?`<b>Ost-West-Spread:</b> ${fmt(spread.value_usd_bbl)} $/bbl · ${spread.state} · Niveau/Abweichung ${fmt(spread.deviation_percentile,1)}. Perzentil · Geschwindigkeit ${fmt(spread.speed_percentile,1)}. Perzentil · ${spread.days_in_state??'–'} Tage im Zustand.`
