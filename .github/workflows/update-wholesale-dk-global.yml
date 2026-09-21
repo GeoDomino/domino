@@ -75,7 +75,7 @@ jobs:
               return float(m.group(1).replace(',','')), []
 
           def tradingview_europe_gasoil():
-              url='https://www.tradingview.com/symbols/ICEEUR-ULS1%21/contracts/'
+              url='https://www.tradingview.com/symbols/ICEEUR-ULS1%21/'
               req=urllib.request.Request(url,headers={
                   'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
                   'Accept-Language':'en-US,en;q=0.9'
@@ -83,9 +83,10 @@ jobs:
               html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
               # TradingView exposes the front ICE Low Sulphur Gasoil contract in page text/metadata.
               patterns=[
-                  r'ULS[A-Z]2026[\\s\\S]{0,2500}?([0-9]{1,2}[,.][0-9]{3}[,.][0-9]{2})',
-                  r'current price[^0-9]{0,80}([0-9,]+(?:\\.[0-9]+)?)\\s*USD',
-                  r'"last_price"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)'
+                  r'current price of ULS1! is[^0-9]{0,120}([0-9,.]+)\\s*USD',
+                  r'current price[^0-9]{0,120}([0-9,.]+)\\s*USD',
+                  r'"last_price"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)',
+                  r'"lp"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)'
               ]
               for pat in patterns:
                   m=re.search(pat,html,re.I)
