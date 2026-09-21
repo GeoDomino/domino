@@ -11,7 +11,7 @@
   function installStructuralBreakLayer(){
     const g=document.getElementById('economyGrid');
     if(g&&g.children.length>=8){
-      g.children[3].outerHTML=watchCard('Logistik-Kapazität','Flotte · Kühlkette','Ausfall spezialisierter Transportkapazität');
+      g.children[3].outerHTML=`<div class="card"><div class="name">LNG-Kosten</div><div class="light" id="lngCostLight"><span class="statusword" id="lngCostStatus">Lädt</span></div><div class="price" id="lngCostPrice">–</div><div class="small" id="lngCostDate">TTF · Preisstress</div><div class="error" id="lngCostError"></div></div>`;
       g.children[4].outerHTML=watchCard('Industrie-Netzwerk','kritische Zulieferer','Qualifikation · Werkzeuge · Ersatzzeit');
       g.children[5].outerHTML=watchCard('Agrar / Nahrung','Saisonfenster','Ernte · Aussaat · Verarbeitung');
       g.children[6].outerHTML=watchCard('Strukturverlust','Hysterese','Kapazitätsabgang > Ersatzaufbau');
@@ -19,8 +19,23 @@
     }
     const body=document.querySelector('.page:nth-child(2) .detailbody');
     if(body&&!document.getElementById('structureBreakRules')){
-      const box=document.createElement('div');box.id='structureBreakRules';box.innerHTML=`<div class="detailtitle">Strukturbruch · Version 1.0</div><div class="rule"><b>Phasenlogik</b><br>1 Preisstress → 2 Liquiditätsstress → 3 Firmen-/Kapazitätsausfall → 4 Netzwerk- und Fähigkeitsverlust → 5 Wiederaufbau blockiert.</div><div class="rule"><b>Logistik</b><br>Rot wird nicht schon bei teurem Diesel ausgelöst. Kritisch ist der dauerhafte Verlust spezialisierter Kapazität wie Kühlfahrzeuge, Fahrer, Depots, Werkstätten, Disposition und feste Lieferfenster.</div><div class="rule"><b>Industrie</b><br>Ein kleiner spezialisierter Zulieferer kann einen großen Produktionsverbund blockieren. Entscheidend sind Ersatzzeit, Zertifizierung, Werkzeugbau und verfügbare Alternativkapazität.</div><div class="rule"><b>Agrar / Nahrung</b><br>Verpasste Ernte-, Aussaat- oder Verarbeitungsfenster sind zeitgebunden. Sinkt der Dieselpreis später, lässt sich die verlorene Saison nicht nachholen.</div><div class="rule"><b>Hysterese-Regel</b><br>Eine Strukturbruch-Ampel bleibt kritisch, auch wenn der ursprüngliche Dieseltrigger wieder fällt. Entwarnung erst, wenn reale Ersatzkapazität, Lieferfähigkeit und Finanzierung wieder aufgebaut werden.</div><div class="alarm"><b style="color:var(--text)">DOMINO-Strukturbruch</b><br>Der Übergang vom Stress zum Systembruch beginnt, wenn produktive oder logistische Kapazität schneller verschwindet als neue Kapazität entstehen kann. Ein fallender Dieselpreis kann dann Demand Destruction anzeigen und ist nicht automatisch Entwarnung.</div>`;body.appendChild(box);
+      const box=document.createElement('div');box.id='structureBreakRules';box.innerHTML=`<div class="detailtitle">LNG-Kosten · Version 1.0</div><div class="rule" id="lngCostDetail">Wartet auf LNG-Kostendaten.</div><div class="rule"><b>Zweck</b><br>Dieser Sensor misst bewusst nicht primär, ob Europa genug Gas bekommt, sondern ob die Kosten der LNG-/Gasversorgung in einen wirtschaftlich gefährlichen Bereich laufen. TTF dient als europäischer Preisanker. ALSI-LNG-Bestand und Send-out sowie AGSI-Speicherstände kommen als Diagnoseebene dazu. Die Folgewirkung auf Strom, Chemie, Stahl und weitere Vorprodukte wird separat aufgebaut.</div><div class="detailtitle">Strukturbruch · Version 1.0</div><div class="rule"><b>Phasenlogik</b><br>1 Preisstress → 2 Liquiditätsstress → 3 Firmen-/Kapazitätsausfall → 4 Netzwerk- und Fähigkeitsverlust → 5 Wiederaufbau blockiert.</div><div class="rule"><b>Logistik</b><br>Rot wird nicht schon bei teurem Diesel ausgelöst. Kritisch ist der dauerhafte Verlust spezialisierter Kapazität wie Kühlfahrzeuge, Fahrer, Depots, Werkstätten, Disposition und feste Lieferfenster.</div><div class="rule"><b>Industrie</b><br>Ein kleiner spezialisierter Zulieferer kann einen großen Produktionsverbund blockieren. Entscheidend sind Ersatzzeit, Zertifizierung, Werkzeugbau und verfügbare Alternativkapazität.</div><div class="rule"><b>Agrar / Nahrung</b><br>Verpasste Ernte-, Aussaat- oder Verarbeitungsfenster sind zeitgebunden. Sinkt der Dieselpreis später, lässt sich die verlorene Saison nicht nachholen.</div><div class="rule"><b>Hysterese-Regel</b><br>Eine Strukturbruch-Ampel bleibt kritisch, auch wenn der ursprüngliche Dieseltrigger wieder fällt. Entwarnung erst, wenn reale Ersatzkapazität, Lieferfähigkeit und Finanzierung wieder aufgebaut werden.</div><div class="alarm"><b style="color:var(--text)">DOMINO-Strukturbruch</b><br>Der Übergang vom Stress zum Systembruch beginnt, wenn produktive oder logistische Kapazität schneller verschwindet als neue Kapazität entstehen kann. Ein fallender Dieselpreis kann dann Demand Destruction anzeigen und ist nicht automatisch Entwarnung.</div>`;body.appendChild(box);
     }
+  }
+
+  async function loadLNGCost(){
+    const light=document.getElementById('lngCostLight'),status=document.getElementById('lngCostStatus'),price=document.getElementById('lngCostPrice'),small=document.getElementById('lngCostDate'),err=document.getElementById('lngCostError');
+    if(!light||!status||!price||!small)return;
+    try{
+      const r=await fetch('./lng-cost.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
+      const x=await r.json();
+      light.style.background=colors[x.status]||colors.unknown;status.textContent=String(x.days_in_status||1);
+      price.textContent=Number(x.value).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' €/MWh';
+      small.textContent='TTF · 5T '+(Number(x.change_5d_pct)>=0?'+':'')+Number(x.change_5d_pct).toLocaleString('de-DE',{maximumFractionDigits:1})+' %';
+      if(err)err.style.display='none';
+      const d=document.getElementById('lngCostDetail');
+      if(d)d.innerHTML='<b>TTF:</b> '+Number(x.value).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' €/MWh · 5 Handelstage '+(Number(x.change_5d_pct)>=0?'+':'')+Number(x.change_5d_pct).toLocaleString('de-DE',{maximumFractionDigits:1})+' % · 20 Handelstage '+(Number(x.change_20d_pct)>=0?'+':'')+Number(x.change_20d_pct).toLocaleString('de-DE',{maximumFractionDigits:1})+' %.<br><b>Ampel:</b> 🟢 &lt;45 · 🟡 45–&lt;65 · 🟠 65–&lt;100 · 🔴 ≥100 €/MWh. Beschleunigung über 5 Handelstage kann die Warnstufe erhöhen: 🟡 ab +10 %, 🟠 ab +20 %, 🔴 ab +35 %.<br><br><b>ALSI/AGSI:</b> LNG-Tankbestand, Send-out und Gasspeicher werden im ersten Schritt als Diagnosekontext betrachtet. Sie verändern die Preisampel noch nicht.';
+    }catch(e){status.textContent='?';light.style.background=colors.unknown;price.textContent='TTF';small.textContent='Aktualisierung fehlgeschlagen';if(err){err.textContent='Wartet auf LNG-Kostendaten';err.style.display='block'}}
   }
 
   async function loadCreditStress(){
@@ -58,8 +73,9 @@
     }
   }
 
-  setTimeout(()=>{installStructuralBreakLayer();installCreditChain()},0);
+  setTimeout(()=>{installStructuralBreakLayer();installCreditChain();loadLNGCost()},0);
   setInterval(loadCreditStress,3600000);
+  setInterval(loadLNGCost,3600000);
   for(const [src,v] of [['stocks-ui.js','20260827-2'],['transport-ui.js','20260821-7'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4'],['us-oil-physical-ui.js','20260910-2'],['yen-ui.js','20260912-1']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
   {const s=document.createElement('script');s.src='us-financing-ui.js?v=20260912-1';document.body.appendChild(s)}
 })();
