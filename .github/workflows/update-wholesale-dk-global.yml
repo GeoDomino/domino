@@ -25,7 +25,8 @@ jobs:
           from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
 
-          MANUAL = os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+          EVENT = os.environ.get('GITHUB_EVENT_NAME')
+          MANUAL = EVENT in ('workflow_dispatch','push')
           now = datetime.now(timezone.utc)
 
           markets = {
@@ -206,4 +207,8 @@ jobs:
           git config user.name "DOMINO Bot"
           git config user.email "actions@users.noreply.github.com"
           git add wholesale-dk-eu.json wholesale-dk-asia.json wholesale-dk-spread.json 2>/dev/null || true
-          git diff --cached --quiet || (git commit -m "Update global wholesale diesel markets" && git push)
+          if ! git diff --cached --quiet; then
+            git commit -m "Update global wholesale diesel markets"
+            git pull --rebase origin main
+            git push
+          fi
