@@ -32,7 +32,7 @@ jobs:
           markets = {
             'eu': {
               'name':'Europa','tz':'Europe/Amsterdam','ticker':'LGO=F',
-              'benchmark':'ICE Low Sulphur Gasoil Futures (delayed Yahoo quote)',
+              'benchmark':'ICE Low Sulphur Gasoil Futures (TradingView scanner, ICEEUR:ULS1!)',
               'unit':'USD/t','thresholds':[900,1200,1500],
               'file':'wholesale-dk-eu.json'
             },
@@ -66,14 +66,6 @@ jobs:
               if price is None: raise RuntimeError(f'No quote for {ticker}')
               return float(price), hist
 
-          def public_europe_gasoil():
-              url='https://www.oilpriceapi.com/live/gasoil-price'
-              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 DOMINO/1.0'})
-              html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
-              m=re.search(r'ICE Gasoil \(Rotterdam\) Price[\\s\\S]{0,4000}?\\$([0-9,]+(?:\\.[0-9]+)?)',html,re.I)
-              if not m: raise RuntimeError('No public Europe gasoil quote found')
-              return float(m.group(1).replace(',','')), []
-
           def tradingview_europe_gasoil():
               # TradingView scanner endpoint: machine-readable quote, no HTML scraping.
               url='https://scanner.tradingview.com/futures/scan'
@@ -93,27 +85,6 @@ jobs:
               v=float(rows[0]['d'][0])
               if not 300 <= v <= 5000: raise RuntimeError('TradingView scanner quote outside sanity range')
               return v,[]
-
-          def investing_europe_gasoil():
-              # Public delayed ICE London Gas Oil page. No login/API key required.
-              url='https://www.investing.com/commodities/london-gas-oil-contracts'
-              req=urllib.request.Request(url,headers={
-                  'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
-                  'Accept':'text/html,application/xhtml+xml',
-                  'Accept-Language':'en-US,en;q=0.9'
-              })
-              html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
-              patterns=[
-                  r'data-test="instrument-price-last"[^>]*>\\s*([0-9,.]+)',
-                  r'"last"\\s*:\\s*"([0-9,.]+)"',
-                  r'London Gas Oil[^<]{0,120}</[^>]+>[\\s\\S]{0,2500}?([0-9]{1,2},[0-9]{3}\\.[0-9]{1,2})'
-              ]
-              for pat in patterns:
-                  m=re.search(pat,html,re.I)
-                  if m:
-                      v=float(m.group(1).replace(',',''))
-                      if 300 <= v <= 5000: return v,[]
-              raise RuntimeError('No public Investing.com London Gas Oil quote found')
 
           def level(value, t):
               return 0 if value<t[0] else 1 if value<t[1] else 2 if value<t[2] else 3
@@ -141,6 +112,9 @@ jobs:
                               'orange_from':cfg['thresholds'][1],'red_from':cfg['thresholds'][2]},
                 'history':[{'date':d,'value':round(v,3)} for d,v in hist[-260:]]
               }
+              if not hist:
+                  prior=[x for x in old.get('history',[]) if x.get('date')!=source_date and isinstance(x.get('value'),(int,float))]
+                  out['history']=(prior+[{'date':source_date,'value':round(value,3)}])[-260:]
               json.dump(out,open(cfg['file'],'w'),indent=2,ensure_ascii=False)
               return out
 
@@ -151,25 +125,15 @@ jobs:
                   except: pass
                   continue
               try:
-                  v,h=yahoo(cfg['ticker']); data[key]=save_market(cfg,v,h)
+                  if key=='eu':
+                      v,h=tradingview_europe_gasoil()
+                      data[key]=save_market(cfg,v,h,'TradingView scanner · ICEEUR:ULS1! · ICE Low Sulphur Gasoil')
+                  else:
+                      v,h=yahoo(cfg['ticker'])
+                      data[key]=save_market(cfg,v,h)
                   print(cfg['name'],v,cfg['unit'])
               except Exception as e:
-                  print('WARN primary',cfg['name'],e)
-                  if key=='eu':
-                      try:
-                          v,h=tradingview_europe_gasoil()
-                          data[key]=save_market(cfg,v,h,'TradingView public ICE Low Sulphur Gasoil continuous contract page')
-                          print(cfg['name'],'TradingView fallback',v,cfg['unit'])
-                          continue
-                      except Exception as fallback_error:
-                          print('WARN TradingView fallback',cfg['name'],fallback_error)
-                      try:
-                          v,h=investing_europe_gasoil()
-                          data[key]=save_market(cfg,v,h,'Investing.com delayed ICE London Gas Oil quote')
-                          print(cfg['name'],'Investing fallback',v,cfg['unit'])
-                          continue
-                      except Exception as fallback_error:
-                          print('WARN Investing fallback',cfg['name'],fallback_error)
+                  print('WARN market fetch',cfg['name'],e)
                   try: data[key]=json.load(open(cfg['file']))
                   except: pass
 
