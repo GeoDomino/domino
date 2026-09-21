@@ -73,6 +73,34 @@ jobs:
               if not m: raise RuntimeError('No public Europe gasoil quote found')
               return float(m.group(1).replace(',','')), []
 
+          def tradingview_europe_gasoil():
+              url='https://www.tradingview.com/symbols/ICEEUR-ULS1%21/contracts/'
+              req=urllib.request.Request(url,headers={
+                  'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
+                  'Accept-Language':'en-US,en;q=0.9'
+              })
+              html=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
+              # TradingView exposes the front ICE Low Sulphur Gasoil contract in page text/metadata.
+              patterns=[
+                  r'ULS[A-Z]2026[\\s\\S]{0,2500}?([0-9]{1,2}[,.][0-9]{3}[,.][0-9]{2})',
+                  r'current price[^0-9]{0,80}([0-9,]+(?:\\.[0-9]+)?)\\s*USD',
+                  r'"last_price"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)'
+              ]
+              for pat in patterns:
+                  m=re.search(pat,html,re.I)
+                  if not m: continue
+                  raw=m.group(1)
+                  # Accept both 1,509.25 and German-style 1.509,25.
+                  if ',' in raw and '.' in raw:
+                      if raw.rfind(',') > raw.rfind('.'): raw=raw.replace('.','').replace(',','.')
+                      else: raw=raw.replace(',','')
+                  elif ',' in raw:
+                      parts=raw.split(',')
+                      raw=''.join(parts) if len(parts[-1])==3 else raw.replace(',','.')
+                  v=float(raw)
+                  if 300 <= v <= 5000: return v,[]
+              raise RuntimeError('No public TradingView ICE gasoil quote found')
+
           def level(value, t):
               return 0 if value<t[0] else 1 if value<t[1] else 2 if value<t[2] else 3
 
