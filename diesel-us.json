@@ -2,20 +2,22 @@
   "version": "1.1",
   "market": "USA",
   "product": "DK",
-  "value": 6.285,
+  "value": 5.967,
   "unit": "USD/gal",
   "status": "red",
   "label": "ROT",
   "level": 3,
-  "trend_pct_last_observation": 5.33,
-  "source_date": "2026-09-14",
-  "updated_at": "2026-09-21T07:01:35.694249+00:00",
+  "trend_pct_last_observation": -5.06,
+  "source_date": "2026-09-07",
+  "updated_at": "2026-09-22T15:01:46.965472+00:00",
   "source": "U.S. EIA / FRED GASDESW",
-  "data_quality": "ok",
-  "data_quality_ok": true,
-  "data_age_days": 7,
+  "data_quality": "compromised",
+  "data_quality_ok": false,
+  "data_age_days": 15,
   "expected_max_age_days": 8,
-  "quality_reasons": [],
+  "quality_reasons": [
+    "EIA-Wochenwert 15 Tage alt"
+  ],
   "quality_method": "Freshness + physical sanity range + weekly jump check. A failed check preserves the market value/status but requires gray UI until validated.",
   "thresholds": {
     "green_below": 3.6,
@@ -51,6 +53,10 @@
     {
       "date": "2026-09-14",
       "value": 6.285
+    },
+    {
+      "date": "2026-09-07",
+      "value": 5.967
     }
   ]
 }
