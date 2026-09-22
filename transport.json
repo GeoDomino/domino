@@ -3,10 +3,10 @@
   "status": "orange",
   "label": "ORANGE",
   "summary": "stark gestört",
-  "score": 1.4,
+  "score": 1.7,
   "days_in_status": 1,
-  "updated_at": "2026-09-22T10:11:14.737879+00:00",
-  "source_date": "2026-09-13",
+  "updated_at": "2026-09-22T14:54:19.973539+00:00",
+  "source_date": "2026-09-20",
   "components": {
     "hormuz": {
       "status": "red",
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 9.0,
+        "count": 5.0,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
         "status": "green",
-        "count": 31.0,
-        "baseline": 31.0,
-        "ratio": 1.0,
-        "display": "31 Schiffe · 100 % vom Normalwert"
+        "count": 26.0,
+        "baseline": 30.0,
+        "ratio": 0.867,
+        "display": "26 Schiffe · 87 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 31.0,
-      "total_baseline": 31.0
+      "total_count": 26.0,
+      "total_baseline": 30.0
     },
     "suez": {
       "status": "green",
-      "count": 21.0,
+      "count": 42.0,
       "baseline": 41.0,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
         "status": "green",
-        "count": 21.0,
+        "count": 42.0,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -68,16 +68,16 @@
     },
     "cape": {
       "status": "green",
-      "count": 82.0,
-      "baseline": 90.0,
-      "ratio": 0.911,
+      "count": 85.0,
+      "baseline": 89.0,
+      "ratio": 0.955,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "yellow",
-      "count": 62.0,
-      "baseline": 56.2,
-      "ratio": 1.103,
+      "status": "red",
+      "count": 104.0,
+      "baseline": 57.2,
+      "ratio": 1.818,
       "label": "Dark-Shipping-Radar"
     }
   },
