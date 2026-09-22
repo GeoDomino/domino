@@ -3,16 +3,16 @@
   "status": "orange",
   "label": "ORANGE",
   "summary": "stark gestört",
-  "score": 1.7,
+  "score": 1.4,
   "days_in_status": 1,
-  "updated_at": "2026-09-22T14:54:19.973539+00:00",
+  "updated_at": "2026-09-22T18:29:14.807664+00:00",
   "source_date": "2026-09-20",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 8.0,
+      "count": 1.0,
       "baseline": 85.0,
-      "ratio": 0.094,
+      "ratio": 0.012,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
@@ -74,10 +74,10 @@
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "red",
-      "count": 104.0,
-      "baseline": 57.2,
-      "ratio": 1.818,
+      "status": "yellow",
+      "count": 76.0,
+      "baseline": 57.8,
+      "ratio": 1.315,
       "label": "Dark-Shipping-Radar"
     }
   },
