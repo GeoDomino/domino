@@ -5,8 +5,8 @@
   "summary": "auffällig",
   "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-09-29T08:50:55.237669+00:00",
-  "source_date": "2026-09-20",
+  "updated_at": "2026-09-29T15:20:45.374693+00:00",
+  "source_date": "2026-09-27",
   "components": {
     "hormuz": {
       "status": "red",
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 5.0,
+        "count": 11.0,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
         "status": "green",
-        "count": 26.0,
-        "baseline": 30.0,
-        "ratio": 0.867,
-        "display": "26 Schiffe · 87 % vom Normalwert"
+        "count": 27.0,
+        "baseline": 29.0,
+        "ratio": 0.931,
+        "display": "27 Schiffe · 93 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 26.0,
-      "total_baseline": 30.0
+      "total_count": 27.0,
+      "total_baseline": 29.0
     },
     "suez": {
       "status": "green",
-      "count": 42.0,
+      "count": 37.0,
       "baseline": 41.0,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
         "status": "green",
-        "count": 42.0,
+        "count": 37.0,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -68,9 +68,9 @@
     },
     "cape": {
       "status": "green",
-      "count": 85.0,
+      "count": 75.0,
       "baseline": 89.0,
-      "ratio": 0.955,
+      "ratio": 0.843,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
