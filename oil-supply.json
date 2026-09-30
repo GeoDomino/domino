@@ -81,7 +81,7 @@
       "detail_file": "us-oil-physical.json"
     }
   },
-  "sensor1_updated": "2026-09-29T11:25:38.861572+00:00",
+  "sensor1_updated": "2026-09-30T11:13:27.514736+00:00",
   "sensor1_source_date": "2026-Q3",
   "sensor1_note": "Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.",
   "sensor2_updated": "2026-09-29T11:30:36.582145+00:00",
