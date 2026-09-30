@@ -1,7 +1,7 @@
 (()=>{
   const css=document.createElement('style');
   css.textContent=`
-    .usfin-signal-row{display:flex;align-items:center;justify-content:center;gap:13px;margin:0 auto 8px}
+    .usfin-signal-row{display:flex;align-items:flex-start;justify-content:center;gap:8px;margin:0 auto 8px}.usfin-mini{display:flex;flex-direction:column;align-items:center;gap:3px}.usfin-mini-label{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:.02em}.usfin-mini .light{width:48px;height:48px}.usfin-mini .statusword{font-size:12px}
     .usfin-signal-row .light{margin:0!important}
     .fed-intervention{width:58px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .fed-arrow{font-size:42px;line-height:42px;font-weight:800;color:#cbd5e1;transform-origin:50% 50%}
@@ -24,11 +24,9 @@
     first.outerHTML=`<div class="card" id="usFinCard">
       <div class="name">US-Finanzierung</div>
       <div class="usfin-signal-row">
-        <div class="light" id="usFinLight"><span class="statusword" id="usFinDays">–</span></div>
-        <div class="fed-intervention" title="Fed-Intervention">
-          <div class="fed-arrow stopped" id="fedInterventionArrow">↻</div>
-          <div class="fed-days" id="fedInterventionDays">–</div>
-        </div>
+        <div class="usfin-mini"><div class="usfin-mini-label">ZINSLAST</div><div class="light" id="usDebtLight"><span class="statusword" id="usDebtStatus">–</span></div></div>
+        <div class="usfin-mini"><div class="usfin-mini-label">KÄUFER</div><div class="light" id="usFinLight"><span class="statusword" id="usFinDays">–</span></div></div>
+        <div class="usfin-mini"><div class="usfin-mini-label">FED</div><div class="fed-intervention" title="Fed-Intervention"><div class="fed-arrow stopped" id="fedInterventionArrow">↻</div><div class="fed-days" id="fedInterventionDays">–</div></div></div>
       </div>
       <div class="price" id="usFinPrice">1,37 Bio. $</div>
       <div class="small" id="usFinSmall">Treasury-Auktionen · lädt</div>
@@ -39,8 +37,8 @@
     if(body&&!document.getElementById('usFinancingRules')){
       const box=document.createElement('div');
       box.id='usFinancingRules';
-      box.innerHTML=`<div class="detailtitle">US-Finanzierung · Version 1.1</div>
-        <div class="rule"><b>Belastungstest bis Jahresende</b><br>Für Jul–Dez 2026 sind 1,367 Bio. $ Netto-Marktschuldenaufnahme angesetzt: Q3 739 Mrd. $ · Q4 628 Mrd. $. Die Summe selbst färbt die Ampel nicht. Entscheidend ist, ob der Markt die Emissionen sauber absorbiert.</div>
+      box.innerHTML=`<div class="detailtitle">US-Finanzierung · Dalio-Dreifachampel · Version 1.2</div>
+        <div class="rule"><b>Drei getrennte Anzeigen</b><br><span id="usDebtDetail">Zinslast wird geladen.</span><br><br><b>1 Zinslast:</b> Nettozinsausgaben relativ zu Bundeseinnahmen. <b>2 Käufer:</b> reale Treasury-Auktionen. <b>3 Fed:</b> außergewöhnliche Käufe wegen Treasury-Marktstress. Die drei Anzeigen werden absichtlich nicht zu einer einzigen Farbe zusammengematscht.</div><div class="rule"><b>Zinslast-Schwellen</b><br>🟢 &lt;15 % · 🟡 15–&lt;17,5 % · 🟠 17,5–&lt;20 % · 🔴 ≥20 % der Einnahmen. Quelle: Monthly Treasury Statement, Fiskaljahr bis dato. Die 20-%-Marke bildet die im Dalio-Modell verwendete rote Schwelle ab.</div><div class="rule"><b>Belastungstest bis Jahresende</b><br>Für Jul–Dez 2026 sind 1,367 Bio. $ Netto-Marktschuldenaufnahme angesetzt: Q3 739 Mrd. $ · Q4 628 Mrd. $. Die Summe selbst färbt die Käuferampel nicht. Entscheidend ist, ob der Markt die Emissionen sauber absorbiert.</div>
         <div class="rule"><b>Auktionsampel</b><br><span id="usFinAuctionDetail">Wartet auf Auktionsdaten.</span><br><br>Jede relevante Note-/Bond-Auktion wird mit bis zu acht vorigen Auktionen derselben Laufzeit verglichen. Kernwerte: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil. Die letzten drei Auktionen wirken mit 60/25/15 % nach; wiederholte ernst schwache Ergebnisse erzwingen mindestens Orange.</div>
         <div class="rule"><b>Ampellogik</b><br>🟢 normal absorbiert · 🟡 erste deutliche Schwäche · 🟠 ernst oder wiederholt schwach · 🔴 schwere bzw. wiederholte Funktionsstörung. Bills werden wegen ihrer sehr hohen Auktionsfrequenz nicht für die Ampelfarbe verwendet; sie würden sonst jeden anderen Befund zuschütten.</div>
         <div class="rule"><b>Fed-Pfeil</b><br><span id="usFinFedDetail">Wartet auf NY-Fed-Daten.</span><br><br>↻ steht = kein außergewöhnlicher Eingriff. Langsames Drehen = zusätzliche begrenzte Stützung wegen Treasury-Marktstress. Schnelles Drehen = massive oder wiederholte Stabilisierung. Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen ausdrücklich nicht als Krisenintervention.</div>
@@ -53,12 +51,13 @@
 
   async function load(){
     const light=document.getElementById('usFinLight'),days=document.getElementById('usFinDays'),price=document.getElementById('usFinPrice'),small=document.getElementById('usFinSmall'),err=document.getElementById('usFinError');
-    const arrow=document.getElementById('fedInterventionArrow'),arrowDays=document.getElementById('fedInterventionDays');
+    const arrow=document.getElementById('fedInterventionArrow'),arrowDays=document.getElementById('fedInterventionDays'),debtLight=document.getElementById('usDebtLight'),debtStatus=document.getElementById('usDebtStatus');
     if(!light||!days||!arrow)return;
     try{
       const r=await fetch('./us-financing.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
-      const x=await r.json(),a=x.latest_auction||{},i=x.intervention||{};
+      const x=await r.json(),a=x.latest_auction||{},i=x.intervention||{},d=x.debt_service||{};
       light.style.background=cmap[x.status]||cmap.unknown;
+      if(debtLight){debtLight.style.background=cmap[d.status]||cmap.unknown;debtStatus.textContent=d.ratio_pct!=null?n(d.ratio_pct,0)+'%':'?';debtLight.title=d.ratio_pct!=null?('Nettozins / Einnahmen '+n(d.ratio_pct,1)+' %'):'Zinslastdaten fehlen'}
       days.textContent=String(x.days_in_status||1);
       price.textContent=(x.label||'?')+' · 1,37 Bio. $';
       small.textContent=a.date?('Letzte: '+a.security+' · '+a.date):'Wartet auf ersten Auktionslauf';
@@ -66,6 +65,7 @@
       arrowDays.textContent=String(i.days_in_state||1)+' T';
       arrow.title=i.label||'Fed-Intervention';
       if(err)err.style.display='none';
+      const dd=document.getElementById('usDebtDetail');if(dd)dd.innerHTML=d.ratio_pct!=null?('<b style="color:var(--text)">'+String(d.status||'').toUpperCase()+' · '+n(d.ratio_pct,1)+' %</b><br>Nettozins '+n(d.net_interest_ytd_usd_bn||0,1)+' Mrd. $ · Einnahmen '+n(d.receipts_ytd_usd_bn||0,1)+' Mrd. $ · Stand '+(d.source_date||'–')):'Zinslastdaten noch nicht verfügbar.';
       const ad=document.getElementById('usFinAuctionDetail');
       if(ad){
         const parts=[];
@@ -78,7 +78,7 @@
       const fd=document.getElementById('usFinFedDetail');
       if(fd)fd.innerHTML='<b style="color:var(--text)">'+(i.label||'?')+' · seit '+(i.days_in_state||1)+' Tag(en)</b><br>'+((i.evidence||[])[0]||i.reason||'');
     }catch(e){
-      light.style.background=cmap.unknown;days.textContent='?';price.textContent='US-Finanzierung';small.textContent='Aktualisierung fehlgeschlagen';arrow.className='fed-arrow stopped';arrowDays.textContent='?';
+      light.style.background=cmap.unknown;days.textContent='?';if(debtLight){debtLight.style.background=cmap.unknown;debtStatus.textContent='?'}price.textContent='US-Finanzierung';small.textContent='Aktualisierung fehlgeschlagen';arrow.className='fed-arrow stopped';arrowDays.textContent='?';
       if(err){err.textContent='Wartet auf US-Finanzierungsdaten';err.style.display='block'}
     }
   }
