@@ -128,13 +128,47 @@ jobs:
           else: istate,ilabel,ispeed='stopped','KEIN AUSSERORDENTLICHER EINGRIFF',0; evidence.append('Keine explizite Treasury-Marktstress-Intervention auf den geprüften NY-Fed-Seiten erkannt.')
           oldi=old.get('intervention') or {}; state_since=oldi.get('state_since') if oldi.get('state')==istate and oldi.get('state_since') else today.isoformat()
 
+          # Dalio display #1: net interest / federal receipts, fiscal-year-to-date.
+          # Monthly Treasury Statement table 9 is the authoritative source. If unavailable,
+          # preserve the last good observation but mark it stale instead of inventing a value.
+          debt_service=None
+          try:
+              mts='https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9'
+              mr=requests.get(mts,params={'format':'json','sort':'-record_date','page[size]':'500'},timeout=40,headers={'User-Agent':'GeoDomino/1.0'}); mr.raise_for_status()
+              md=mr.json().get('data',[])
+              latest_date=max((z.get('record_date') for z in md if z.get('record_date')),default=None)
+              cur=[z for z in md if z.get('record_date')==latest_date]
+              def pick(label):
+                  for z in cur:
+                      txt=' '.join(str(z.get(k,'')) for k in z.keys() if 'classification' in k or 'category' in k or 'line' in k).lower()
+                      if label in txt:
+                          vals=[(k,num(v)) for k,v in z.items() if 'fiscal_year_to_date' in k.lower() or 'fytd' in k.lower()]
+                          vals=[v for k,v in vals if v is not None]
+                          if vals:return vals[0]
+                  return None
+              receipts=pick('total')
+              interest=pick('net interest')
+              if receipts and interest:
+                  ratio=interest/receipts*100
+                  dlev=3 if ratio>=20 else 2 if ratio>=17.5 else 1 if ratio>=15 else 0
+                  debt_service={'source_date':latest_date,'net_interest_ytd_usd_bn':round(interest/1000,1),'receipts_ytd_usd_bn':round(receipts/1000,1),'ratio_pct':round(ratio,1),'level':dlev,'status':['green','yellow','orange','red'][dlev],'source':'U.S. Treasury Monthly Treasury Statement, Table 9','data_quality':'ok'}
+          except Exception as e:
+              evidence.append('MTS-Zinslast nicht lesbar: '+str(e)[:90])
+          if debt_service is None:
+              prev=old.get('debt_service')
+              if prev:
+                  debt_service=dict(prev); debt_service['data_quality']='stale'; debt_service['quality_reason']='Aktualisierung fehlgeschlagen, letzter guter Wert beibehalten'
+              else:
+                  debt_service={'source_date':None,'ratio_pct':None,'level':None,'status':'unknown','source':'U.S. Treasury Monthly Treasury Statement, Table 9','data_quality':'missing'}
+
           out={
-            'version':'1.1','status':status,'label':label,'level':level,'score':round(score,2),'status_since':status_since,'days_in_status':days(status_since),'updated_at':datetime.now(timezone.utc).isoformat(),
+            'version':'1.2','status':status,'label':label,'level':level,'score':round(score,2),'status_since':status_since,'days_in_status':days(status_since),'updated_at':datetime.now(timezone.utc).isoformat(),
+            'debt_service':debt_service,
             'financing_plan':{'period':'Jul–Dez 2026','net_market_borrowing_usd_bn':1367,'q3_usd_bn':739,'q4_usd_bn':628},
             'latest_auction':latest,'recent_auctions':evaluated[:6],
             'intervention':{'state':istate,'label':ilabel,'state_since':state_since,'days_in_state':days(state_since),'speed':ispeed,'reason':'Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.','evidence':evidence},
             'thresholds':{'auction':'Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.','combined':'Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot.'},
-            'method':'Täglicher offizieller FiscalData-Abruf relevanter Treasury Notes/Bonds. Bills werden wegen ihrer hohen Frequenz nicht zur Ampelwertung benutzt. Fed-Pfeil separat und konservativ: normale Geldmarkt-/Reserveoperationen zählen nicht als Krisenintervention.'
+            'method':'Dalio-Dreifachanzeige: (1) Zinslast aus Treasury MTS, (2) Käuferstress aus offiziellen Treasury-Auktionen, (3) Fed-Intervention konservativ aus NY-Fed-Mitteilungen. Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht als Krisenintervention.'
           }
           p.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
