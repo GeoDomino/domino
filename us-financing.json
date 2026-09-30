@@ -1,12 +1,22 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "status": "yellow",
   "label": "GELB",
   "level": 1,
   "score": 1.3,
   "status_since": "2026-09-23",
-  "days_in_status": 7,
-  "updated_at": "2026-09-29T23:56:45.467461+00:00",
+  "days_in_status": 8,
+  "updated_at": "2026-09-30T16:02:30.132927+00:00",
+  "debt_service": {
+    "source_date": "2026-08-31",
+    "net_interest_ytd_usd_bn": 1016966437.4,
+    "receipts_ytd_usd_bn": 6811043257.2,
+    "ratio_pct": 14.9,
+    "level": 0,
+    "status": "green",
+    "source": "U.S. Treasury Monthly Treasury Statement, Table 9",
+    "data_quality": "ok"
+  },
   "financing_plan": {
     "period": "Jul–Dez 2026",
     "net_market_borrowing_usd_bn": 1367,
@@ -117,7 +127,7 @@
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
-    "days_in_state": 18,
+    "days_in_state": 19,
     "speed": 0,
     "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
     "evidence": [
@@ -128,5 +138,5 @@
     "auction": "Vergleich jeder Auktion mit bis zu 8 vorigen Auktionen gleicher Laufzeit: Bid-to-Cover, Primary-Dealer-Anteil und Indirect-Bidder-Anteil.",
     "combined": "Letzte Auktion 60 %, vorletzte 25 %, drittletzte 15 %. Zwei ernst schwache Auktionen in drei erzwingen mindestens Orange; zwei rote erzwingen Rot."
   },
-  "method": "Täglicher offizieller FiscalData-Abruf relevanter Treasury Notes/Bonds. Bills werden wegen ihrer hohen Frequenz nicht zur Ampelwertung benutzt. Fed-Pfeil separat und konservativ: normale Geldmarkt-/Reserveoperationen zählen nicht als Krisenintervention."
+  "method": "Dalio-Dreifachanzeige: (1) Zinslast aus Treasury MTS, (2) Käuferstress aus offiziellen Treasury-Auktionen, (3) Fed-Intervention konservativ aus NY-Fed-Mitteilungen. Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht als Krisenintervention."
 }
