@@ -151,7 +151,7 @@ jobs:
               if receipts and interest:
                   ratio=interest/receipts*100
                   dlev=3 if ratio>=20 else 2 if ratio>=17.5 else 1 if ratio>=15 else 0
-                  debt_service={'source_date':latest_date,'net_interest_ytd_usd_bn':round(interest/1000,1),'receipts_ytd_usd_bn':round(receipts/1000,1),'ratio_pct':round(ratio,1),'level':dlev,'status':['green','yellow','orange','red'][dlev],'source':'U.S. Treasury Monthly Treasury Statement, Table 9','data_quality':'ok'}
+                  debt_service={'source_date':latest_date,'net_interest_ytd_usd_bn':round(interest/1_000_000_000,1),'receipts_ytd_usd_bn':round(receipts/1_000_000_000,1),'ratio_pct':round(ratio,1),'level':dlev,'status':['green','yellow','orange','red'][dlev],'source':'U.S. Treasury Monthly Treasury Statement, Table 9','data_quality':'ok'}
           except Exception as e:
               evidence.append('MTS-Zinslast nicht lesbar: '+str(e)[:90])
           if debt_service is None:
