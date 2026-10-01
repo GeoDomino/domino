@@ -4,16 +4,16 @@
   "status": "orange",
   "label": "ORANGE",
   "level": 2,
-  "value": 72.105,
+  "value": 73.015,
   "unit": "EUR/MWh",
-  "source_date": "2026-09-30",
-  "updated_at": "2026-09-30T20:50:35.915210+00:00",
-  "change_5d_pct": 0.13,
-  "change_20d_pct": -0.16,
+  "source_date": "2026-10-01",
+  "updated_at": "2026-10-01T21:04:03.465501+00:00",
+  "change_5d_pct": -2.78,
+  "change_20d_pct": -0.84,
   "price_level": 2,
   "speed_level": 0,
   "status_since": "2026-09-18",
-  "days_in_status": 13,
+  "days_in_status": 14,
   "source": "Yahoo Finance Dutch TTF Natural Gas Calendar (TTF=F), delayed quote",
   "thresholds": {
     "green_below": 45,
@@ -32,10 +32,6 @@
     "agsi": "Underground gas storage is diagnostic context; not scored yet."
   },
   "history": [
-    {
-      "date": "2026-06-30",
-      "value": 43.444
-    },
     {
       "date": "2026-07-01",
       "value": 42.779
@@ -290,7 +286,11 @@
     },
     {
       "date": "2026-09-30",
-      "value": 72.105
+      "value": 72.357
+    },
+    {
+      "date": "2026-10-01",
+      "value": 73.015
     }
   ]
 }
