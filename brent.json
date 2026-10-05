@@ -1,9 +1,9 @@
 {
   "date": "2026-10-05",
-  "value": 101.83,
+  "value": 101.71,
   "source": "Yahoo Finance BZ=F",
-  "market_timestamp": "2026-10-05T05:36:06+00:00",
+  "market_timestamp": "2026-10-05T14:36:30+00:00",
   "age_days": 0,
   "stale": false,
-  "updated_at": "2026-10-05T05:46:50.213836+00:00"
+  "updated_at": "2026-10-05T14:47:23.702010+00:00"
 }
