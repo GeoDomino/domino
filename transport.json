@@ -3,16 +3,16 @@
   "status": "orange",
   "label": "ORANGE",
   "summary": "stark gestört",
-  "score": 1.55,
+  "score": 1.7,
   "days_in_status": 1,
-  "updated_at": "2026-10-06T08:32:08.140849+00:00",
-  "source_date": "2026-09-27",
+  "updated_at": "2026-10-06T15:27:00.798950+00:00",
+  "source_date": "2026-10-04",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 1.0,
+      "count": 4.0,
       "baseline": 85.0,
-      "ratio": 0.012,
+      "ratio": 0.047,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
@@ -31,10 +31,10 @@
       },
       "goods": {
         "status": "green",
-        "count": 27.0,
+        "count": 34.0,
         "baseline": 29.0,
-        "ratio": 0.931,
-        "display": "27 Schiffe · 93 % vom Normalwert"
+        "ratio": 1.172,
+        "display": "34 Schiffe · 117 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 27.0,
+      "total_count": 34.0,
       "total_baseline": 29.0
     },
     "suez": {
       "status": "green",
-      "count": 37.0,
+      "count": 46.0,
       "baseline": 41.0,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
         "status": "green",
-        "count": 37.0,
+        "count": 46.0,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -67,17 +67,17 @@
       "wait_time_hours": null
     },
     "cape": {
-      "status": "green",
-      "count": 75.0,
-      "baseline": 89.0,
-      "ratio": 0.843,
+      "status": "yellow",
+      "count": 99.0,
+      "baseline": 88.5,
+      "ratio": 1.119,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
       "status": "orange",
-      "count": 142.0,
-      "baseline": 83.0,
-      "ratio": 1.711,
+      "count": 138.0,
+      "baseline": 86.6,
+      "ratio": 1.594,
       "label": "Dark-Shipping-Radar"
     }
   },
