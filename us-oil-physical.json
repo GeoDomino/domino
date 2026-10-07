@@ -3,60 +3,60 @@
   "status": "green",
   "label": "GRÜN",
   "level": 0,
-  "score": 0.2,
-  "source_date": "2026-09-25",
-  "updated_at": "2026-10-06T21:00:08.491858+00:00",
+  "score": 0.1,
+  "source_date": "2026-10-02",
+  "updated_at": "2026-10-07T21:19:31.572926+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 3.423,
-      "deviation_pct": 5.26,
+      "value": 3.891,
+      "deviation_pct": 13.67,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.252
+      "previous_week": 3.423
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
       "level": 0,
-      "value": 427.32,
-      "deviation_pct": 0.22,
+      "value": 424.134,
+      "deviation_pct": -0.75,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 426.398
+      "previous_week": 427.32
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
       "level": 0,
-      "value": 5.698,
-      "deviation_pct": -3.05,
+      "value": 6.84,
+      "deviation_pct": 20.04,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 5.877
+      "previous_week": 5.698
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
       "weight": 15,
       "level": 0,
-      "value": 13.955,
-      "deviation_pct": 3.33,
+      "value": 13.979,
+      "deviation_pct": 2.57,
       "unit": "mb/d",
       "comparison": "year_over_year",
-      "year_ago": 13.505,
-      "comparison_date": "2025-09-26"
+      "year_ago": 13.629,
+      "comparison_date": "2025-10-03"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
-      "level": 2,
-      "value": 16.257,
-      "deviation_pct": -6.06,
+      "level": 1,
+      "value": 16.48,
+      "deviation_pct": -3.04,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 17.306
+      "baseline_4w": 16.996
     }
   },
   "sources": {
