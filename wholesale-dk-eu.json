@@ -2,13 +2,13 @@
   "market": "Europa",
   "benchmark": "ICE Low Sulphur Gasoil Futures (TradingView scanner, ICEEUR:ULS1!)",
   "ticker": "LGO=F",
-  "value": 1391.0,
+  "value": 1464.5,
   "unit": "USD/t",
-  "source_date": "2026-10-07",
-  "updated_at": "2026-10-07T08:18:18.995432+00:00",
+  "source_date": "2026-10-08",
+  "updated_at": "2026-10-08T08:34:09.082697+00:00",
   "status": "orange",
   "level": 2,
-  "days_in_status": 36,
+  "days_in_status": 37,
   "source": "TradingView scanner · ICEEUR:ULS1! · ICE Low Sulphur Gasoil",
   "thresholds": {
     "green_below": 900,
@@ -68,6 +68,10 @@
     {
       "date": "2026-10-07",
       "value": 1391.0
+    },
+    {
+      "date": "2026-10-08",
+      "value": 1464.5
     }
   ]
 }
