@@ -84,7 +84,7 @@
   "sensor1_updated": "2026-10-10T11:14:44.252111+00:00",
   "sensor1_source_date": "2026-Q4",
   "sensor1_note": "Misst, ob die weltweite Ölproduktion den weltweiten Verbrauch deckt oder ob ein Defizit bzw. Überschuss in Mio. Barrel pro Tag entsteht.",
-  "sensor2_updated": "2026-10-09T12:03:24.254106+00:00",
+  "sensor2_updated": "2026-10-10T11:19:48.636306+00:00",
   "sensor2_source_date": "2026-Q4",
   "sensor2_note": "Misst die kurzfristig zusätzlich verfügbare OPEC-Rohölförderkapazität. Quartalswert = Mittel der drei monatlichen EIA-STEO-Werte COPS_OPEC. Ampel: grün >=5, gelb 3 bis <5, orange 1,5 bis <3, rot <1,5 Mio. Barrel/Tag.",
   "sensor3_updated": "2026-10-09T12:04:42.980959+00:00",
