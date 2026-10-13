@@ -1,9 +1,8 @@
 {
-  "date": "2026-10-13",
-  "value": 105.75,
-  "source": "Yahoo Finance BZ=F",
-  "market_timestamp": "2026-10-13T14:06:47+00:00",
-  "age_days": 0,
-  "stale": false,
-  "updated_at": "2026-10-13T14:16:52.204177+00:00"
+  "date": "2026-10-06",
+  "value": 125.44,
+  "source": "FRED DCOILBRENTEU",
+  "age_days": 7,
+  "stale": true,
+  "updated_at": "2026-10-13T22:48:46.660756+00:00"
 }
