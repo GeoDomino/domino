@@ -4,16 +4,16 @@
   "status": "orange",
   "label": "ORANGE",
   "level": 2,
-  "value": 84.735,
+  "value": 86.8,
   "unit": "EUR/MWh",
-  "source_date": "2026-10-12",
-  "updated_at": "2026-10-12T23:02:12.428457+00:00",
-  "change_5d_pct": 15.27,
-  "change_20d_pct": 2.63,
+  "source_date": "2026-10-13",
+  "updated_at": "2026-10-13T21:19:20.592598+00:00",
+  "change_5d_pct": 14.68,
+  "change_20d_pct": 8.42,
   "price_level": 2,
   "speed_level": 1,
   "status_since": "2026-09-18",
-  "days_in_status": 25,
+  "days_in_status": 26,
   "source": "Yahoo Finance Dutch TTF Natural Gas Calendar (TTF=F), delayed quote",
   "thresholds": {
     "green_below": 45,
@@ -290,7 +290,11 @@
     },
     {
       "date": "2026-10-12",
-      "value": 84.735
+      "value": 84.351
+    },
+    {
+      "date": "2026-10-13",
+      "value": 86.8
     }
   ]
 }
