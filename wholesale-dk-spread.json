@@ -1,16 +1,16 @@
 {
   "name": "Ost-West Spread",
   "method": "Singapore SGB minus ICE LGO converted at 7.45 bbl/t",
-  "value_usd_bbl": -10.722,
-  "baseline_median": -17.457,
-  "deviation_percentile": 100.0,
-  "speed_percentile": 33.3,
-  "stress_score": 100.0,
-  "state": "fast",
+  "value_usd_bbl": -15.509,
+  "baseline_median": -18.193,
+  "deviation_percentile": 50.0,
+  "speed_percentile": 26.7,
+  "stress_score": 50.0,
+  "state": "still",
   "direction": "cw",
-  "days_in_state": 2,
-  "source_date": "2026-10-13",
-  "updated_at": "2026-10-13T23:38:43.867838+00:00",
+  "days_in_state": 1,
+  "source_date": "2026-10-14",
+  "updated_at": "2026-10-14T07:16:23.707561+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
@@ -33,6 +33,54 @@
     {
       "date": "2026-09-24",
       "spread": -16.695
+    },
+    {
+      "date": "2026-09-25",
+      "spread": -14.65
+    },
+    {
+      "date": "2026-09-28",
+      "spread": -18.168
+    },
+    {
+      "date": "2026-09-29",
+      "spread": -13.129
+    },
+    {
+      "date": "2026-09-30",
+      "spread": -12.648
+    },
+    {
+      "date": "2026-10-01",
+      "spread": -19.624
+    },
+    {
+      "date": "2026-10-02",
+      "spread": -23.447
+    },
+    {
+      "date": "2026-10-05",
+      "spread": -17.323
+    },
+    {
+      "date": "2026-10-06",
+      "spread": -19.453
+    },
+    {
+      "date": "2026-10-07",
+      "spread": -16.508
+    },
+    {
+      "date": "2026-10-08",
+      "spread": -21.663
+    },
+    {
+      "date": "2026-10-09",
+      "spread": -26.488
+    },
+    {
+      "date": "2026-10-12",
+      "spread": -18.281
     }
   ]
 }
