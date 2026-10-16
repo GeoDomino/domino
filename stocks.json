@@ -1,52 +1,52 @@
 {
   "version": "2.1",
-  "status": "orange",
-  "label": "ORANGE",
-  "level": 2,
-  "score": 1.9,
-  "status_since": "2026-09-30",
-  "days_in_status": 16,
-  "source_date": "2026-10-02",
-  "updated_at": "2026-10-15T17:07:50.760121+00:00",
+  "status": "red",
+  "label": "ROT",
+  "level": 3,
+  "score": 2.8,
+  "status_since": "2026-10-16",
+  "days_in_status": 1,
+  "source_date": "2026-10-09",
+  "updated_at": "2026-10-16T16:44:56.546854+00:00",
   "components": {
     "spr": {
       "level": 3,
       "value_million_bbl": 282.983,
-      "source_date": "2026-10-02"
+      "source_date": "2026-10-09"
     },
     "spr_trend": {
-      "level": 1,
-      "weekly_change_million_bbl": -0.784,
-      "source_date": "2026-10-02"
+      "level": 0,
+      "weekly_change_million_bbl": 0.0,
+      "source_date": "2026-10-09"
     },
     "commercial_crude": {
-      "level": 0,
-      "value_million_bbl": 424.134,
-      "percentile": 38.1,
-      "source_date": "2026-10-02"
+      "level": 2,
+      "value_million_bbl": 415.577,
+      "percentile": 12.3,
+      "source_date": "2026-10-09"
     },
     "distillate_stocks": {
       "level": 3,
-      "value_million_bbl": 105.138,
-      "percentile": 7.3,
-      "weekly_change_million_bbl": -0.042,
-      "source_date": "2026-10-02"
+      "value_million_bbl": 102.611,
+      "percentile": 2.3,
+      "weekly_change_million_bbl": -2.527,
+      "source_date": "2026-10-09"
     },
     "days_supply": {
-      "level": 2,
-      "value_days": 27.9,
-      "percentile": 17.7,
-      "source_date": "2026-10-02"
+      "level": 3,
+      "value_days": 25.8,
+      "percentile": 1.5,
+      "source_date": "2026-10-09"
     },
     "draw_speed": {
-      "level": 0,
-      "draw_percentile": 2.2,
-      "weekly_change_million_bbl": -0.042,
-      "source_date": "2026-10-02"
+      "level": 1,
+      "draw_percentile": 67.4,
+      "weekly_change_million_bbl": -2.527,
+      "source_date": "2026-10-09"
     },
     "diesel_stress": {
-      "level": 2,
-      "score": 1.9,
+      "level": 3,
+      "score": 2.5,
       "formula": "40% stock percentile + 35% days-of-supply percentile + 25% draw-speed percentile"
     }
   },
