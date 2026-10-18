@@ -3,9 +3,9 @@
   "status": "orange",
   "label": "ORANGE",
   "summary": "stark gestört",
-  "score": 1.7,
+  "score": 1.55,
   "days_in_status": 1,
-  "updated_at": "2026-10-18T09:19:01.083127+00:00",
+  "updated_at": "2026-10-18T13:24:59.614919+00:00",
   "source_date": "2026-10-11",
   "components": {
     "hormuz": {
@@ -74,10 +74,10 @@
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "red",
-      "count": 157.0,
-      "baseline": 81.5,
-      "ratio": 1.926,
+      "status": "orange",
+      "count": 135.0,
+      "baseline": 83.8,
+      "ratio": 1.611,
       "label": "Dark-Shipping-Radar"
     }
   },
