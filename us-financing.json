@@ -5,15 +5,15 @@
   "level": 0,
   "score": 0.0,
   "status_since": "2026-10-07",
-  "days_in_status": 12,
-  "updated_at": "2026-10-18T22:34:40.793039+00:00",
+  "days_in_status": 13,
+  "updated_at": "2026-10-19T23:54:52.390855+00:00",
   "debt_service": {
     "source_date": "2026-09-30",
     "net_interest_ytd_usd_bn": 1051.8,
-    "receipts_ytd_usd_bn": 5403.3,
-    "ratio_pct": 19.5,
-    "level": 2,
-    "status": "orange",
+    "receipts_ytd_usd_bn": 7395.8,
+    "ratio_pct": 14.2,
+    "level": 0,
+    "status": "green",
     "source": "U.S. Treasury Monthly Treasury Statement, Table 9",
     "data_quality": "ok"
   },
@@ -32,7 +32,7 @@
     "dealer_share_pct": 6.6,
     "dealer_baseline_pct": 9.3,
     "indirect_share_pct": 70.4,
-    "indirect_baseline_pct": 59.8,
+    "indirect_baseline_pct": 57.1,
     "high_yield": 5.618,
     "level": 0,
     "status": "green"
@@ -47,7 +47,7 @@
       "dealer_share_pct": 6.6,
       "dealer_baseline_pct": 9.3,
       "indirect_share_pct": 70.4,
-      "indirect_baseline_pct": 59.8,
+      "indirect_baseline_pct": 57.1,
       "high_yield": 5.618,
       "level": 0,
       "status": "green"
@@ -127,7 +127,7 @@
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
-    "days_in_state": 37,
+    "days_in_state": 38,
     "speed": 0,
     "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
     "evidence": [
