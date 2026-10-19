@@ -10,7 +10,7 @@
   "direction": "ccw",
   "days_in_state": 4,
   "source_date": "2026-10-19",
-  "updated_at": "2026-10-19T07:28:14.033772+00:00",
+  "updated_at": "2026-10-19T15:22:05.260542+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
