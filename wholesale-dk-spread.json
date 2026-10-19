@@ -1,16 +1,16 @@
 {
   "name": "Ost-West Spread",
   "method": "Singapore SGB minus ICE LGO converted at 7.45 bbl/t",
-  "value_usd_bbl": -17.649,
-  "baseline_median": -18.218,
-  "deviation_percentile": 17.6,
-  "speed_percentile": 50.0,
-  "stress_score": 50.0,
+  "value_usd_bbl": -19.119,
+  "baseline_median": -18.193,
+  "deviation_percentile": 27.8,
+  "speed_percentile": 5.9,
+  "stress_score": 27.8,
   "state": "still",
-  "direction": "cw",
-  "days_in_state": 3,
-  "source_date": "2026-10-16",
-  "updated_at": "2026-10-16T21:57:08.635412+00:00",
+  "direction": "ccw",
+  "days_in_state": 4,
+  "source_date": "2026-10-19",
+  "updated_at": "2026-10-19T07:28:14.033772+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
@@ -85,6 +85,10 @@
     {
       "date": "2026-10-14",
       "spread": -21.609
+    },
+    {
+      "date": "2026-10-15",
+      "spread": -18.134
     }
   ]
 }
