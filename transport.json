@@ -5,14 +5,14 @@
   "summary": "auffällig",
   "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-10-20T07:31:40.315028+00:00",
-  "source_date": "2026-10-11",
+  "updated_at": "2026-10-20T12:59:12.136615+00:00",
+  "source_date": "2026-10-18",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 2.0,
+      "count": 4.0,
       "baseline": 85.0,
-      "ratio": 0.024,
+      "ratio": 0.047,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 7.0,
+        "count": 17.0,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
         "status": "green",
-        "count": 31.0,
-        "baseline": 28.5,
-        "ratio": 1.088,
-        "display": "31 Schiffe · 109 % vom Normalwert"
+        "count": 32.0,
+        "baseline": 27.0,
+        "ratio": 1.185,
+        "display": "32 Schiffe · 119 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,8 +43,8 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 31.0,
-      "total_baseline": 28.5
+      "total_count": 32.0,
+      "total_baseline": 27.0
     },
     "suez": {
       "status": "green",
@@ -68,16 +68,16 @@
     },
     "cape": {
       "status": "green",
-      "count": 90.0,
+      "count": 78.0,
       "baseline": 87.5,
-      "ratio": 1.029,
+      "ratio": 0.891,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
       "status": "green",
-      "count": 99.0,
-      "baseline": 97.8,
-      "ratio": 1.012,
+      "count": 95.0,
+      "baseline": 97.1,
+      "ratio": 0.978,
       "label": "Dark-Shipping-Radar"
     }
   },
