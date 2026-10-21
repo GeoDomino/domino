@@ -3,50 +3,50 @@
   "status": "red",
   "label": "ROT",
   "level": 3,
-  "score": 2.8,
+  "score": 3.0,
   "status_since": "2026-10-16",
-  "days_in_status": 5,
-  "source_date": "2026-10-09",
-  "updated_at": "2026-10-20T17:16:50.292598+00:00",
+  "days_in_status": 6,
+  "source_date": "2026-10-16",
+  "updated_at": "2026-10-21T17:19:33.345135+00:00",
   "components": {
     "spr": {
       "level": 3,
-      "value_million_bbl": 282.983,
-      "source_date": "2026-10-09"
+      "value_million_bbl": 282.683,
+      "source_date": "2026-10-16"
     },
     "spr_trend": {
-      "level": 0,
-      "weekly_change_million_bbl": 0.0,
-      "source_date": "2026-10-09"
+      "level": 1,
+      "weekly_change_million_bbl": -0.3,
+      "source_date": "2026-10-16"
     },
     "commercial_crude": {
-      "level": 2,
-      "value_million_bbl": 415.577,
-      "percentile": 12.3,
-      "source_date": "2026-10-09"
+      "level": 3,
+      "value_million_bbl": 412.517,
+      "percentile": 5.4,
+      "source_date": "2026-10-16"
     },
     "distillate_stocks": {
       "level": 3,
-      "value_million_bbl": 102.611,
-      "percentile": 2.3,
-      "weekly_change_million_bbl": -2.527,
-      "source_date": "2026-10-09"
+      "value_million_bbl": 104.286,
+      "percentile": 7.3,
+      "weekly_change_million_bbl": 1.675,
+      "source_date": "2026-10-16"
     },
     "days_supply": {
       "level": 3,
-      "value_days": 25.8,
-      "percentile": 1.5,
-      "source_date": "2026-10-09"
+      "value_days": 26.7,
+      "percentile": 6.9,
+      "source_date": "2026-10-16"
     },
     "draw_speed": {
-      "level": 1,
-      "draw_percentile": 67.4,
-      "weekly_change_million_bbl": -2.527,
-      "source_date": "2026-10-09"
+      "level": 0,
+      "draw_percentile": 0.0,
+      "weekly_change_million_bbl": 1.675,
+      "source_date": "2026-10-16"
     },
     "diesel_stress": {
       "level": 3,
-      "score": 2.5,
+      "score": 2.25,
       "formula": "40% stock percentile + 35% days-of-supply percentile + 25% draw-speed percentile"
     }
   },
