@@ -1,62 +1,62 @@
 {
   "version": "1.4",
-  "status": "yellow",
-  "label": "GELB",
-  "level": 1,
-  "score": 0.6,
-  "source_date": "2026-10-09",
-  "updated_at": "2026-10-20T20:00:20.730348+00:00",
+  "status": "green",
+  "label": "GRÜN",
+  "level": 0,
+  "score": 0.3,
+  "source_date": "2026-10-16",
+  "updated_at": "2026-10-21T20:11:18.080536+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 3.751,
-      "deviation_pct": -3.6,
+      "value": 3.902,
+      "deviation_pct": 4.03,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.891
+      "previous_week": 3.751
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
-      "level": 1,
-      "value": 415.577,
-      "deviation_pct": -2.02,
+      "level": 0,
+      "value": 412.517,
+      "deviation_pct": -0.74,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 424.134
+      "previous_week": 415.577
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
-      "level": 2,
-      "value": 6.049,
-      "deviation_pct": -11.56,
+      "level": 0,
+      "value": 5.758,
+      "deviation_pct": -4.81,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 6.84
+      "previous_week": 6.049
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
       "weight": 15,
-      "level": 0,
-      "value": 13.679,
-      "deviation_pct": 0.32,
+      "level": 2,
+      "value": 13.269,
+      "deviation_pct": -2.64,
       "unit": "mb/d",
       "comparison": "year_over_year",
-      "year_ago": 13.636,
-      "comparison_date": "2025-10-10"
+      "year_ago": 13.629,
+      "comparison_date": "2025-10-17"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
       "level": 0,
-      "value": 16.615,
-      "deviation_pct": -0.63,
+      "value": 16.649,
+      "deviation_pct": 0.65,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 16.72
+      "baseline_4w": 16.541
     }
   },
   "sources": {
