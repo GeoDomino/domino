@@ -4,13 +4,13 @@
   "label": "GRÜN",
   "level": 0,
   "direction": "yen_stronger",
-  "usd_jpy": 157.88,
-  "date": "2026-10-21",
-  "change_5d_pct": -0.36,
-  "change_20d_pct": -0.03,
+  "usd_jpy": 157.05,
+  "date": "2026-10-22",
+  "change_5d_pct": -0.59,
+  "change_20d_pct": -1.14,
   "position_level": 0,
   "speed_level": 0,
-  "updated_at": "2026-10-21T20:14:05.239894+00:00",
+  "updated_at": "2026-10-22T20:12:05.227326+00:00",
   "source": "ECB euro foreign exchange reference rates (JPY/EUR divided by USD/EUR)",
   "thresholds": {
     "position": {
