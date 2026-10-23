@@ -1,0 +1,71 @@
+name: Update Gold Silver Ratio
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 21 * * *'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Fetch paired daily precious metal prices
+        run: |
+          python - <<'PY'
+          import csv,io,json,requests
+          from datetime import date,timedelta
+          from pathlib import Path
+          out=Path('gold-silver-ratio.json')
+          old=json.loads(out.read_text()) if out.exists() else {}
+          start=(date.today()-timedelta(days=390)).strftime('%Y%m%d')
+          end=date.today().strftime('%Y%m%d')
+          def series(symbol):
+              url=f'https://stooq.com/q/d/l/?s={symbol}&d1={start}&d2={end}&i=d'
+              r=requests.get(url,timeout=35,headers={'User-Agent':'Mozilla/5.0 GeoDomino/1.0'})
+              r.raise_for_status()
+              data={}
+              for row in csv.DictReader(io.StringIO(r.text)):
+                  try:
+                      d=row['Date']; v=float(row['Close'])
+                      if v>0 and 100<v<20000 if symbol=='xauusd' else v>0 and 1<v<500:
+                          data[d]=v
+                  except (KeyError,ValueError,TypeError): continue
+              if len(data)<150: raise ValueError(f'{symbol}: insufficient daily prices ({len(data)})')
+              return data
+          try:
+              gold=series('xauusd'); silver=series('xagusd')
+              dates=sorted(set(gold)&set(silver))
+              if len(dates)<150: raise ValueError('Insufficient matching trading dates')
+              history=[{'date':d,'ratio':round(gold[d]/silver[d],3)} for d in dates if gold[d]>0 and silver[d]>0]
+              history=history[-370:]
+              last=date.fromisoformat(history[-1]['date'])
+              if (date.today()-last).days>7: raise ValueError('Market data too old')
+              prior=date.fromisoformat(history[-1]['date'])-timedelta(days=30)
+              before=min(history,key=lambda p:abs((date.fromisoformat(p['date'])-prior).days))
+              trend=round((history[-1]['ratio']/before['ratio']-1)*100,2)
+              # Dealer quotes are not inferred from spot and never fabricated.
+              quote=old.get('dealer_quote')
+              if not isinstance(quote,dict): quote=None
+              data={'version':'1.0','source':'Stooq XAUUSD/XAGUSD daily close (same currency, matching dates)','history':history,'trend_30d_pct':trend,'dealer_quote':quote}
+              out.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+              print('Latest:',history[-1], '30-day change:',trend)
+          except Exception as e:
+              # Retain last historical observation; UI turns gray when stale.
+              print('Price retrieval failed; preserving existing history:',repr(e))
+              if not out.exists():
+                  out.write_text(json.dumps({'version':'1.0','source':'awaiting validated source','history':[],'trend_30d_pct':None,'dealer_quote':None},indent=2)+'\n')
+          PY
+      - name: Commit market data
+        run: |
+          git config user.name 'DOMINO Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add gold-silver-ratio.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update gold silver ratio daily history'
+            git pull --rebase origin main
+            git push
+          fi
