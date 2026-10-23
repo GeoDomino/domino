@@ -1,0 +1,43 @@
+(()=>{
+ const css=document.createElement('style');
+ css.textContent=`.gsr-card .name{font-size:16px}.gsr-line{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}.gsr-card .light{width:72px;height:72px;margin:0;flex:none;flex-direction:column}.gsr-value{font-size:21px;font-weight:850;color:#10151b}.gsr-unit{font-size:9px;font-weight:800;color:#10151b}.gsr-spark{width:58px;height:39px;min-width:35px;flex:1;max-width:86px}.gsr-arrow{font-size:32px;font-weight:900;line-height:1}.gsr-caption{font-size:10px;color:var(--muted);margin-top:8px}.gsr-card .small{font-size:10px}`;
+ document.head.appendChild(css);
+ const fmt=v=>Number(v).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
+ const esc=s=>String(s??'–').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ function draw(history){
+  const svg=document.getElementById('gsrSpark');if(!svg)return;
+  const a=history.filter(p=>Number.isFinite(+p.ratio)&&p.ratio>0);
+  if(a.length<2){svg.innerHTML='<text x="45" y="24" text-anchor="middle" fill="#8b929e" font-size="11">keine Kurve</text>';return;}
+  const vals=a.map(p=>+p.ratio),lo=Math.min(...vals),hi=Math.max(...vals),span=hi-lo||1;
+  const pts=vals.map((v,i)=>[3+i*84/(vals.length-1),34-(v-lo)/span*29]);
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(2)+' '+p[1].toFixed(2)).join(' ');
+  svg.innerHTML='<path d="'+path+'" fill="none" stroke="#cbd5e1" stroke-width="1.7" stroke-linecap="round"/><circle cx="'+pts.at(-1)[0]+'" cy="'+pts.at(-1)[1]+'" r="2.4" fill="#cbd5e1"/>';
+ }
+ function install(){
+  const g=document.getElementById('financeGrid');if(!g||g.children.length<2)return false;
+  g.children[1].outerHTML=`<div class="card gsr-card" id="gsrCard"><div class="name">Gold-Silber-Ratio</div><div class="gsr-line"><div class="light" id="gsrLight"><span class="gsr-value" id="gsrValue">–</span><span class="gsr-unit">GSR</span></div><svg class="gsr-spark" id="gsrSpark" viewBox="0 0 90 40" preserveAspectRatio="none" role="img" aria-label="Gold-Silber-Ratio der letzten zwölf Monate"></svg><div class="gsr-arrow" id="gsrArrow" title="Trend aus Silber-Sicht">→</div></div><div class="gsr-caption">12 Monate · Silber-Trend <span id="gsrTrend">–</span></div><div class="small" id="gsrQuote">Händlerankauf: nicht bestätigt</div></div>`;
+  const body=document.querySelector('.page:nth-child(3) .detailbody');
+  if(body){const d=document.createElement('div');d.id='gsrDetails';d.innerHTML=`<div class="detailtitle">Gold-Silber-Ratio · Version 1.0</div><div class="rule">Die Zahl ist Goldpreis je Feinunze geteilt durch Silberpreis je Feinunze, jeweils in derselben Währung. Die Mini-Kurve zeigt zwölf Monate reale Tageswerte. Sie ist mathematisch korrekt: Steigende Kurve = höhere Ratio.</div><div class="rule"><b>Pfeil aus Sicht des Silberbesitzers:</b> Grün ↗, wenn die Ratio über 30 Tage fällt (Silber gewinnt relativ); Rot ↘, wenn sie steigt (Silber verliert relativ); → bei weniger als 0,5 % Änderung. Der Pfeil ist bewusst umgekehrt zur mathematischen Ratio-Richtung.</div><div class="rule"><b>Persönliche Ampelfarbe:</b> 🔴 Händlerankauf unter 107,93 € je Feinunze · 🟡 107,93 € oder mehr · 🟢 erst nach späterer Festlegung einer Gewinnschwelle. ⚪ Grau, wenn kein frisches, nachprüfbares Ankaufangebot für eine vergleichbare 1-oz-Anlagemünze vorliegt. Der Spotpreis darf niemals die Händlerankaufampel ersetzen. 107,93 € ist nominaler Einstand, kein inflationsbereinigter Gewinn.</div><div class="rule" id="gsrLiveDetails">Wartet auf Daten.</div>`;body.appendChild(d);}
+  load();return true;
+ }
+ async function load(){
+  const lamp=document.getElementById('gsrLight');if(!lamp)return;
+  try{
+   const r=await fetch('./gold-silver-ratio.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('missing');
+   const x=await r.json(),h=Array.isArray(x.history)?x.history:[],last=h.at(-1);
+   if(!last||!Number.isFinite(+last.ratio)||!/^\d{4}-\d{2}-\d{2}$/.test(last.date))throw Error('invalid');
+   const age=(Date.now()-Date.parse(last.date+'T12:00:00Z'))/86400000;
+   if(age>7||age< -2)throw Error('stale');
+   document.getElementById('gsrValue').textContent=fmt(last.ratio);
+   draw(h);
+   const t=Number(x.trend_30d_pct),a=document.getElementById('gsrArrow'),desc=document.getElementById('gsrTrend');
+   if(Number.isFinite(t)){a.textContent=t>0.5?'↘':t< -0.5?'↗':'→';a.style.color=t>0.5?'var(--red)':t< -0.5?'var(--green)':'var(--muted)';desc.textContent=(t>0?'+':'')+fmt(t)+' % / 30 T';}else{a.textContent='→';a.style.color='var(--muted)';desc.textContent='keine 30-Tage-Daten';}
+   const q=x.dealer_quote||{},fresh=Number.isFinite(+q.buyback_eur_per_oz)&&+q.buyback_eur_per_oz>0&&q.date&&Math.abs((Date.now()-Date.parse(q.date+'T12:00:00Z'))/86400000)<=7&&q.source_url&&q.coin;
+   lamp.style.background=fresh?(+q.buyback_eur_per_oz>=107.93?'var(--yellow)':'var(--red)'):'var(--unknown)';
+   document.getElementById('gsrQuote').textContent=fresh?'Ankauf '+Number(q.buyback_eur_per_oz).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'/oz':'Ankauf unbestätigt · Ampel grau';
+   const d=document.getElementById('gsrLiveDetails');if(d)d.textContent='Ratio '+fmt(last.ratio)+' · Stand '+last.date+' · Quelle '+(x.source||'–')+' · Händlerankauf: '+(fresh?(q.coin+' · '+q.buyback_eur_per_oz+' €/oz · '+q.date+' · '+q.source_url):'kein frisches verifiziertes Angebot');
+  }catch(e){lamp.style.background='var(--unknown)';document.getElementById('gsrValue').textContent='–';document.getElementById('gsrQuote').textContent='Marktdaten fehlen oder veraltet';draw([]);}
+ }
+ if(!install())setTimeout(install,150);
+ setInterval(load,3600000);
+})();
