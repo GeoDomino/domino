@@ -22,7 +22,7 @@
     while(x<today){x.setUTCDate(x.getUTCDate()+1);const w=x.getUTCDay();if(w!==0&&w!==6)n++}
     return n;
   }
-  const stale=d=>!d||businessAge(d.source_date)>1;
+  const stale=d=>!d||businessAge(d.source_date)>5;
   const row=(name,d)=>{const bad=stale(d),level=bad?null:d?.level,days=bad?'!':(d?.days_in_status??'–');return `<div class="wdk-row"><b>${name}</b><span class="wdk-dot" style="background:${levelColor(level)}" title="${bad?'Daten veraltet / kompromittiert':'Daten aktuell'}">${days}</span></div>`};
   const fmt=(x,d=3)=>typeof x==='number'?x.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
   async function get(file){try{const r=await fetch(file+'?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json()}catch(e){return null}}
