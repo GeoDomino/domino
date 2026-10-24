@@ -30,7 +30,7 @@
    document.getElementById('gsrQuote').textContent=fresh?'Ankauf '+Number(q.buyback_eur_per_oz).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'/oz':'Ankauf unbestätigt · Ampel grau';
    const d=document.getElementById('gsrLiveDetails');
    if(d)d.textContent='Händlerankauf: '+(fresh?(q.coin+' · '+q.buyback_eur_per_oz+' €/oz · '+q.date+' · '+q.source_url):'kein frisches verifiziertes Angebot');
-   if(!last||!Number.isFinite(+last.ratio)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(last.date)){
+   if(!last||!Number.isFinite(+last.ratio)||!/^\d{4}-\d{2}-\d{2}$/.test(last.date)){
      document.getElementById('gsrValue').textContent='–';draw([]);document.getElementById('gsrTrend').textContent='Kursdaten fehlen';return;
    }
    const age=(Date.now()-Date.parse(last.date+'T12:00:00Z'))/86400000;
