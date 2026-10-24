@@ -1,6 +1,6 @@
 (()=>{
  const css=document.createElement('style');
- css.textContent=`.gsr-card .name{font-size:16px}.gsr-line{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}.gsr-card .light{width:72px;height:72px;margin:0;flex:none;flex-direction:column}.gsr-value{font-size:21px;font-weight:850;color:#10151b}.gsr-unit{font-size:9px;font-weight:800;color:#10151b}.gsr-spark{display:block;width:100%;height:96px;margin:10px 0 2px;overflow:visible}.gsr-chart-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700}.gsr-arrow{font-size:32px;font-weight:900;line-height:1}.gsr-caption{font-size:10px;color:var(--muted);margin-top:8px}.gsr-card .small{font-size:10px}`;
+ css.textContent=`.gsr-card .name{font-size:16px}.gsr-line{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}.gsr-card .light{width:72px;height:72px;margin:0;flex:none;flex-direction:column}.gsr-value{font-size:21px;font-weight:850;color:#10151b}.gsr-unit{font-size:9px;font-weight:800;color:#10151b}.gsr-spark{display:block;width:100%;height:96px;margin:10px 0 2px;overflow:visible}.gsr-chart-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700}.gsr-arrow{font-size:44px;font-weight:900;line-height:1;display:inline-block;min-width:50px;text-align:center}.gsr-trend-status{font-weight:800}.gsr-caption{font-size:10px;color:var(--muted);margin-top:8px}.gsr-card .small{font-size:10px}`;
  document.head.appendChild(css);
  const fmt=v=>Number(v).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
  const esc=s=>String(s??'–').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -17,7 +17,7 @@
  }
  function install(){
   const g=document.getElementById('financeGrid');if(!g||g.children.length<2)return false;
-  g.children[1].outerHTML=`<div class="card gsr-card" id="gsrCard"><div class="name">Gold-Silber-Ratio · Silber-Sicht ↑</div><div class="gsr-line"><div class="light" id="gsrLight"><span class="gsr-value" id="gsrValue">–</span><span class="gsr-unit">GSR</span></div><div class="gsr-arrow" id="gsrArrow" title="Zwölfmonats-Trend aus Silber-Sicht">→</div></div><svg class="gsr-spark" id="gsrSpark" viewBox="0 0 320 96" preserveAspectRatio="none" role="img" aria-label="Silberperspektive der Gold-Silber-Ratio der letzten zwölf Monate: nach oben ist besser für Silber"></svg><div class="gsr-chart-labels"><span>Okt 2025</span><span>↑ besser für Silber · ↓ schlechter</span><span>Okt 2026</span></div><div class="gsr-caption"><span id="gsrPeriod">12 Monate</span> · Silber-Trend <span id="gsrTrend">–</span></div><div class="small" id="gsrQuote">Händlerankauf: nicht bestätigt</div></div>`;
+  g.children[1].outerHTML=`<div class="card gsr-card" id="gsrCard"><div class="name">Gold-Silber-Ratio · Silber-Sicht ↑ · V2</div><div class="gsr-line"><div class="light" id="gsrLight"><span class="gsr-value" id="gsrValue">–</span><span class="gsr-unit">GSR</span></div><div class="gsr-arrow" id="gsrArrow" title="Zwölfmonats-Trend aus Silber-Sicht">?</div></div><svg class="gsr-spark" id="gsrSpark" viewBox="0 0 320 96" preserveAspectRatio="none" role="img" aria-label="Silberperspektive der Gold-Silber-Ratio der letzten zwölf Monate: nach oben ist besser für Silber"></svg><div class="gsr-chart-labels"><span>Okt 2025</span><span>↑ besser für Silber · ↓ schlechter</span><span>Okt 2026</span></div><div class="gsr-caption"><span id="gsrPeriod">12 Monate</span> · 12-Monats-Trend <span id="gsrTrend" class="gsr-trend-status">–</span></div><div class="small" id="gsrQuote">Händlerankauf: nicht bestätigt</div></div>`;
   const body=document.querySelector('.page:nth-child(3) .detailbody');
   if(body){const d=document.createElement('div');d.id='gsrDetails';d.innerHTML=`<div class="detailtitle">Gold-Silber-Ratio · Version 1.0</div><div class="rule">Die Zahl ist Goldpreis je Feinunze geteilt durch Silberpreis je Feinunze, jeweils in derselben Währung. Die Mini-Kurve ist bewusst aus Sicht des Silberbesitzers gespiegelt: steigende Kurve = fallende Ratio = Silber gewinnt relativ zu Gold; fallende Kurve = steigende Ratio = Silber verliert relativ zu Gold. Sie zeigt zwölf Monate reale Beobachtungen. Bei Monatsdaten werden Monatsdurchschnitte der Weltbank und der jüngste aktuelle Kursstand kombiniert; diese Werte sind nicht direkt identisch mit täglichen Schlusskursen. Steigende Kurve = niedrigere Ratio (Silberperspektive).</div><div class="rule"><b>Pfeil aus Sicht des Silberbesitzers:</b> Grün ↗, wenn die Ratio im Zwölfmonatsvergleich fällt (Silber gewinnt relativ); Rot ↘, wenn sie steigt (Silber verliert relativ); → bei weniger als 0,5 % Änderung. Maßgeblich sind der erste und der letzte gültige Datenpunkt der dargestellten Zwölfmonatskurve. Der Pfeil ist bewusst umgekehrt zur mathematischen Ratio-Richtung.</div><div class="rule"><b>Persönliche Ampelfarbe:</b> 🔴 Händlerankauf unter 107,93 € je Feinunze · 🟡 ab 107,93 € bis unter 189,54 € · 🟢 ab 189,54 € bis unter 326,80 € je Feinunze · 🔵 ab 326,80 € je Feinunze (153 oz × Ankaufspreis ≥ 50.000 €). ⚪ Grau, wenn kein frisches, nachprüfbares Ankaufangebot für eine vergleichbare 1-oz-Anlagemünze vorliegt. Der Spotpreis darf niemals die Händlerankaufampel ersetzen. Die Grün-Schwelle basiert auf dem Modell: 25.000 € Darlehen, 6 % p.a., 60 Monatsraten à 483,32 €, insgesamt 28.999,20 € inklusive ca. 3.999,20 € Zinsen; geteilt durch 153 oz = 189,5373 €/oz. Grün gilt ab 189,54 €/oz, also sobald die gesamte modellierte Rückzahlung durch den Verkauf der 153 oz gedeckt wäre. Das Darlehen enthält auch Altschulden; Grün ist deshalb eine persönliche Zukunftswette, keine Silberrendite. Die Schwellen sind nominal und nicht inflationsbereinigt.</div><div class="rule" id="gsrLiveDetails">Wartet auf Daten.</div>`;body.appendChild(d);}
   load();return true;
@@ -41,17 +41,21 @@
    const period=document.getElementById('gsrPeriod');if(period)period.textContent=x.history_frequency==='monthly_plus_latest'?'12 Monate · Monatswerte + aktuell':'12 Monate · Tageswerte';
    draw(h);
    const a=document.getElementById('gsrArrow'),desc=document.getElementById('gsrTrend');
-   const valid=h.filter(p=>/^\d{4}-\d{2}-\d{2}$/.test(p.date)&&Number.isFinite(+p.ratio)&&+p.ratio>0);
-   const first=valid[0],end=valid.at(-1);
+   const valid=h.filter(p=>p&&Number.isFinite(Number(p.ratio))&&Number(p.ratio)>0&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)).sort((u,v)=>u.date.localeCompare(v.date));
+   const first=valid[0],end=valid[valid.length-1];
    const spanDays=first&&end?(Date.parse(end.date+'T12:00:00Z')-Date.parse(first.date+'T12:00:00Z'))/86400000:0;
-   const t=spanDays>=300&&spanDays<=430?(+end.ratio/+first.ratio-1)*100:NaN;
-   if(Number.isFinite(t)){
-     a.textContent=t>0.5?'↘':t< -0.5?'↗':'→';
-     a.style.color=t>0.5?'var(--red)':t< -0.5?'var(--green)':'var(--muted)';
-     desc.textContent=(t>0?'+':'')+fmt(t)+' % / 12 Monate';
-     a.title='Silber-Sicht: Ratio '+fmt(first.ratio)+' ('+first.date+') → '+fmt(end.ratio)+' ('+end.date+')';
+   const change=spanDays>=300&&spanDays<=430?100*(Number(end.ratio)/Number(first.ratio)-1):null;
+   if(change!==null&&Number.isFinite(change)){
+     const direction=change>0.5?'down':change< -0.5?'up':'flat';
+     const color=direction==='up'?'#22c55e':direction==='down'?'#ef4444':'#94a3b8';
+     a.textContent=direction==='up'?'↗':direction==='down'?'↘':'→';
+     a.style.setProperty('color',color,'important');
+     desc.textContent=(change>0?'+':'')+fmt(change)+' % (Ratio '+fmt(first.ratio)+' → '+fmt(end.ratio)+')';
+     desc.style.color=color;
+     a.title='12-Monats-Vergleich: '+first.date+' bis '+end.date;
    }else{
-     a.textContent='→';a.style.color='var(--muted)';desc.textContent='keine 12-Monats-Vergleichsdaten';
+     a.textContent='→';a.style.setProperty('color','#94a3b8','important');
+     desc.textContent='12-Monats-Daten fehlen';desc.style.color='#94a3b8';
    }
    if(d)d.textContent='Ratio '+fmt(last.ratio)+' · Stand '+last.date+' · Quelle '+(x.source||'–')+' · '+d.textContent;
   }catch(e){lamp.style.background='var(--unknown)';document.getElementById('gsrValue').textContent='–';document.getElementById('gsrQuote').textContent='Marktdaten fehlen oder veraltet';draw([]);}
