@@ -1,0 +1,67 @@
+name: Update Pro Aurum Silver Buyback
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 6,10,14,18 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-proaurum-buyback.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: python -m pip install requests beautifulsoup4
+      - name: Fetch verified dealer buyback
+        run: |
+          python - <<'PY'
+          import json,re,requests
+          from bs4 import BeautifulSoup
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          url='https://www.proaurum.de/shop/preisliste-onlineshop/silber/'
+          response=requests.get(url,timeout=40,headers={'User-Agent':'Mozilla/5.0 (compatible; GeoDomino/1.0)'})
+          response.raise_for_status()
+          soup=BeautifulSoup(response.text,'html.parser')
+          for tag in soup(['script','style','noscript']): tag.decompose()
+          text=' '.join(soup.stripped_strings)
+          target='Silbermünze 1 Unze Känguru diverse Jahrgänge'
+          # Strictly match the named 31.10 g coin and the first (dealer buyback) price.
+          escaped=re.escape(target).replace(r'\ ',r'\s+')
+          match=re.search(escaped+r'\s+31[,.]10\s*g\s+(\d{1,4}[,.]\d{2})\s*€',text,re.I)
+          if not match:
+              # Some layouts omit the weight between name and buyback.
+              match=re.search(escaped+r'\s+(?:Verkaufen\s*)?(\d{1,4}[,.]\d{2})\s*€',text,re.I)
+          if not match: raise RuntimeError('No unambiguous Kangaroo buyback quote found; leaving existing quote unchanged')
+          price=float(match.group(1).replace(',','.'))
+          if not (10 <= price <= 500): raise RuntimeError('Dealer quote outside sanity range')
+          stamp=re.search(r'Zuletzt aktualisiert am\s+(\d{2}\.\d{2}\.\d{4})\s+um\s+(\d{2}:\d{2}:\d{2})',text)
+          if not stamp: raise RuntimeError('Missing dealer page update timestamp')
+          source_dt=datetime.strptime(stamp.group(1)+' '+stamp.group(2),'%d.%m.%Y %H:%M:%S').replace(tzinfo=ZoneInfo('Europe/Berlin'))
+          now=datetime.now(ZoneInfo('Europe/Berlin'))
+          if not (0 <= (now-source_dt).total_seconds() <= 4*86400): raise RuntimeError('Dealer page timestamp stale or future')
+          path=Path('gold-silver-ratio.json')
+          data=json.loads(path.read_text(encoding='utf-8'))
+          quote={'buyback_eur_per_oz':price,'date':source_dt.date().isoformat(),'coin':target,'source_url':url,'source':'Pro Aurum Silberpreisliste, Verkaufen (Ankauf)','source_timestamp':source_dt.isoformat()}
+          data['dealer_quote']=quote
+          path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('Verified dealer buyback',quote)
+          PY
+      - name: Commit verified quote
+        run: |
+          git config user.name 'DOMINO Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add gold-silver-ratio.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update verified Pro Aurum silver buyback'
+            git pull --rebase origin main
+            git push
+          fi
