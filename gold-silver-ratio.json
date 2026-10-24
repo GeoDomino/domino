@@ -1,7 +1,12 @@
 {
   "version": "1.0",
-  "source": "awaiting validated source",
-  "history": [],
+  "source": "Pro Aurum Basiskurse 2026-10-23 23:00:28 (Gold 3996.40 USD/oz, Silber 53.87 USD/oz)",
+  "history": [
+    {
+      "date": "2026-10-23",
+      "ratio": 74.186
+    }
+  ],
   "trend_30d_pct": null,
   "dealer_quote": {
     "buyback_eur_per_oz": 46.05,
