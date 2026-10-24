@@ -6,7 +6,7 @@
   "score": 0.6,
   "status_since": "2026-10-24",
   "days_in_status": 1,
-  "updated_at": "2026-10-23T18:30:22.242985+00:00",
+  "updated_at": "2026-10-24T17:29:55.745211+00:00",
   "components": {
     "hy_spread": {
       "label": "ICE BofA Single-B HY OAS",
@@ -26,7 +26,7 @@
       "level": 0,
       "status": "green",
       "weight": 40,
-      "large_middle": 0,
+      "large_middle": 0.0,
       "small": 1.8,
       "series": [
         "DRTSCILM",
@@ -36,16 +36,16 @@
   },
   "thresholds": {
     "hy_spread": {
-      "green_lt": 3,
-      "yellow_lt": 4,
-      "orange_lt": 6,
-      "red_gte": 6
+      "green_lt": 3.0,
+      "yellow_lt": 4.0,
+      "orange_lt": 6.0,
+      "red_gte": 6.0
     },
     "sloos": {
-      "green_lte": 5,
-      "yellow_lte": 15,
-      "orange_lte": 30,
-      "red_gt": 30
+      "green_lte": 5.0,
+      "yellow_lte": 15.0,
+      "orange_lte": 30.0,
+      "red_gt": 30.0
     },
     "combined": {
       "green_lt": 0.75,
@@ -54,5 +54,5 @@
       "red_gte": 2.5
     }
   },
-  "method": "60% HY-OAS + 40% SLOOS, mit Frühwarn-Untergrenze: Gesamtampel mindestens HY-Spread-Stufe. HY täglich, SLOOS quartalsweise."
+  "method": "Frühwarn-Untergrenze: Gesamtampel mindestens auf Stufe des täglichen HY-Spreads; ansonsten 60% täglicher ICE-BofA-Single-B-High-Yield-OAS + 40% SLOOS-Kreditstandards. SLOOS ist der Mittelwert aus C&I-Standards für große/mittlere und kleine Firmen. Beide Quellen werden täglich abgerufen; SLOOS selbst wird quartalsweise veröffentlicht. status_since und days_in_status speichern die Dauer der aktuellen Ampelfarbe dauerhaft im Datenbestand."
 }
