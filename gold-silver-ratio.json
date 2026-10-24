@@ -1,7 +1,55 @@
 {
   "version": "1.0",
-  "source": "Pro Aurum Basiskurse 2026-10-23 23:00:28 (Gold 3996.40 USD/oz, Silber 53.87 USD/oz)",
+  "source": "Weltbank Pink Sheet: Monatsmittel Gold/Silber Okt 2025–Sep 2026; 23.10.2026 Pro Aurum Basiskurse Gold 3996,40 USD/oz, Silber 53,87 USD/oz (Tagesstand)",
   "history": [
+    {
+      "date": "2025-10-01",
+      "ratio": 82.15
+    },
+    {
+      "date": "2025-11-01",
+      "ratio": 81.09
+    },
+    {
+      "date": "2025-12-01",
+      "ratio": 69.17
+    },
+    {
+      "date": "2026-01-01",
+      "ratio": 51.61
+    },
+    {
+      "date": "2026-02-01",
+      "ratio": 61.29
+    },
+    {
+      "date": "2026-03-01",
+      "ratio": 62.34
+    },
+    {
+      "date": "2026-04-01",
+      "ratio": 62.2
+    },
+    {
+      "date": "2026-05-01",
+      "ratio": 58.81
+    },
+    {
+      "date": "2026-06-01",
+      "ratio": 63.39
+    },
+    {
+      "date": "2026-07-01",
+      "ratio": 69.27
+    },
+    {
+      "date": "2026-08-01",
+      "ratio": 67.45
+    },
+    {
+      "date": "2026-09-01",
+      "ratio": 66.86
+    },
     {
       "date": "2026-10-23",
       "ratio": 74.186
@@ -15,5 +63,6 @@
     "source_url": "https://www.proaurum.de/shop/preisliste-onlineshop/silber/",
     "source": "Pro Aurum Silberpreisliste, Verkaufen (Ankauf)",
     "source_timestamp": "2026-10-24T06:45:36+02:00"
-  }
+  },
+  "history_frequency": "monthly_plus_latest"
 }
