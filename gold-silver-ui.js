@@ -25,17 +25,21 @@
   try{
    const r=await fetch('./gold-silver-ratio.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('missing');
    const x=await r.json(),h=Array.isArray(x.history)?x.history:[],last=h.at(-1);
-   if(!last||!Number.isFinite(+last.ratio)||!/^\d{4}-\d{2}-\d{2}$/.test(last.date))throw Error('invalid');
+   const q=x.dealer_quote||{},fresh=Number.isFinite(+q.buyback_eur_per_oz)&&+q.buyback_eur_per_oz>0&&q.date&&Math.abs((Date.now()-Date.parse(q.date+'T12:00:00Z'))/86400000)<=7&&q.source_url&&q.coin;
+   lamp.style.background=fresh?(+q.buyback_eur_per_oz*153>=50000?'#3b82f6':+q.buyback_eur_per_oz>=189.54?'var(--green)':+q.buyback_eur_per_oz>=107.93?'var(--yellow)':'var(--red)'):'var(--unknown)';
+   document.getElementById('gsrQuote').textContent=fresh?'Ankauf '+Number(q.buyback_eur_per_oz).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'/oz':'Ankauf unbestätigt · Ampel grau';
+   const d=document.getElementById('gsrLiveDetails');
+   if(d)d.textContent='Händlerankauf: '+(fresh?(q.coin+' · '+q.buyback_eur_per_oz+' €/oz · '+q.date+' · '+q.source_url):'kein frisches verifiziertes Angebot');
+   if(!last||!Number.isFinite(+last.ratio)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(last.date)){
+     document.getElementById('gsrValue').textContent='–';draw([]);document.getElementById('gsrTrend').textContent='Kursdaten fehlen';return;
+   }
    const age=(Date.now()-Date.parse(last.date+'T12:00:00Z'))/86400000;
    if(age>7||age< -2)throw Error('stale');
    document.getElementById('gsrValue').textContent=fmt(last.ratio);
    draw(h);
    const t=x.trend_30d_pct==null?NaN:Number(x.trend_30d_pct),a=document.getElementById('gsrArrow'),desc=document.getElementById('gsrTrend');
    if(Number.isFinite(t)){a.textContent=t>0.5?'↘':t< -0.5?'↗':'→';a.style.color=t>0.5?'var(--red)':t< -0.5?'var(--green)':'var(--muted)';desc.textContent=(t>0?'+':'')+fmt(t)+' % / 30 T';}else{a.textContent='→';a.style.color='var(--muted)';desc.textContent='keine 30-Tage-Daten';}
-   const q=x.dealer_quote||{},fresh=Number.isFinite(+q.buyback_eur_per_oz)&&+q.buyback_eur_per_oz>0&&q.date&&Math.abs((Date.now()-Date.parse(q.date+'T12:00:00Z'))/86400000)<=7&&q.source_url&&q.coin;
-   lamp.style.background=fresh?(+q.buyback_eur_per_oz*153>=50000?'#3b82f6':+q.buyback_eur_per_oz>=189.54?'var(--green)':+q.buyback_eur_per_oz>=107.93?'var(--yellow)':'var(--red)'):'var(--unknown)';
-   document.getElementById('gsrQuote').textContent=fresh?'Ankauf '+Number(q.buyback_eur_per_oz).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+'/oz':'Ankauf unbestätigt · Ampel grau';
-   const d=document.getElementById('gsrLiveDetails');if(d)d.textContent='Ratio '+fmt(last.ratio)+' · Stand '+last.date+' · Quelle '+(x.source||'–')+' · Händlerankauf: '+(fresh?(q.coin+' · '+q.buyback_eur_per_oz+' €/oz · '+q.date+' · '+q.source_url):'kein frisches verifiziertes Angebot');
+   if(d)d.textContent='Ratio '+fmt(last.ratio)+' · Stand '+last.date+' · Quelle '+(x.source||'–')+' · '+d.textContent;
   }catch(e){lamp.style.background='var(--unknown)';document.getElementById('gsrValue').textContent='–';document.getElementById('gsrQuote').textContent='Marktdaten fehlen oder veraltet';draw([]);}
  }
  if(!install())setTimeout(install,150);
