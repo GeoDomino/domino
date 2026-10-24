@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install dependencies
+        run: python -m pip install requests
       - name: Fetch paired daily precious metal prices
         run: |
           python - <<'PY'
@@ -31,7 +33,7 @@ jobs:
               for row in csv.DictReader(io.StringIO(r.text)):
                   try:
                       d=row['Date']; v=float(row['Close'])
-                      if v>0 and 100<v<20000 if symbol=='xauusd' else v>0 and 1<v<500:
+                      if (100 < v < 20000) if symbol=='xauusd' else (1 < v < 500):
                           data[d]=v
                   except (KeyError,ValueError,TypeError): continue
               if len(data)<150: raise ValueError(f'{symbol}: insufficient daily prices ({len(data)})')
