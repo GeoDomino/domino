@@ -30,7 +30,7 @@
    if(age>7||age< -2)throw Error('stale');
    document.getElementById('gsrValue').textContent=fmt(last.ratio);
    draw(h);
-   const t=Number(x.trend_30d_pct),a=document.getElementById('gsrArrow'),desc=document.getElementById('gsrTrend');
+   const t=x.trend_30d_pct==null?NaN:Number(x.trend_30d_pct),a=document.getElementById('gsrArrow'),desc=document.getElementById('gsrTrend');
    if(Number.isFinite(t)){a.textContent=t>0.5?'↘':t< -0.5?'↗':'→';a.style.color=t>0.5?'var(--red)':t< -0.5?'var(--green)':'var(--muted)';desc.textContent=(t>0?'+':'')+fmt(t)+' % / 30 T';}else{a.textContent='→';a.style.color='var(--muted)';desc.textContent='keine 30-Tage-Daten';}
    const q=x.dealer_quote||{},fresh=Number.isFinite(+q.buyback_eur_per_oz)&&+q.buyback_eur_per_oz>0&&q.date&&Math.abs((Date.now()-Date.parse(q.date+'T12:00:00Z'))/86400000)<=7&&q.source_url&&q.coin;
    lamp.style.background=fresh?(+q.buyback_eur_per_oz*153>=50000?'#3b82f6':+q.buyback_eur_per_oz>=189.54?'var(--green)':+q.buyback_eur_per_oz>=107.93?'var(--yellow)':'var(--red)'):'var(--unknown)';
