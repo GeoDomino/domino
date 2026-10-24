@@ -78,5 +78,5 @@
   setInterval(loadLNGCost,3600000);
   for(const [src,v] of [['stocks-ui.js','20260827-2'],['transport-ui.js','20260821-7'],['refinery-ui.js','20260820-1'],['oil-sensor1-ui.js','20260820-4'],['us-oil-physical-ui.js','20260910-2'],['yen-ui.js','20260912-1']]){const s=document.createElement('script');s.src=src+'?v='+v;document.body.appendChild(s)}
   {const s=document.createElement('script');s.src='us-financing-ui.js?v=20260912-1';document.body.appendChild(s)}
-  {const s=document.createElement('script');s.src='gold-silver-ui.js?v=20261024-6';document.body.appendChild(s)}
+  {const s=document.createElement('script');s.src='gold-silver-ui.js?ts='+Date.now();document.body.appendChild(s)}
 })();
