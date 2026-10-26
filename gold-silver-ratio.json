@@ -57,12 +57,12 @@
   ],
   "trend_30d_pct": null,
   "dealer_quote": {
-    "buyback_eur_per_oz": 46.25,
+    "buyback_eur_per_oz": 46.15,
     "date": "2026-10-26",
     "coin": "Silbermünze 1 Unze Känguru diverse Jahrgänge",
     "source_url": "https://www.proaurum.de/shop/preisliste-onlineshop/silber/",
     "source": "Pro Aurum Silberpreisliste, Verkaufen (Ankauf)",
-    "source_timestamp": "2026-10-26T13:50:41+01:00"
+    "source_timestamp": "2026-10-26T20:50:42+01:00"
   },
   "history_frequency": "monthly_plus_latest"
 }
