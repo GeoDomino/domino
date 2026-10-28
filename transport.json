@@ -3,16 +3,16 @@
   "status": "orange",
   "label": "ORANGE",
   "summary": "stark gestört",
-  "score": 1.55,
+  "score": 1.7,
   "days_in_status": 1,
-  "updated_at": "2026-10-28T07:25:38.048405+00:00",
-  "source_date": "2026-10-18",
+  "updated_at": "2026-10-28T14:16:35.704377+00:00",
+  "source_date": "2026-10-25",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 4.0,
+      "count": 2.0,
       "baseline": 85.0,
-      "ratio": 0.047,
+      "ratio": 0.024,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 17.0,
+        "count": 13.0,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
         "status": "green",
-        "count": 32.0,
+        "count": 36.0,
         "baseline": 27.0,
-        "ratio": 1.185,
-        "display": "32 Schiffe · 119 % vom Normalwert"
+        "ratio": 1.333,
+        "display": "36 Schiffe · 133 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 32.0,
+      "total_count": 36.0,
       "total_baseline": 27.0
     },
     "suez": {
       "status": "green",
-      "count": 43.0,
+      "count": 46.0,
       "baseline": 41.0,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
         "status": "green",
-        "count": 43.0,
+        "count": 46.0,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -67,17 +67,17 @@
       "wait_time_hours": null
     },
     "cape": {
-      "status": "green",
-      "count": 78.0,
+      "status": "yellow",
+      "count": 100.0,
       "baseline": 87.5,
-      "ratio": 0.891,
+      "ratio": 1.143,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
       "status": "orange",
-      "count": 147.0,
-      "baseline": 100.9,
-      "ratio": 1.457,
+      "count": 164.0,
+      "baseline": 103.7,
+      "ratio": 1.581,
       "label": "Dark-Shipping-Radar"
     }
   },
