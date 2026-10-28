@@ -5,44 +5,44 @@
   "level": 3,
   "score": 3.0,
   "status_since": "2026-10-16",
-  "days_in_status": 12,
-  "source_date": "2026-10-16",
-  "updated_at": "2026-10-27T18:03:51.432354+00:00",
+  "days_in_status": 13,
+  "source_date": "2026-10-23",
+  "updated_at": "2026-10-28T18:22:41.314358+00:00",
   "components": {
     "spr": {
       "level": 3,
-      "value_million_bbl": 282.683,
-      "source_date": "2026-10-16"
+      "value_million_bbl": 282.583,
+      "source_date": "2026-10-23"
     },
     "spr_trend": {
       "level": 1,
-      "weekly_change_million_bbl": -0.3,
-      "source_date": "2026-10-16"
+      "weekly_change_million_bbl": -0.1,
+      "source_date": "2026-10-23"
     },
     "commercial_crude": {
       "level": 3,
-      "value_million_bbl": 412.517,
-      "percentile": 5.4,
-      "source_date": "2026-10-16"
+      "value_million_bbl": 410.625,
+      "percentile": 2.7,
+      "source_date": "2026-10-23"
     },
     "distillate_stocks": {
       "level": 3,
-      "value_million_bbl": 104.286,
-      "percentile": 7.3,
-      "weekly_change_million_bbl": 1.675,
-      "source_date": "2026-10-16"
+      "value_million_bbl": 102.824,
+      "percentile": 3.1,
+      "weekly_change_million_bbl": -1.462,
+      "source_date": "2026-10-23"
     },
     "days_supply": {
       "level": 3,
-      "value_days": 26.7,
-      "percentile": 6.9,
-      "source_date": "2026-10-16"
+      "value_days": 25.9,
+      "percentile": 2.7,
+      "source_date": "2026-10-23"
     },
     "draw_speed": {
       "level": 0,
-      "draw_percentile": 0.0,
-      "weekly_change_million_bbl": 1.675,
-      "source_date": "2026-10-16"
+      "draw_percentile": 43.7,
+      "weekly_change_million_bbl": -1.462,
+      "source_date": "2026-10-23"
     },
     "diesel_stress": {
       "level": 3,
