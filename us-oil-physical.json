@@ -3,60 +3,60 @@
   "status": "green",
   "label": "GRÜN",
   "level": 0,
-  "score": 0.3,
-  "source_date": "2026-10-16",
-  "updated_at": "2026-10-27T20:43:12.623563+00:00",
+  "score": 0.0,
+  "source_date": "2026-10-23",
+  "updated_at": "2026-10-28T21:07:23.742693+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 3.902,
-      "deviation_pct": 4.03,
+      "value": 3.928,
+      "deviation_pct": 0.67,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.751
+      "previous_week": 3.902
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
       "level": 0,
-      "value": 412.517,
-      "deviation_pct": -0.74,
+      "value": 410.625,
+      "deviation_pct": -0.46,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 415.577
+      "previous_week": 412.517
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
       "level": 0,
-      "value": 5.758,
-      "deviation_pct": -4.81,
+      "value": 6.374,
+      "deviation_pct": 10.7,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 6.049
+      "previous_week": 5.758
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
       "weight": 15,
-      "level": 2,
-      "value": 13.269,
-      "deviation_pct": -2.64,
+      "level": 0,
+      "value": 13.992,
+      "deviation_pct": 2.55,
       "unit": "mb/d",
       "comparison": "year_over_year",
-      "year_ago": 13.629,
-      "comparison_date": "2025-10-17"
+      "year_ago": 13.644,
+      "comparison_date": "2025-10-24"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
       "level": 0,
-      "value": 16.649,
-      "deviation_pct": 0.65,
+      "value": 16.526,
+      "deviation_pct": 0.16,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 16.541
+      "baseline_4w": 16.5
     }
   },
   "sources": {
