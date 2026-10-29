@@ -8,46 +8,99 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: wholesale-dk-us-main
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch US Gulf Coast ULSD
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Fetch and validate US Gulf Coast ULSD
         shell: python
         run: |
-          import csv, io, json, urllib.request
-          from datetime import datetime
-          url='https://fred.stlouisfed.org/graph/fredgraph.csv?id=DDFUELUSGULF'
-          req=urllib.request.Request(url,headers={'User-Agent':'DOMINO/1.0'})
-          text=urllib.request.urlopen(req,timeout=30).read().decode('utf-8-sig')
-          rows=[]
-          for r in csv.DictReader(io.StringIO(text)):
-              raw=(r.get('DDFUELUSGULF') or '').strip()
-              if raw and raw!='.':
-                  try: rows.append((r.get('DATE') or r.get('observation_date'),float(raw)))
-                  except: pass
-          if not rows: raise RuntimeError('No USGC ULSD data')
-          date,value=rows[-1]
-          level=0 if value<2.5 else 1 if value<3.5 else 2 if value<4.2 else 3
-          old={}
-          try: old=json.load(open('wholesale-dk-us.json'))
-          except: pass
-          old_level=old.get('level')
-          old_days=int(old.get('days_in_status') or 0)
-          old_date=old.get('source_date')
-          if old_level==level and old_date and date!=old_date:
+          import csv, io, json, re, time, urllib.request
+          from datetime import date, datetime
+          SERIES = 'DDFUELUSGULF'
+          URLS = [
+              'https://fred.stlouisfed.org/graph/fredgraph.csv?id=DDFUELUSGULF',
+              'https://fred.stlouisfed.org/data/DDFUELUSGULF',
+          ]
+          def parse(data):
+              result = []
+              for row in csv.reader(io.StringIO(data)):
+                  if len(row) >= 2 and re.fullmatch(r'\d{4}-\d{2}-\d{2}', row[0].strip()):
+                      try:
+                          v = float(row[1].strip())
+                          if 0 < v < 50: result.append((row[0].strip(), v))
+                      except ValueError: pass
+              if not result:
+                  for d, v in re.findall(r'(?m)^\s*(\d{4}-\d{2}-\d{2})\s+([0-9]+(?:\.[0-9]+)?)\s*$', data):
+                      if 0 < float(v) < 50: result.append((d, float(v)))
+              return sorted(result)
+          rows = []
+          errors = []
+          for url in URLS:
               try:
-                  delta=(datetime.fromisoformat(date)-datetime.fromisoformat(old_date)).days
-                  days=max(1,old_days+max(delta,0))
-              except: days=max(1,old_days)
-          elif old_level==level: days=max(1,old_days)
-          else: days=1
-          out={'market':'Amerika','benchmark':'U.S. Gulf Coast ULSD Spot','value':value,'unit':'USD/gal','source_date':date,'status':['green','yellow','orange','red'][level],'level':level,'days_in_status':days,'source':'U.S. EIA via FRED DDFUELUSGULF','thresholds':{'green_below':2.5,'yellow_from':2.5,'orange_from':3.5,'red_from':4.2}}
-          json.dump(out,open('wholesale-dk-us.json','w'),indent=2,ensure_ascii=False)
-      - name: Commit
+                  print('Fetching:', url, flush=True)
+                  req = urllib.request.Request(url, headers={'User-Agent':'Mozilla/5.0 GeoDomino/1.0', 'Accept':'text/csv,text/plain,text/html'})
+                  with urllib.request.urlopen(req, timeout=14) as response:
+                      data = response.read().decode('utf-8-sig')
+                  rows = parse(data)
+                  if not rows: raise ValueError('No parseable dated prices returned')
+                  print('Latest observation:', rows[-1], flush=True)
+                  break
+              except Exception as exc:
+                  errors.append(f'{url}: {type(exc).__name__}: {exc}')
+                  print('Source failed:', errors[-1], flush=True)
+          if not rows: raise RuntimeError('Both FRED endpoints failed: '+'; '.join(errors))
+          source_date, value = rows[-1]
+          age = (date.today() - date.fromisoformat(source_date)).days
+          if age < 0 or age > 10:
+              raise RuntimeError(f'Refusing stale/future source observation {source_date} (age {age} days)')
+          level = 0 if value < 2.5 else 1 if value < 3.5 else 2 if value < 4.2 else 3
+          try:
+              with open('wholesale-dk-us.json', encoding='utf-8') as fp: old = json.load(fp)
+          except (OSError, ValueError): old = {}
+          old_level, old_date = old.get('level'), old.get('source_date')
+          old_days = int(old.get('days_in_status') or 0)
+          if old_level == level and old_date:
+              days = max(1, old_days + max(0, (date.fromisoformat(source_date)-date.fromisoformat(old_date)).days))
+          else: days = 1
+          out = {
+              'market':'Amerika', 'benchmark':'U.S. Gulf Coast ULSD Spot',
+              'value':value, 'unit':'USD/gal', 'source_date':source_date,
+              'status':['green','yellow','orange','red'][level], 'level':level,
+              'days_in_status':days, 'source':'U.S. EIA via FRED DDFUELUSGULF',
+              'thresholds':{'green_below':2.5,'yellow_from':2.5,'orange_from':3.5,'red_from':4.2}
+          }
+          with open('wholesale-dk-us.json','w',encoding='utf-8') as fp:
+              json.dump(out,fp,indent=2,ensure_ascii=False)
+              fp.write('\n')
+          print('Updated validated observation:', source_date, value, 'level:', level, flush=True)
+      - name: Commit and push (retry after concurrent updates)
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "DOMINO Bot"
           git config user.email "actions@users.noreply.github.com"
           git add wholesale-dk-us.json
-          git diff --cached --quiet || (git commit -m "Update US wholesale diesel" && git push)
+          if git diff --cached --quiet; then
+            echo "No data changes; nothing to commit"
+            exit 0
+          fi
+          git commit -m "Update US wholesale diesel"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push conflict, retrying ($attempt/3)"
+            sleep 3
+          done
+          echo "ERROR: Could not push updated diesel data" >&2
+          exit 1
