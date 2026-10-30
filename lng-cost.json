@@ -1,19 +1,19 @@
 {
   "version": "1.1",
   "name": "LNG-Kosten",
-  "status": "orange",
-  "label": "ORANGE",
-  "level": 2,
-  "value": 97.51,
+  "status": "red",
+  "label": "ROT",
+  "level": 3,
+  "value": 103.19,
   "unit": "EUR/MWh",
-  "source_date": "2026-10-29",
-  "updated_at": "2026-10-29T21:12:21.642709+00:00",
-  "change_5d_pct": 8.29,
-  "change_20d_pct": 31.88,
-  "price_level": 2,
+  "source_date": "2026-10-30",
+  "updated_at": "2026-10-30T20:51:39.110849+00:00",
+  "change_5d_pct": 9.95,
+  "change_20d_pct": 38.03,
+  "price_level": 3,
   "speed_level": 0,
-  "status_since": "2026-09-18",
-  "days_in_status": 42,
+  "status_since": "2026-10-30",
+  "days_in_status": 1,
   "source": "Yahoo Finance Dutch TTF Natural Gas Calendar (TTF=F), delayed quote",
   "thresholds": {
     "green_below": 45,
@@ -32,10 +32,6 @@
     "agsi": "Underground gas storage is diagnostic context; not scored yet."
   },
   "history": [
-    {
-      "date": "2026-07-29",
-      "value": 60.42
-    },
     {
       "date": "2026-07-30",
       "value": 58.181
@@ -294,7 +290,11 @@
     },
     {
       "date": "2026-10-29",
-      "value": 97.51
+      "value": 98.588
+    },
+    {
+      "date": "2026-10-30",
+      "value": 103.19
     }
   ]
 }
