@@ -5,8 +5,8 @@
   "level": 0,
   "score": 0.0,
   "status_since": "2026-10-07",
-  "days_in_status": 26,
-  "updated_at": "2026-11-01T23:51:45.824044+00:00",
+  "days_in_status": 28,
+  "updated_at": "2026-11-03T02:37:34.880399+00:00",
   "debt_service": {
     "source_date": "2026-09-30",
     "net_interest_ytd_usd_bn": 1051.8,
@@ -87,9 +87,9 @@
       "bid_to_cover": 2.42,
       "bid_to_cover_baseline": 2.5,
       "dealer_share_pct": 10.8,
-      "dealer_baseline_pct": 11.0,
+      "dealer_baseline_pct": 10.8,
       "indirect_share_pct": 49.1,
-      "indirect_baseline_pct": 55.1,
+      "indirect_baseline_pct": 53.7,
       "high_yield": 5.085,
       "level": 1,
       "status": "yellow"
@@ -127,7 +127,7 @@
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
-    "days_in_state": 51,
+    "days_in_state": 53,
     "speed": 0,
     "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
     "evidence": [
