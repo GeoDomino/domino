@@ -4,59 +4,59 @@
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
-  "source_date": "2026-10-23",
-  "updated_at": "2026-11-03T21:48:11.272883+00:00",
+  "source_date": "2026-10-30",
+  "updated_at": "2026-11-04T21:54:20.033790+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 3.928,
-      "deviation_pct": 0.67,
+      "value": 3.991,
+      "deviation_pct": 1.6,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.902
+      "previous_week": 3.928
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
       "level": 0,
-      "value": 410.625,
-      "deviation_pct": -0.46,
+      "value": 409.76,
+      "deviation_pct": -0.21,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 412.517
+      "previous_week": 410.625
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
       "level": 0,
       "value": 6.374,
-      "deviation_pct": 10.7,
+      "deviation_pct": 0.0,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 5.758
+      "previous_week": 6.374
     },
     "domestic_production": {
       "label": "US-Rohölförderung",
       "weight": 15,
       "level": 0,
-      "value": 13.992,
-      "deviation_pct": 2.55,
+      "value": 14.003,
+      "deviation_pct": 2.58,
       "unit": "mb/d",
       "comparison": "year_over_year",
-      "year_ago": 13.644,
-      "comparison_date": "2025-10-24"
+      "year_ago": 13.651,
+      "comparison_date": "2025-10-31"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
       "level": 0,
-      "value": 16.526,
-      "deviation_pct": 0.16,
+      "value": 16.725,
+      "deviation_pct": 0.95,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 16.5
+      "baseline_4w": 16.567
     }
   },
   "sources": {
