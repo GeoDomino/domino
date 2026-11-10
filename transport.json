@@ -1,11 +1,11 @@
 {
   "version": "2.7",
-  "status": "yellow",
-  "label": "YELLOW",
-  "summary": "auffällig",
-  "score": 1.25,
+  "status": "orange",
+  "label": "ORANGE",
+  "summary": "stark gestört",
+  "score": 1.4,
   "days_in_status": 1,
-  "updated_at": "2026-11-10T02:31:37.550620+00:00",
+  "updated_at": "2026-11-10T10:25:54.789027+00:00",
   "source_date": "2026-11-01",
   "components": {
     "hormuz": {
@@ -74,10 +74,10 @@
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "green",
-      "count": 79.0,
-      "baseline": 84.3,
-      "ratio": 0.937,
+      "status": "yellow",
+      "count": 94.0,
+      "baseline": 81.3,
+      "ratio": 1.156,
       "label": "Dark-Shipping-Radar"
     }
   },
