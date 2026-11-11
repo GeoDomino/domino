@@ -7,8 +7,8 @@
   .wdk-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#07120a;font-size:14px}
   .wdk-spread{width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center}
   .wdk-arrow{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:44px;line-height:46px;color:#cbd5e1;opacity:.95;transform-origin:50% 50%}
-  .wdk-arrow.slow{animation:wdkspin 7s linear infinite}
-  .wdk-arrow.fast{animation:wdkspin 2s linear infinite}
+  .wdk-arrow.slow[data-verified="true"]{animation:wdkspin 7s linear infinite}
+  .wdk-arrow.fast[data-verified="true"]{animation:wdkspin 2s linear infinite}
   .wdk-arrow.ccw{animation-direction:reverse}
   .wdk-spread-label{width:48px;font-size:8px;line-height:9px;color:var(--muted);text-align:center;margin-top:2px;white-space:normal}
   @keyframes wdkspin{to{transform:rotate(360deg)}}`;
@@ -32,7 +32,7 @@
   async function init(){
     const c=card();if(!c)return;
     c.classList.remove('placeholder');
-    c.innerHTML=`<div class="name">Großhandel DK</div><div class="wdk"><div class="wdk-rows" id="wdkrows">${row('Amerika',null,null)}${row('Europa',null,null)}${row('Asien',null,null)}</div><div class="wdk-spread"><div class="wdk-arrow" id="wdkArrow" title="Ost-West Spread">⟳</div><div class="wdk-spread-label">Ost-West<br>Spread</div></div></div>`;
+    c.innerHTML=`<div class="name">Großhandel DK</div><div class="wdk"><div class="wdk-rows" id="wdkrows">${row('Amerika',null,null)}${row('Europa',null,null)}${row('Asien',null,null)}</div><div class="wdk-spread"><div class="wdk-arrow" id="wdkArrow" title="Spread: Datenprüfung läuft">!</div><div class="wdk-spread-label">Spread<br>prüfen</div></div></div>`;
 
     const [us,eu,asia,spread]=await Promise.all([
       get('wholesale-dk-us.json'),get('wholesale-dk-eu.json'),get('wholesale-dk-asia.json'),get('wholesale-dk-spread.json')
@@ -49,9 +49,14 @@
     if(spreadReady){
       const state=['still','slow','fast'].includes(spread.state)?spread.state:'still';
       const dir=spread.direction==='ccw'?'ccw':'cw';
+      arrow.dataset.verified='true';
+      arrow.textContent='⟳';
       arrow.className='wdk-arrow '+state+' '+dir;
+      const label=arrow.parentElement.querySelector('.wdk-spread-label');
+      if(label)label.innerHTML='Ost-West<br>Spread';
       arrow.title=`Ost-West Spread · ${state} · Stress ${fmt(spread.stress_score,1)} %`;
     }else{
+      delete arrow.dataset.verified;
       arrow.className='wdk-arrow';
       arrow.textContent='!';
       arrow.style.color='var(--muted)';
