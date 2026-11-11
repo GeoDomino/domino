@@ -42,11 +42,22 @@
       row('Amerika',us)+row('Europa',eu)+row('Asien',asia);
 
     const arrow=document.getElementById('wdkArrow');
-    if(spread){
+    // A recent spread JSON is not enough: both underlying regional quotes
+    // must also be fresh. Otherwise the animated alert would be misleading.
+    const spreadReady=!stale(spread)&&!stale(eu)&&!stale(asia)
+      &&typeof spread?.value_usd_bbl==='number';
+    if(spreadReady){
       const state=['still','slow','fast'].includes(spread.state)?spread.state:'still';
       const dir=spread.direction==='ccw'?'ccw':'cw';
       arrow.className='wdk-arrow '+state+' '+dir;
       arrow.title=`Ost-West Spread · ${state} · Stress ${fmt(spread.stress_score,1)} %`;
+    }else{
+      arrow.className='wdk-arrow';
+      arrow.textContent='!';
+      arrow.style.color='var(--muted)';
+      arrow.title='Ost-West Spread nicht belastbar: Europa- oder Asien-Kurs veraltet bzw. fehlt';
+      const label=arrow.parentElement.querySelector('.wdk-spread-label');
+      if(label)label.innerHTML='Spread<br>unbestätigt';
     }
 
     const b=detailBody();
@@ -55,9 +66,9 @@
       const market=(d,label)=>d&&typeof d.value==='number'
         ?`<b>${label}:</b> ${fmt(d.value)} ${d.unit} · ${stale(d)?'<span style="color:var(--muted)">GRAU · DATEN VERALTET</span>':(['grün','gelb','orange','rot'][d.level]||'offen')} · ${stale(d)?'Quelle '+(d.source_date||'unbekannt'):(d.days_in_status??'–')+' Tage'}`
         :`<b>${label}:</b> noch kein belastbarer Abruf`;
-      const sp=spread&&typeof spread.value_usd_bbl==='number'
+      const sp=spreadReady
         ?`<b>Ost-West-Spread:</b> ${fmt(spread.value_usd_bbl)} $/bbl · ${spread.state} · Niveau/Abweichung ${fmt(spread.deviation_percentile,1)}. Perzentil · Geschwindigkeit ${fmt(spread.speed_percentile,1)}. Perzentil · ${spread.days_in_state??'–'} Tage im Zustand.`
-        :`<b>Ost-West-Spread:</b> wartet auf belastbare Europa- und Asienwerte.`;
+        :`<b>Ost-West-Spread:</b> keine belastbare aktuelle Bewertung (Europa/Asien veraltet oder fehlend). Animation ausgesetzt, bis beide Quellwerte aktuell sind.`;
       b.insertAdjacentHTML('beforeend',`<div id="wdkDetails" class="rule"><b>Großhandel DK · Regionalmärkte</b><br>${market(us,'Amerika / USGC ULSD')}<br>${market(eu,'Europa / ICE Low Sulphur Gasoil')}<br>${market(asia,'Asien / Singapore Gasoil (Platts)')}<br><br><b>Ampelgrenzen:</b><br>Amerika: 🟢 &lt;2,50 · 🟡 2,50–&lt;3,50 · 🟠 3,50–&lt;4,20 · 🔴 ≥4,20 $/gal.<br>Europa: 🟢 &lt;900 · 🟡 900–&lt;1.200 · 🟠 1.200–&lt;1.500 · 🔴 ≥1.500 $/t.<br>Asien: 🟢 &lt;100 · 🟡 100–&lt;125 · 🟠 125–&lt;150 · 🔴 ≥150 $/bbl.<br><br>${sp}<br><br><b>Pfeil-Logik:</b> Der Pfeil bewertet drei Faktoren gemeinsam: (1) Höhe bzw. Abweichung des Spreads von seiner historischen Normalzone, (2) Geschwindigkeit der Veränderung und (3) Dauer/Persistenz des Zustands. Unter dem 90. historischen Perzentil steht er; 90.–&lt;97,5 = langsame Rotation; ab 97,5 = schnelle Rotation. Die Drehrichtung folgt der jüngsten Spread-Veränderung.<br><br><b>Spread-Modell:</b> Europa wird mit 7,45 bbl/t in $/bbl umgerechnet; DOMINO berechnet Singapore minus Europa. Das ist ein transparentes DOMINO-Modell und keine proprietäre Platts-/ICE-EFS-Reihe.<br><br><b>Abrufziel:</b> Europa und Asien möglichst um 10:00 und 15:00 Uhr jeweiliger Ortszeit an Handelstagen; Amerika über den separaten US-Abruf. Quellen: USA U.S. EIA/FRED; Europa ICE Low Sulphur Gasoil über den Börsenfeed mit öffentlicher OilPriceAPI-Referenzseite als Ersatzabruf; Asien Singapore Gasoil (Platts) via verzögertem Yahoo-Futures-Feed.</div>`);
     }
   }
