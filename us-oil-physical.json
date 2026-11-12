@@ -4,35 +4,35 @@
   "label": "GRÜN",
   "level": 0,
   "score": 0.0,
-  "source_date": "2026-10-30",
-  "updated_at": "2026-11-11T22:42:29.508839+00:00",
+  "source_date": "2026-11-06",
+  "updated_at": "2026-11-12T22:15:12.057249+00:00",
   "components": {
     "canada_imports": {
       "label": "Kanada → USA Rohöl",
       "weight": 30,
       "level": 0,
-      "value": 3.991,
-      "deviation_pct": 1.6,
+      "value": 4.352,
+      "deviation_pct": 9.05,
       "unit": "mb/d",
       "comparison": "previous_week",
-      "previous_week": 3.928
+      "previous_week": 3.991
     },
     "commercial_crude_stocks": {
       "label": "Kommerzielle Rohöllager",
       "weight": 30,
       "level": 0,
-      "value": 409.76,
-      "deviation_pct": -0.21,
+      "value": 414.417,
+      "deviation_pct": 1.14,
       "unit": "Mio. bbl",
       "comparison": "previous_week",
-      "previous_week": 410.625
+      "previous_week": 409.76
     },
     "total_crude_imports": {
       "label": "Gesamte Rohölimporte",
       "weight": 15,
       "level": 0,
-      "value": 6.374,
-      "deviation_pct": 0.0,
+      "value": 6.698,
+      "deviation_pct": 5.08,
       "unit": "mb/d",
       "comparison": "previous_week",
       "previous_week": 6.374
@@ -41,22 +41,22 @@
       "label": "US-Rohölförderung",
       "weight": 15,
       "level": 0,
-      "value": 14.003,
-      "deviation_pct": 2.58,
+      "value": 14.013,
+      "deviation_pct": 1.09,
       "unit": "mb/d",
       "comparison": "year_over_year",
-      "year_ago": 13.651,
-      "comparison_date": "2025-10-31"
+      "year_ago": 13.862,
+      "comparison_date": "2025-11-07"
     },
     "refinery_inputs": {
       "label": "Raffinerie-Rohöleinsatz",
       "weight": 10,
       "level": 0,
-      "value": 16.725,
-      "deviation_pct": 0.95,
+      "value": 17.047,
+      "deviation_pct": 2.52,
       "unit": "mb/d",
       "comparison": "4w_average",
-      "baseline_4w": 16.567
+      "baseline_4w": 16.629
     }
   },
   "sources": {
