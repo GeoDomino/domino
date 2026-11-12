@@ -1,7 +1,7 @@
 {
   "name": "Ost-West Spread",
   "method": "Singapore SGB minus ICE LGO converted at 7.45 bbl/t",
-  "value_usd_bbl": 3.651,
+  "value_usd_bbl": 6.134,
   "baseline_median": -19.453,
   "deviation_percentile": 100.0,
   "speed_percentile": 100.0,
@@ -10,7 +10,7 @@
   "direction": "cw",
   "days_in_state": 6,
   "source_date": "2026-11-12",
-  "updated_at": "2026-11-12T01:22:17.681463+00:00",
+  "updated_at": "2026-11-12T09:28:31.697636+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
