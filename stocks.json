@@ -5,48 +5,48 @@
   "level": 3,
   "score": 3.0,
   "status_since": "2026-10-16",
-  "days_in_status": 27,
-  "source_date": "2026-10-30",
-  "updated_at": "2026-11-11T19:41:37.468643+00:00",
+  "days_in_status": 28,
+  "source_date": "2026-11-06",
+  "updated_at": "2026-11-12T20:03:33.211082+00:00",
   "components": {
     "spr": {
       "level": 3,
-      "value_million_bbl": 282.184,
-      "source_date": "2026-10-30"
+      "value_million_bbl": 279.535,
+      "source_date": "2026-11-06"
     },
     "spr_trend": {
-      "level": 1,
-      "weekly_change_million_bbl": -0.399,
-      "source_date": "2026-10-30"
+      "level": 2,
+      "weekly_change_million_bbl": -2.649,
+      "source_date": "2026-11-06"
     },
     "commercial_crude": {
       "level": 3,
-      "value_million_bbl": 409.76,
-      "percentile": 1.9,
-      "source_date": "2026-10-30"
+      "value_million_bbl": 414.417,
+      "percentile": 10.0,
+      "source_date": "2026-11-06"
     },
     "distillate_stocks": {
       "level": 3,
-      "value_million_bbl": 99.259,
-      "percentile": 0.4,
-      "weekly_change_million_bbl": -3.565,
-      "source_date": "2026-10-30"
+      "value_million_bbl": 103.33,
+      "percentile": 4.6,
+      "weekly_change_million_bbl": 4.071,
+      "source_date": "2026-11-06"
     },
     "days_supply": {
       "level": 3,
-      "value_days": 23.8,
-      "percentile": 0.4,
-      "source_date": "2026-10-30"
+      "value_days": 26.2,
+      "percentile": 5.0,
+      "source_date": "2026-11-06"
     },
     "draw_speed": {
-      "level": 2,
-      "draw_percentile": 89.6,
-      "weekly_change_million_bbl": -3.565,
-      "source_date": "2026-10-30"
+      "level": 0,
+      "draw_percentile": 0.0,
+      "weekly_change_million_bbl": 4.071,
+      "source_date": "2026-11-06"
     },
     "diesel_stress": {
       "level": 3,
-      "score": 2.75,
+      "score": 2.25,
       "formula": "40% stock percentile + 35% days-of-supply percentile + 25% draw-speed percentile"
     }
   },
