@@ -3,46 +3,46 @@
   "status": "red",
   "label": "ROT",
   "level": 3,
-  "score": 3.0,
+  "score": 2.8,
   "status_since": "2026-10-16",
-  "days_in_status": 33,
-  "source_date": "2026-11-06",
-  "updated_at": "2026-11-17T21:01:44.606076+00:00",
+  "days_in_status": 34,
+  "source_date": "2026-11-13",
+  "updated_at": "2026-11-18T20:39:34.485087+00:00",
   "components": {
     "spr": {
       "level": 3,
-      "value_million_bbl": 279.535,
-      "source_date": "2026-11-06"
+      "value_million_bbl": 276.361,
+      "source_date": "2026-11-13"
     },
     "spr_trend": {
       "level": 2,
-      "weekly_change_million_bbl": -2.649,
-      "source_date": "2026-11-06"
+      "weekly_change_million_bbl": -3.174,
+      "source_date": "2026-11-13"
     },
     "commercial_crude": {
-      "level": 3,
-      "value_million_bbl": 414.417,
-      "percentile": 10.0,
-      "source_date": "2026-11-06"
+      "level": 2,
+      "value_million_bbl": 417.797,
+      "percentile": 19.2,
+      "source_date": "2026-11-13"
     },
     "distillate_stocks": {
       "level": 3,
-      "value_million_bbl": 103.33,
-      "percentile": 4.6,
-      "weekly_change_million_bbl": 4.071,
-      "source_date": "2026-11-06"
+      "value_million_bbl": 104.901,
+      "percentile": 8.8,
+      "weekly_change_million_bbl": 1.571,
+      "source_date": "2026-11-13"
     },
     "days_supply": {
       "level": 3,
-      "value_days": 26.2,
-      "percentile": 5.0,
-      "source_date": "2026-11-06"
+      "value_days": 26.5,
+      "percentile": 6.2,
+      "source_date": "2026-11-13"
     },
     "draw_speed": {
       "level": 0,
       "draw_percentile": 0.0,
-      "weekly_change_million_bbl": 4.071,
-      "source_date": "2026-11-06"
+      "weekly_change_million_bbl": 1.571,
+      "source_date": "2026-11-13"
     },
     "diesel_stress": {
       "level": 3,
