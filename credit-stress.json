@@ -5,14 +5,14 @@
   "level": 1,
   "score": 0.6,
   "status_since": "2026-10-24",
-  "days_in_status": 26,
-  "updated_at": "2026-11-18T22:09:28.867991+00:00",
+  "days_in_status": 27,
+  "updated_at": "2026-11-19T22:18:39.459253+00:00",
   "components": {
     "hy_spread": {
       "label": "ICE BofA Single-B HY OAS",
-      "value": 3.68,
+      "value": 3.73,
       "unit": "%",
-      "date": "2026-11-17",
+      "date": "2026-11-18",
       "level": 1,
       "status": "yellow",
       "weight": 60,
