@@ -10,7 +10,7 @@
   "direction": "cw",
   "days_in_state": 11,
   "source_date": "2026-11-19",
-  "updated_at": "2026-11-19T09:59:45.517412+00:00",
+  "updated_at": "2026-11-19T21:13:37.571790+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
