@@ -5,8 +5,8 @@
   "level": 0,
   "score": 0.0,
   "status_since": "2026-10-07",
-  "days_in_status": 47,
-  "updated_at": "2026-11-22T00:38:53.041108+00:00",
+  "days_in_status": 48,
+  "updated_at": "2026-11-23T01:07:11.249078+00:00",
   "debt_service": {
     "source_date": "2026-10-31",
     "net_interest_ytd_usd_bn": 103.1,
@@ -127,7 +127,7 @@
     "state": "stopped",
     "label": "KEIN AUSSERORDENTLICHER EINGRIFF",
     "state_since": "2026-09-12",
-    "days_in_state": 72,
+    "days_in_state": 73,
     "speed": 0,
     "reason": "Normale SOMA-Rollover, Reinvestments und Reserve-Management-Käufe zählen nicht. Nur zusätzliche Maßnahmen wegen Treasury-Marktstress bewegen den Pfeil.",
     "evidence": [
