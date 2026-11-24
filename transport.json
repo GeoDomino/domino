@@ -5,14 +5,14 @@
   "summary": "stark gestört",
   "score": 1.55,
   "days_in_status": 1,
-  "updated_at": "2026-11-24T05:31:41.348770+00:00",
-  "source_date": "2026-11-15",
+  "updated_at": "2026-11-24T16:26:42.663761+00:00",
+  "source_date": "2026-11-22",
   "components": {
     "hormuz": {
       "status": "red",
-      "count": 2.0,
+      "count": 1.0,
       "baseline": 85.0,
-      "ratio": 0.024,
+      "ratio": 0.012,
       "label": "Straße von Hormus"
     },
     "bab_el_mandeb": {
@@ -25,16 +25,16 @@
       "assumption": "70_percent_dark_when_no_normal_saudi_AIS_flow",
       "tanker": {
         "status": "yellow",
-        "count": 9.0,
+        "count": 5.0,
         "ratio": 0.7,
         "display": "≈ 5.7 Mio. b/d · 70 % geschätzt (Dark)"
       },
       "goods": {
-        "status": "green",
-        "count": 34.0,
-        "baseline": 27.0,
-        "ratio": 1.259,
-        "display": "34 Schiffe · 126 % vom Normalwert"
+        "status": "yellow",
+        "count": 20.0,
+        "baseline": 26.0,
+        "ratio": 0.769,
+        "display": "20 Schiffe · 77 % vom Normalwert"
       },
       "security_news": {
         "status": "green",
@@ -43,18 +43,18 @@
         "rule": "0=green, 1=orange, >=2=red",
         "events": []
       },
-      "total_count": 34.0,
-      "total_baseline": 27.0
+      "total_count": 20.0,
+      "total_baseline": 26.0
     },
     "suez": {
       "status": "green",
-      "count": 44.0,
-      "baseline": 42.0,
+      "count": 33.0,
+      "baseline": 42.5,
       "ratio": null,
       "label": "Suez / SUMED",
       "traffic": {
         "status": "green",
-        "count": 44.0,
+        "count": 33.0,
         "rule": "<=80 green, 81-99 yellow, >=100 orange; no red from count alone"
       },
       "waiting": {
@@ -68,9 +68,9 @@
     },
     "cape": {
       "status": "green",
-      "count": 87.0,
-      "baseline": 87.0,
-      "ratio": 1.0,
+      "count": 84.0,
+      "baseline": 84.5,
+      "ratio": 0.994,
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
