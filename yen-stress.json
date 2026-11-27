@@ -4,13 +4,13 @@
   "label": "GELB",
   "level": 1,
   "direction": "yen_stronger",
-  "usd_jpy": 159.32,
-  "date": "2026-11-25",
-  "change_5d_pct": -0.06,
-  "change_20d_pct": 0.86,
+  "usd_jpy": 159.26,
+  "date": "2026-11-26",
+  "change_5d_pct": -0.44,
+  "change_20d_pct": 0.76,
   "position_level": 1,
   "speed_level": 0,
-  "updated_at": "2026-11-26T00:31:06.777353+00:00",
+  "updated_at": "2026-11-27T00:39:38.281806+00:00",
   "source": "ECB euro foreign exchange reference rates (JPY/EUR divided by USD/EUR)",
   "thresholds": {
     "position": {
