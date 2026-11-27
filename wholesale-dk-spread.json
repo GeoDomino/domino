@@ -8,9 +8,9 @@
   "stress_score": 100.0,
   "state": "fast",
   "direction": "cw",
-  "days_in_state": 16,
-  "source_date": "2026-11-26",
-  "updated_at": "2026-11-26T22:10:13.016882+00:00",
+  "days_in_state": 17,
+  "source_date": "2026-11-27",
+  "updated_at": "2026-11-27T10:38:40.324986+00:00",
   "rules": {
     "still": "<90th percentile",
     "slow": "90th–<97.5th percentile",
