@@ -1,11 +1,11 @@
 {
   "version": "2.7",
-  "status": "orange",
-  "label": "ORANGE",
-  "summary": "stark gestört",
-  "score": 1.4,
+  "status": "yellow",
+  "label": "YELLOW",
+  "summary": "auffällig",
+  "score": 1.25,
   "days_in_status": 1,
-  "updated_at": "2026-11-27T03:03:20.941981+00:00",
+  "updated_at": "2026-11-27T12:16:10.907528+00:00",
   "source_date": "2026-11-22",
   "components": {
     "hormuz": {
@@ -74,10 +74,10 @@
       "label": "Kap der Guten Hoffnung"
     },
     "ais_dark": {
-      "status": "yellow",
-      "count": 34.0,
-      "baseline": 26.0,
-      "ratio": 1.308,
+      "status": "green",
+      "count": 21.0,
+      "baseline": 28.2,
+      "ratio": 0.745,
       "label": "Dark-Shipping-Radar"
     }
   },
@@ -94,7 +94,5 @@
     "Portcast public Suez congestion page for median waiting time"
   ],
   "note": "TEMPORARY TEST MODE every 15 min. Suez now separates traffic load from actual waiting time; red is reserved for >=72h waiting time.",
-  "errors": [
-    "attack-news: 503 Server Error: Service Unavailable for url: https://news.google.com/rss/search?q=Bab+el-Mandeb+Houthi+tanker+attack+OR+oil+tanker+strike+OR+missile+OR+drone&hl=en-US&gl=US&ceid="
-  ]
+  "errors": []
 }
